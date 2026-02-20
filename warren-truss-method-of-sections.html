@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warren Truss — 截面法互動分析 | Method of Sections</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;
+    background:linear-gradient(165deg,#0d1117 0%,#161b22 50%,#0d1117 100%);
+    color:#e2e8f0;font-family:'Source Sans Pro','Noto Sans TC',sans-serif;padding:20px;
+  }
+  .container{max-width:940px;margin:0 auto}
+  h1{
+    font-size:26px;font-weight:700;letter-spacing:.02em;
+    background:linear-gradient(135deg,#f59e0b,#f97316,#ef4444);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;
+  }
+  .subtitle{color:#94a3b8;font-size:14px;font-weight:300;margin-bottom:20px}
+
+  /* SVG Panel */
+  .svg-panel{
+    background:rgba(13,17,23,.85);border:1px solid rgba(245,158,11,.15);
+    border-radius:16px;padding:16px 8px;margin-bottom:16px;position:relative;
+    backdrop-filter:blur(10px);
+  }
+  .svg-panel svg{display:block;width:100%}
+
+  .node-g{cursor:default}
+  .cut-line{stroke-dasharray:8 5;stroke-dashoffset:0}
+  @keyframes dashMove{to{stroke-dashoffset:-26}}
+  .cut-line-anim{animation:dashMove 1s linear infinite}
+  @keyframes pulse{0%,100%{r:16;opacity:.45}50%{r:21;opacity:.15}}
+  .moment-pulse{animation:pulse 2s ease-in-out infinite}
+  @keyframes fadeForce{0%,100%{opacity:.45}50%{opacity:1}}
+  .force-blink{animation:fadeForce 1.5s ease-in-out infinite}
+
+  /* Shade for the portion NOT being analyzed */
+  .shade-region{fill:rgba(0,0,0,.35);transition:opacity .3s}
+
+  /* Navigation */
+  .nav-bar{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .nav-btn{
+    background:rgba(30,41,59,.6);border:1px solid #334155;color:#94a3b8;
+    padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer;
+    font-family:inherit;font-weight:500;transition:all .2s;white-space:nowrap;
+  }
+  .nav-btn:hover{border-color:#475569;color:#cbd5e1}
+  .nav-btn.active{background:rgba(245,158,11,.12);border-color:#f59e0b;color:#f59e0b}
+  .nav-btn.play{font-weight:600;margin-left:auto}
+  .nav-btn.play.running{background:rgba(34,197,94,.15);border-color:#22c55e;color:#22c55e}
+
+  /* Sub-step dots */
+  .sub-dots{display:flex;gap:8px;margin-bottom:16px;align-items:center}
+  .sub-dot{
+    width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .sub-dot.done{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#86efac}
+  .sub-dot.active{background:rgba(245,158,11,.2);border:2px solid #f59e0b;color:#f59e0b}
+  .sub-dot.future{background:rgba(30,41,59,.5);border:1px solid #334155;color:#64748b}
+  .sub-label{font-size:11px;color:#64748b;margin-left:4px}
+
+  /* Analysis panel */
+  .analysis-panel{
+    background:rgba(13,17,23,.85);border:1px solid rgba(245,158,11,.1);
+    border-radius:16px;padding:24px;backdrop-filter:blur(10px);min-height:220px;
+  }
+  .step-title{font-size:18px;font-weight:600;color:#f59e0b;margin-bottom:4px}
+  .step-title-en{font-size:12px;color:#64748b;margin-bottom:14px}
+  .step-desc{font-size:13px;color:#cbd5e1;line-height:1.7;margin-bottom:16px}
+
+  .eq-box{
+    background:rgba(30,41,59,.5);border-radius:12px;padding:16px;
+    border:1px solid rgba(71,85,105,.3);margin-bottom:16px;
+  }
+  .eq-box h3{font-size:12px;color:#f59e0b;margin-bottom:10px;font-weight:600;letter-spacing:.05em}
+  .eq-line{
+    font-family:'JetBrains Mono',monospace;font-size:13px;color:#e2e8f0;
+    padding:5px 0;border-bottom:1px solid rgba(51,65,85,.3);line-height:1.6;
+  }
+  .eq-line:last-child{border-bottom:none}
+  .eq-line.result{color:#f59e0b;font-weight:500}
+  .eq-line.compression{color:#fca5a5}
+  .eq-line.tension{color:#86efac}
+
+  .member-tags{display:flex;flex-wrap:wrap;gap:8px}
+  .member-tag{
+    display:inline-flex;align-items:center;gap:6px;
+    border-radius:8px;padding:4px 10px;font-size:11px;font-family:'JetBrains Mono',monospace;
+  }
+  .member-tag.tension{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#86efac}
+  .member-tag.compression{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
+  .member-tag .badge{border-radius:4px;padding:1px 5px;font-weight:600;font-size:10px}
+  .member-tag.tension .badge{background:rgba(34,197,94,.2)}
+  .member-tag.compression .badge{background:rgba(239,68,68,.2)}
+
+  .step-nav{display:flex;justify-content:space-between;margin-top:20px}
+  .step-nav button{
+    background:rgba(30,41,59,.6);border:1px solid #334155;color:#94a3b8;
+    padding:8px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s;
+  }
+  .step-nav button:hover:not(:disabled){border-color:#475569;color:#cbd5e1}
+  .step-nav .next-btn{background:rgba(245,158,11,.12);border-color:#f59e0b;color:#f59e0b;font-weight:600}
+  .step-nav .next-btn:disabled{background:rgba(30,41,59,.3);border-color:#1e293b;color:#475569;cursor:not-allowed}
+
+  .overview-title{font-size:20px;font-weight:600;color:#e2e8f0;margin-bottom:12px}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  @media(max-width:600px){.info-grid{grid-template-columns:1fr}}
+  .info-card{background:rgba(30,41,59,.5);border-radius:12px;padding:16px;border:1px solid rgba(71,85,105,.3)}
+  .info-card h3{font-size:13px;margin-bottom:8px;font-weight:600}
+  .info-card .row{font-size:13px;color:#cbd5e1;line-height:1.8}
+  .info-card .val{font-family:'JetBrains Mono',monospace}
+  .hint-box{background:rgba(245,158,11,.04);border-radius:10px;padding:12px 16px;border:1px solid rgba(245,158,11,.1)}
+  .hint-box p{font-size:13px;color:#94a3b8;line-height:1.7}
+  .legend{display:flex;gap:20px;justify-content:center;margin-top:16px;font-size:11px;color:#64748b}
+  .legend-line{display:inline-block;width:20px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+
+  .compare-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
+  .compare-table th{text-align:left;color:#f59e0b;padding:6px 8px;border-bottom:1px solid #334155;font-weight:600}
+  .compare-table td{padding:6px 8px;border-bottom:1px solid rgba(51,65,85,.3);color:#cbd5e1;font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Warren Truss — 截面法互動分析</h1>
+  <p class="subtitle">Method of Sections Interactive Analysis ｜ 選擇截面、力矩點，逐步求解桿件內力</p>
+
+  <div class="svg-panel">
+    <svg id="trussSvg" viewBox="0 0 720 310"></svg>
+  </div>
+
+  <div class="nav-bar" id="navBar"></div>
+  <div class="sub-dots" id="subDots"></div>
+  <div class="analysis-panel" id="analysisPanel"></div>
+
+  <div class="legend">
+    <span><span class="legend-line" style="background:#22c55e"></span>拉力 Tension</span>
+    <span><span class="legend-line" style="background:#ef4444"></span>壓力 Compression</span>
+    <span><span class="legend-line" style="background:#f59e0b"></span>截面切割 Section Cut</span>
+    <span><span class="legend-line" style="background:#8b5cf6;height:6px;border-radius:50%"></span>力矩點 Moment Point</span>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════
+const NODES={
+  A:{x:0,y:0,label:"A",support:"pin"},
+  B:{x:1.5,y:2,label:"B"},
+  C:{x:3,y:0,label:"C",load:-10},
+  D:{x:4.5,y:2,label:"D"},
+  E:{x:6,y:0,label:"E",support:"roller"},
+};
+const MEMBERS=[
+  {id:"AB",from:"A",to:"B",force:-6.25},
+  {id:"AC",from:"A",to:"C",force:3.75},
+  {id:"BC",from:"B",to:"C",force:6.25},
+  {id:"BD",from:"B",to:"D",force:-7.5},
+  {id:"CD",from:"C",to:"D",force:6.25},
+  {id:"CE",from:"C",to:"E",force:3.75},
+  {id:"DE",from:"D",to:"E",force:-6.25},
+];
+
+const SOLVE_ORDER=["overview","reactions","section_aa","section_bb"];
+
+// Section a-a: cut through BC, BD, AC  |  analyze LEFT portion (A,B)
+// Section b-b: cut through CD, BD, CE  |  analyze LEFT portion (A,B,C)
+
+const SECTIONS={
+  section_aa:{
+    label:"截面 a-a",
+    cutMembers:["BC","BD","AC"],
+    cutLine:{x1:2.25,y1:-0.4,x2:2.25,y2:2.6},
+    leftNodes:["A","B"],
+    rightNodes:["C","D","E"],
+    portion:"left",
+    subSteps:[
+      {
+        id:"cut",
+        title:"選擇截面 a-a",
+        titleEn:"Choose Section a-a",
+        desc:"截面 a-a 通過桿件 BC、BD、AC，共切斷 3 根桿件（≤ 3 個未知數，可由 3 個平衡方程式求解）。分析左側部分（節點 A、B）。",
+        equations:[],
+        momentPoint:null,solvedMembers:[],
+      },
+      {
+        id:"moment_B",
+        title:"取矩於 B → 求 F_AC",
+        titleEn:"Moment about B → Solve F_AC",
+        desc:"取矩於 B 點可消去 F_BC 和 F_BD（這兩力的作用線都通過 B 點），只剩 F_AC 一個未知數。",
+        equations:[
+          {text:"ΣM_B = 0（左側部分）",type:""},
+          {text:"Ay × 1.5 − F_AC × 2 = 0",type:""},
+          {text:"5 × 1.5 = F_AC × 2",type:""},
+          {text:"F_AC = 3.75 kN（拉力 T）",type:"tension"},
+        ],
+        momentPoint:"B",solvedMembers:["AC"],
+      },
+      {
+        id:"moment_C",
+        title:"取矩於 C → 求 F_BD",
+        titleEn:"Moment about C → Solve F_BD",
+        desc:"取矩於 C 點可消去 F_BC 和 F_AC（作用線通過 C 點），只剩 F_BD。",
+        equations:[
+          {text:"ΣM_C = 0（左側部分）",type:""},
+          {text:"Ay × 3 + F_BD × 2 = 0",type:""},
+          {text:"5 × 3 + F_BD × 2 = 0",type:""},
+          {text:"F_BD = −7.5 kN（壓力 C）",type:"compression"},
+        ],
+        momentPoint:"C",solvedMembers:["AC","BD"],
+      },
+      {
+        id:"fy_eq",
+        title:"ΣFy = 0 → 求 F_BC",
+        titleEn:"ΣFy = 0 → Solve F_BC",
+        desc:"用垂直方向平衡求 F_BC。F_AC 和 F_BD 都是水平力，垂直分量為零，只有 F_BC 有垂直分量。",
+        equations:[
+          {text:"ΣFy = 0（左側部分）",type:""},
+          {text:"Ay − F_BC × sin θ = 0",type:""},
+          {text:"5 − F_BC × 0.8 = 0",type:""},
+          {text:"F_BC = 6.25 kN（拉力 T）",type:"tension"},
+        ],
+        momentPoint:null,solvedMembers:["AC","BD","BC"],
+      },
+    ],
+  },
+  section_bb:{
+    label:"截面 b-b",
+    cutMembers:["CD","BD","CE"],
+    cutLine:{x1:3.75,y1:-0.4,x2:3.75,y2:2.6},
+    leftNodes:["A","B","C"],
+    rightNodes:["D","E"],
+    portion:"left",
+    subSteps:[
+      {
+        id:"cut",
+        title:"選擇截面 b-b",
+        titleEn:"Choose Section b-b",
+        desc:"截面 b-b 通過桿件 CD、BD、CE，切斷 3 根桿件。分析左側部分（節點 A、B、C），其上有反力 Ay 和外力 P。",
+        equations:[],
+        momentPoint:null,solvedMembers:[],
+      },
+      {
+        id:"moment_D",
+        title:"取矩於 D → 求 F_CE",
+        titleEn:"Moment about D → Solve F_CE",
+        desc:"取矩於 D 點消去 F_BD（通過 D）和 F_CD（通過 D），只剩 F_CE。",
+        equations:[
+          {text:"ΣM_D = 0（左側部分）",type:""},
+          {text:"Ay × 4.5 − P × 1.5 − F_CE × 2 = 0",type:""},
+          {text:"5 × 4.5 − 10 × 1.5 − F_CE × 2 = 0",type:""},
+          {text:"F_CE = 3.75 kN（拉力 T）",type:"tension"},
+        ],
+        momentPoint:"D",solvedMembers:["CE"],
+      },
+      {
+        id:"moment_C",
+        title:"取矩於 C → 求 F_BD",
+        titleEn:"Moment about C → Solve F_BD",
+        desc:"取矩於 C 點消去 F_CE（通過 C）和 F_CD（通過 C），只剩 F_BD。",
+        equations:[
+          {text:"ΣM_C = 0（左側部分）",type:""},
+          {text:"Ay × 3 + F_BD × 2 = 0",type:""},
+          {text:"5 × 3 + F_BD × 2 = 0",type:""},
+          {text:"F_BD = −7.5 kN（壓力 C）",type:"compression"},
+        ],
+        momentPoint:"C",solvedMembers:["CE","BD"],
+      },
+      {
+        id:"fy_eq",
+        title:"ΣFy = 0 → 求 F_CD",
+        titleEn:"ΣFy = 0 → Solve F_CD",
+        desc:"垂直平衡：F_BD 和 F_CE 是水平力，只有 F_CD 有垂直分量。",
+        equations:[
+          {text:"ΣFy = 0（左側部分）",type:""},
+          {text:"Ay − P + F_CD × sin θ = 0",type:""},
+          {text:"5 − 10 + F_CD × 0.8 = 0",type:""},
+          {text:"F_CD = 6.25 kN（拉力 T）",type:"tension"},
+        ],
+        momentPoint:null,solvedMembers:["CE","BD","CD"],
+      },
+    ],
+  },
+};
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let mainStep=0; // 0=overview,1=reactions,2=section_aa,3=section_bb
+let subStep=0;
+let autoTimer=null;
+
+// ═══════════════════════════════════════════
+//  SVG UTILS
+// ═══════════════════════════════════════════
+const SC=90,OX=90,OY=55,SW=720,SH=310,NS="http://www.w3.org/2000/svg";
+function toS(x,y){return{x:OX+x*SC,y:SH-OY-y*SC}}
+function mk(t,a,p){const e=document.createElementNS(NS,t);if(a)Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));if(p)p.appendChild(e);return e}
+function arr(p,x1,y1,x2,y2,col,sz){
+  sz=sz||8;const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy);if(!l)return;
+  const ux=dx/l,uy=dy/l,px=-uy,py=ux;
+  mk("line",{x1,y1,x2,y2,stroke:col,"stroke-width":2.2},p);
+  mk("polygon",{points:`${x2},${y2} ${x2-ux*sz+px*sz*.4},${y2-uy*sz+py*sz*.4} ${x2-ux*sz-px*sz*.4},${y2-uy*sz-py*sz*.4}`,fill:col},p);
+}
+
+function currentSection(){
+  if(mainStep===2) return SECTIONS.section_aa;
+  if(mainStep===3) return SECTIONS.section_bb;
+  return null;
+}
+function currentSubStep(){
+  const sec=currentSection();
+  if(!sec) return null;
+  return sec.subSteps[subStep]||null;
+}
+
+// Collect all solved members up to current state
+function allSolved(){
+  const s=[];
+  // From section_aa if we're past it
+  if(mainStep>2){
+    const last=SECTIONS.section_aa.subSteps;
+    s.push(...(last[last.length-1].solvedMembers||[]));
+  }
+  // Current section sub-step
+  const ss=currentSubStep();
+  if(ss&&ss.solvedMembers) s.push(...ss.solvedMembers);
+  return[...new Set(s)];
+}
+
+// ═══════════════════════════════════════════
+//  RENDER SVG
+// ═══════════════════════════════════════════
+function renderSvg(){
+  const svg=document.getElementById("trussSvg");
+  svg.innerHTML="";
+
+  const sec=currentSection();
+  const ss=currentSubStep();
+  const solved=allSolved();
+
+  // defs
+  const defs=mk("defs",{},svg);
+  defs.innerHTML=`<pattern id="grid" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M 18 0 L 0 0 0 18" fill="none" stroke="rgba(245,158,11,0.03)" stroke-width="0.5"/></pattern><filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="glowO"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  mk("rect",{width:SW,height:SH,fill:"url(#grid)"},svg);
+
+  // Shade the non-analyzed portion
+  if(sec&&subStep>0){
+    const rightSide=sec.portion==="left";
+    // shade right portion
+    if(rightSide){
+      const cx=toS(sec.cutLine.x1,0).x;
+      mk("rect",{x:cx,y:0,width:SW-cx,height:SH,class:"shade-region"},svg);
+    }
+  }
+
+  // Supports
+  const pa=toS(0,0),pe=toS(6,0);
+  // Pin A
+  const pg=mk("g",{},svg);
+  mk("polygon",{points:`${pa.x},${pa.y} ${pa.x-14},${pa.y+20} ${pa.x+14},${pa.y+20}`,fill:"none",stroke:"#8ecae6","stroke-width":2},pg);
+  mk("line",{x1:pa.x-18,y1:pa.y+22,x2:pa.x+18,y2:pa.y+22,stroke:"#8ecae6","stroke-width":2},pg);
+  [-12,-4,4,12].forEach(d=>mk("line",{x1:pa.x+d-3,y1:pa.y+28,x2:pa.x+d+3,y2:pa.y+22,stroke:"#8ecae6","stroke-width":1.5},pg));
+  // Roller E
+  const rg=mk("g",{},svg);
+  mk("polygon",{points:`${pe.x},${pe.y} ${pe.x-14},${pe.y+18} ${pe.x+14},${pe.y+18}`,fill:"none",stroke:"#8ecae6","stroke-width":2},rg);
+  mk("circle",{cx:pe.x-8,cy:pe.y+23,r:4,fill:"none",stroke:"#8ecae6","stroke-width":1.5},rg);
+  mk("circle",{cx:pe.x+8,cy:pe.y+23,r:4,fill:"none",stroke:"#8ecae6","stroke-width":1.5},rg);
+  mk("line",{x1:pe.x-18,y1:pe.y+29,x2:pe.x+18,y2:pe.y+29,stroke:"#8ecae6","stroke-width":2},rg);
+
+  // Members
+  MEMBERS.forEach(m=>{
+    const f=toS(NODES[m.from].x,NODES[m.from].y);
+    const t=toS(NODES[m.to].x,NODES[m.to].y);
+    const isCut=sec&&sec.cutMembers.includes(m.id);
+    const isSolved=solved.includes(m.id);
+    let col="#475569",w=2.5;
+    if(isSolved){col=m.force<0?"#ef4444":"#22c55e";w=3;}
+    if(isCut&&!isSolved){col="#f59e0b";w=3;}
+    if(isCut){
+      mk("line",{x1:f.x,y1:f.y,x2:t.x,y2:t.y,stroke:col,"stroke-width":w+5,opacity:.1},svg);
+    }
+    mk("line",{x1:f.x,y1:f.y,x2:t.x,y2:t.y,stroke:col,"stroke-width":w,"stroke-linecap":"round"},svg);
+
+    // Force labels
+    if(isSolved){
+      const mx=(f.x+t.x)/2,my=(f.y+t.y)/2-8;
+      mk("text",{x:mx,y:my,"text-anchor":"middle","font-size":10,"font-family":"JetBrains Mono",fill:col,"font-weight":500},svg).textContent=`${Math.abs(m.force).toFixed(2)} kN ${m.force<0?"(C)":"(T)"}`;
+    }
+  });
+
+  // Section cut line
+  if(sec){
+    const c1=toS(sec.cutLine.x1,sec.cutLine.y1);
+    const c2=toS(sec.cutLine.x2,sec.cutLine.y2);
+    // glow behind
+    mk("line",{x1:c1.x,y1:c1.y,x2:c2.x,y2:c2.y,stroke:"#f59e0b","stroke-width":6,opacity:.12},svg);
+    mk("line",{x1:c1.x,y1:c1.y,x2:c2.x,y2:c2.y,stroke:"#f59e0b","stroke-width":2.5,class:"cut-line cut-line-anim"},svg);
+    // label
+    const lbl=sec===SECTIONS.section_aa?"a":"b";
+    mk("text",{x:c1.x-14,y:c1.y-4,"font-size":13,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":700},svg).textContent=lbl;
+    mk("text",{x:c2.x-14,y:c2.y+16,"font-size":13,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":700},svg).textContent=lbl;
+  }
+
+  // External load at C
+  const pc=toS(3,0);
+  arr(svg,pc.x,pc.y-55,pc.x,pc.y-10,"#f59e0b",9);
+  mk("text",{x:pc.x+12,y:pc.y-40,"font-size":13,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":500},svg).textContent="P = 10 kN";
+
+  // Reaction arrows (show from step 1+)
+  if(mainStep>=1){
+    arr(svg,pa.x,pa.y+50,pa.x,pa.y+8,"#8ecae6");
+    mk("text",{x:pa.x-44,y:pa.y+55,"font-size":10,"font-family":"JetBrains Mono",fill:"#8ecae6"},svg).textContent="Ay=5kN";
+    arr(svg,pe.x,pe.y+50,pe.x,pe.y+8,"#8ecae6");
+    mk("text",{x:pe.x+10,y:pe.y+55,"font-size":10,"font-family":"JetBrains Mono",fill:"#8ecae6"},svg).textContent="Ey=5kN";
+  }
+
+  // Force arrows on cut members (for current sub-step)
+  if(sec&&subStep>0){
+    sec.cutMembers.forEach(mid=>{
+      const mb=MEMBERS.find(m=>m.id===mid);if(!mb)return;
+      const isSolved=solved.includes(mid);
+      // Draw force arrow at the cut location pointing along member direction
+      // For the left portion: forces point from cut toward the right portion node
+      const fromN=NODES[mb.from],toN=NODES[mb.to];
+      // Determine which end is on the analyzed side
+      const leftNds=sec.leftNodes;
+      const analyzedEnd=leftNds.includes(mb.from)?mb.from:mb.to;
+      const otherEnd=analyzedEnd===mb.from?mb.to:mb.from;
+      const aNode=NODES[analyzedEnd],oNode=NODES[otherEnd];
+
+      // Cut point is roughly where the cut line intersects the member
+      // For simplicity, use midpoint of member
+      const mid_x=(aNode.x+oNode.x)/2, mid_y=(aNode.y+oNode.y)/2;
+      const sp=toS(mid_x,mid_y);
+
+      const dx=oNode.x-aNode.x,dy=oNode.y-aNode.y;
+      const len=Math.hypot(dx,dy);
+      const ux=dx/len,uy=-dy/len; // flip y for SVG
+
+      const isTension=mb.force>0;
+      const al=40;
+      let ax1,ay1,ax2,ay2;
+      // Tension: arrow points away from analyzed portion (toward other end)
+      // Compression: arrow points toward analyzed portion
+      if(isTension){
+        ax1=sp.x;ay1=sp.y;
+        ax2=sp.x+ux*al;ay2=sp.y+uy*al;
+      }else{
+        ax2=sp.x;ay2=sp.y;
+        ax1=sp.x+ux*al;ay1=sp.y+uy*al;
+      }
+
+      const col=isSolved?(mb.force<0?"#ef4444":"#22c55e"):"#f59e0b";
+      const g=mk("g",{class:isSolved?"":"force-blink"},svg);
+      arr(g,ax1,ay1,ax2,ay2,col,7);
+
+      // Label
+      const lx=sp.x+ux*al*.5+(Math.abs(uy)>.3?(uy>0?-8:8):0)+(ux>0?12:-55);
+      const ly=sp.y+uy*al*.5+(Math.abs(uy)<.3?-12:0);
+      const val=Math.abs(mb.force).toFixed(2);
+      const tl=mb.force<0?"C":"T";
+      mk("text",{x:lx,y:ly,"font-size":9,"font-family":"JetBrains Mono",fill:col,"font-weight":500},svg).textContent=isSolved?`F_${mid}=${val}(${tl})`:`F_${mid}=?`;
+    });
+  }
+
+  // Moment point indicator
+  if(ss&&ss.momentPoint){
+    const mp=NODES[ss.momentPoint];
+    const mpos=toS(mp.x,mp.y);
+    mk("circle",{cx:mpos.x,cy:mpos.y,r:18,fill:"none",stroke:"#8b5cf6","stroke-width":1.5,class:"moment-pulse"},svg);
+    mk("circle",{cx:mpos.x,cy:mpos.y,r:22,fill:"none",stroke:"#8b5cf6","stroke-width":2,opacity:.3,filter:"url(#glowO)"},svg);
+    // M label
+    mk("text",{x:mpos.x,y:mpos.y-26,"text-anchor":"middle","font-size":11,"font-family":"JetBrains Mono",fill:"#8b5cf6","font-weight":700},svg).textContent="ΣM_"+ss.momentPoint;
+  }
+
+  // Nodes
+  Object.entries(NODES).forEach(([key,node])=>{
+    const pos=toS(node.x,node.y);
+    const isMoment=ss&&ss.momentPoint===key;
+    const isInPortion=sec&&sec.leftNodes.includes(key);
+    const dimmed=sec&&subStep>0&&!isInPortion;
+
+    const g=mk("g",{class:"node-g"},svg);
+    mk("circle",{
+      cx:pos.x,cy:pos.y,
+      r:isMoment?14:11,
+      fill:isMoment?"#2d1b4e":dimmed?"#0d1117":"#0f1b2d",
+      stroke:isMoment?"#8b5cf6":"#475569",
+      "stroke-width":isMoment?2.5:2,
+      filter:isMoment?"url(#glowO)":"",
+      opacity:dimmed?.4:1,
+    },g);
+    mk("text",{
+      x:pos.x,y:pos.y+4.5,"text-anchor":"middle",
+      "font-size":isMoment?13:12,"font-weight":isMoment?700:600,
+      "font-family":"JetBrains Mono",
+      fill:isMoment?"#c4b5fd":"#94a3b8",
+      opacity:dimmed?.4:1,
+      style:"pointer-events:none",
+    },g).textContent=node.label;
+  });
+}
+
+// ═══════════════════════════════════════════
+//  RENDER NAV
+// ═══════════════════════════════════════════
+function renderNav(){
+  const bar=document.getElementById("navBar");
+  bar.innerHTML="";
+  const labels=["總覽","反力","截面 a-a","截面 b-b"];
+  labels.forEach((lb,i)=>{
+    const b=document.createElement("button");
+    b.className="nav-btn"+(mainStep===i?" active":"");
+    b.textContent=lb;
+    b.onclick=()=>{mainStep=i;subStep=0;stopAuto();render()};
+    bar.appendChild(b);
+  });
+  const sp=document.createElement("div");sp.style.flex="1";bar.appendChild(sp);
+  const pb=document.createElement("button");
+  pb.className="nav-btn play"+(autoTimer?" running":"");
+  pb.textContent=autoTimer?"⏸ 暫停":"▶ 自動播放";
+  pb.onclick=toggleAuto;
+  bar.appendChild(pb);
+}
+
+// ═══════════════════════════════════════════
+//  RENDER SUB-STEP DOTS
+// ═══════════════════════════════════════════
+function renderSubDots(){
+  const dots=document.getElementById("subDots");
+  dots.innerHTML="";
+  const sec=currentSection();
+  if(!sec){dots.style.display="none";return;}
+  dots.style.display="flex";
+
+  sec.subSteps.forEach((s,i)=>{
+    const d=document.createElement("div");
+    d.className="sub-dot "+(i<subStep?"done":i===subStep?"active":"future");
+    d.textContent=i+1;
+    d.onclick=()=>{subStep=i;stopAuto();render()};
+    dots.appendChild(d);
+
+    if(i===subStep){
+      const lb=document.createElement("span");
+      lb.className="sub-label";
+      lb.textContent=s.title;
+      dots.appendChild(lb);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════
+//  RENDER PANEL
+// ═══════════════════════════════════════════
+function renderPanel(){
+  const panel=document.getElementById("analysisPanel");
+
+  // OVERVIEW
+  if(mainStep===0){
+    panel.innerHTML=`
+      <h2 class="overview-title">截面法 Method of Sections</h2>
+      <div class="info-grid">
+        <div class="info-card"><h3 style="color:#f59e0b">截面法要點</h3>
+          <div class="row">• 通過桁架做一截面，切斷 ≤ 3 根桿件</div>
+          <div class="row">• 取其中一側做自由體，列 3 個平衡方程式</div>
+          <div class="row">• 巧妙選擇力矩點，一次只解一個未知數</div>
+          <div class="row">• 不需逐一分析每個節點，可直接求內部桿件力</div>
+        </div>
+        <div class="info-card"><h3 style="color:#60a5fa">本範例截面</h3>
+          <div class="row"><span class="val" style="color:#f59e0b">截面 a-a</span>：切 BC, BD, AC</div>
+          <div class="row" style="padding-left:12px;color:#94a3b8">→ 求 F_AC, F_BD, F_BC</div>
+          <div class="row"><span class="val" style="color:#f59e0b">截面 b-b</span>：切 CD, BD, CE</div>
+          <div class="row" style="padding-left:12px;color:#94a3b8">→ 求 F_CE, F_BD, F_CD</div>
+        </div>
+      </div>
+      <div class="info-card" style="margin-bottom:16px">
+        <h3 style="color:#8b5cf6">截面法 vs 節點法比較</h3>
+        <table class="compare-table">
+          <tr><th></th><th>節點法 Joints</th><th>截面法 Sections</th></tr>
+          <tr><td style="color:#94a3b8">分析對象</td><td>逐一節點</td><td>整個截面（一側）</td></tr>
+          <tr><td style="color:#94a3b8">每步未知數</td><td>≤ 2</td><td>≤ 3</td></tr>
+          <tr><td style="color:#94a3b8">適用場景</td><td>求所有桿件力</td><td>快速求特定桿件力</td></tr>
+          <tr><td style="color:#94a3b8">關鍵技巧</td><td>從已知節點推進</td><td>選擇力矩點消未知數</td></tr>
+        </table>
+      </div>
+      <div class="hint-box"><p>💡 <strong style="color:#e2e8f0">操作方式：</strong>
+        使用上方按鈕選擇截面，每個截面有多個子步驟。截面法的核心在於
+        <strong style="color:#8b5cf6">選擇力矩點</strong>來消去不需要的未知數。
+        <span style="color:#22c55e">綠色</span>=拉力，<span style="color:#ef4444">紅色</span>=壓力，
+        <span style="color:#8b5cf6">紫色</span>=力矩點。</p></div>`;
+    return;
+  }
+
+  // REACTIONS
+  if(mainStep===1){
+    panel.innerHTML=`
+      <div class="step-title">Step 0：求支承反力</div>
+      <div class="step-title-en">Support Reactions</div>
+      <div class="step-desc">截面法的第一步和節點法相同：先由整體平衡求支承反力。</div>
+      <div class="eq-box"><h3>平衡方程式</h3>
+        <div class="eq-line">ΣFx = 0 → Ax = 0</div>
+        <div class="eq-line">ΣM_A = 0 → Ey × 6 − 10 × 3 = 0 → Ey = 5 kN ↑</div>
+        <div class="eq-line">ΣFy = 0 → Ay + Ey − 10 = 0 → Ay = 5 kN ↑</div>
+      </div>
+      <div class="step-nav">
+        <button onclick="mainStep=0;subStep=0;stopAuto();render()">← 總覽</button>
+        <button class="next-btn" onclick="mainStep=2;subStep=0;stopAuto();render()">開始截面分析 →</button>
+      </div>`;
+    return;
+  }
+
+  // SECTION ANALYSIS
+  const sec=currentSection();
+  const ss=currentSubStep();
+  if(!sec||!ss)return;
+
+  const solved=allSolved();
+
+  // Equations
+  let eqHtml="";
+  if(ss.equations.length>0){
+    eqHtml=`<div class="eq-box"><h3>平衡方程式 EQUILIBRIUM EQUATIONS</h3>`;
+    ss.equations.forEach(eq=>{
+      let cls="eq-line";
+      if(eq.type==="tension")cls+=" tension";
+      else if(eq.type==="compression")cls+=" compression";
+      else if(eq.type==="result")cls+=" result";
+      eqHtml+=`<div class="${cls}">${eq.text}</div>`;
+    });
+    eqHtml+=`</div>`;
+  }
+
+  // Solved tags
+  let tags="";
+  if(solved.length>0){
+    solved.forEach(mid=>{
+      const m=MEMBERS.find(mb=>mb.id===mid);if(!m)return;
+      const tp=m.force<0?"compression":"tension",bd=m.force<0?"C":"T";
+      tags+=`<div class="member-tag ${tp}"><span style="font-weight:600">F_${m.id}</span><span>=</span><span>${Math.abs(m.force).toFixed(2)} kN</span><span class="badge">${bd}</span></div>`;
+    });
+    tags=`<div class="member-tags">${tags}</div>`;
+  }
+
+  // Moment point info
+  let momentInfo="";
+  if(ss.momentPoint){
+    momentInfo=`<div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;padding:6px 12px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:8px">
+      <span style="width:10px;height:10px;border-radius:50%;background:#8b5cf6;display:inline-block"></span>
+      <span style="font-size:12px;color:#c4b5fd;font-family:'JetBrains Mono'">力矩點：${ss.momentPoint}（消去通過此點的力）</span>
+    </div>`;
+  }
+
+  const isFirst=mainStep===2&&subStep===0;
+  const isLast=mainStep===3&&subStep>=sec.subSteps.length-1;
+  const totalSteps=sec.subSteps.length;
+
+  panel.innerHTML=`
+    <div class="step-title">${ss.title}</div>
+    <div class="step-title-en">${ss.titleEn}</div>
+    <div class="step-desc">${ss.desc}</div>
+    ${momentInfo}
+    ${eqHtml}
+    ${tags}
+    <div class="step-nav">
+      <button onclick="prevStep()">← 上一步</button>
+      <button class="${isLast?"":"next-btn"}" ${isLast?"disabled":""} onclick="nextStep()">下一步 →</button>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+function prevStep(){
+  stopAuto();
+  if(subStep>0){subStep--;}
+  else if(mainStep>0){
+    mainStep--;
+    if(mainStep>=2){
+      const sec=mainStep===2?SECTIONS.section_aa:SECTIONS.section_bb;
+      subStep=sec.subSteps.length-1;
+    }else{subStep=0;}
+  }
+  render();
+}
+
+function nextStep(){
+  stopAuto();
+  const sec=currentSection();
+  if(sec&&subStep<sec.subSteps.length-1){subStep++;}
+  else if(mainStep<3){mainStep++;subStep=0;}
+  render();
+}
+
+function toggleAuto(){
+  if(autoTimer){stopAuto();renderNav();return;}
+  autoTimer=setInterval(()=>{
+    const sec=currentSection();
+    if(mainStep===3&&sec&&subStep>=sec.subSteps.length-1){stopAuto();render();return;}
+    nextStep();
+  },3500);
+  render();
+}
+function stopAuto(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;}}
+
+function render(){renderSvg();renderNav();renderSubDots();renderPanel();}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+render();
+</script>
+</body>
+</html>

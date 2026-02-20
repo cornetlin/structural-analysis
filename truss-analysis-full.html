@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>靜定桁架分析 — 互動教學</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Noto+Sans+TC:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --bg:#1a1814;--card:rgba(255,255,255,0.03);--card2:rgba(255,255,255,0.05);
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#f0ead6;--text2:#c8c0b0;--text3:#8a8070;--text4:#5c4a3a;
+  --teal:#2d7d9a;--purple:#a855f7;--gold:#e8b339;--tan:#d4a574;
+  --red:#e05555;--green:#3ba55d;--blue:#5b9bd5;
+  --green-t:#86efac;--red-t:#fca5a5;
+  --nav-w:240px;
+}
+body{
+  min-height:100vh;background:var(--bg);color:var(--text);
+  font-family:'Noto Sans TC',sans-serif;font-size:15px;line-height:1.85;
+}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+button{font-family:inherit;cursor:pointer}
+
+/* ── Layout ── */
+.layout{display:flex;min-height:100vh;position:relative;z-index:1;padding-left:var(--nav-w)}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:var(--nav-w);min-height:100vh;position:fixed;left:0;top:0;
+  background:rgba(20,18,14,.97);border-right:1px solid var(--border);
+  padding:20px 0;overflow-y:auto;z-index:100;
+  backdrop-filter:blur(12px);
+  transition:transform .3s;
+}
+.sidebar-header{padding:0 18px 16px;border-bottom:1px solid var(--border)}
+.sidebar-header h1{
+  font-size:16px;font-weight:800;font-family:'Playfair Display',serif;
+  background:linear-gradient(135deg,var(--text),var(--tan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:3px;
+}
+.sidebar-header .sub{font-size:11px;color:var(--text3);font-weight:400}
+
+.nav-section{padding:10px 0}
+.nav-section-title{font-size:10px;font-weight:700;color:var(--text4);letter-spacing:.12em;text-transform:uppercase;padding:0 18px;margin-bottom:4px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 18px;cursor:pointer;transition:all .2s;
+  font-size:13px;color:var(--text3);border-left:3px solid transparent;
+}
+.nav-item:hover{color:var(--text2);background:rgba(255,255,255,.03)}
+.nav-item.active{color:var(--gold);background:rgba(232,179,57,.06);border-left-color:var(--gold);font-weight:700}
+.nav-item .icon{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.nav-item .num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text4);width:28px;flex-shrink:0}
+
+/* Mobile hamburger */
+.hamburger{
+  display:none;position:fixed;top:14px;left:14px;z-index:200;
+  background:rgba(30,27,22,.95);border:1px solid var(--border);border-radius:10px;
+  padding:10px 13px;cursor:pointer;color:var(--text2);font-size:18px;
+}
+@media(max-width:800px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .hamburger{display:block}
+  .layout{padding-left:0!important}
+  .main{margin-left:0!important;padding:20px!important;padding-top:56px!important}
+}
+
+/* ── Main Content ── */
+.main{padding:36px 40px 60px;max-width:1100px;width:100%;margin:0 auto}
+
+/* Section common */
+.section{display:none;animation:fadeIn .3s ease}
+.section.active{display:block}
+.section-tag{display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(45,125,154,0.15);color:var(--teal);font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.section-title{font-size:28px;font-weight:900;font-family:'Playfair Display',serif;background:linear-gradient(135deg,var(--text),var(--tan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.section-sub{font-size:14px;color:var(--text3);margin-bottom:28px}
+
+/* Content cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+.card-title{font-size:17px;font-weight:800;font-family:'Playfair Display',serif;margin-bottom:10px;color:var(--text)}
+.card-title .en{font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-left:8px;font-weight:400}
+.card h3{font-size:14px;font-weight:600;margin-bottom:10px}
+.card h3.blue{color:var(--blue)}
+.card h3.orange{color:#d4a574}
+.card h3.green{color:var(--green)}
+.card h3.purple{color:var(--purple)}
+.card h3.teal{color:var(--teal)}
+.card h3.red{color:var(--red)}
+.card p,.card li{font-size:13px;color:var(--text2);line-height:1.8}
+.card ul{padding-left:18px}
+.card li{margin-bottom:2px}
+.card .mono{font-family:'JetBrains Mono',monospace;font-size:12px}
+.card .val{font-family:'JetBrains Mono',monospace;color:var(--blue)}
+
+/* Color boxes */
+.def-box{background:rgba(45,125,154,0.08);border:1px solid rgba(45,125,154,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.def-box .label{font-size:11px;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:6px}
+.thm-box{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.thm-box .label{font-size:11px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:6px}
+.prop-box{background:rgba(232,179,57,0.08);border:1px solid rgba(232,179,57,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.prop-box .label{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:6px}
+.ex-box{background:rgba(59,165,93,0.08);border:1px solid rgba(59,165,93,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.ex-box .label{font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:6px}
+.note-box{background:rgba(212,165,116,0.08);border:1px solid rgba(212,165,116,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.note-box .label{font-size:11px;font-weight:700;color:var(--tan);letter-spacing:1px;margin-bottom:6px}
+.note-box p{color:var(--text2);font-size:13px;line-height:1.8}
+
+.formula{
+  background:rgba(0,0,0,0.2);border-radius:10px;padding:16px;
+  margin:12px 0;text-align:center;overflow-x:auto;
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  color:var(--text2);line-height:1.8;
+}
+.formula-block{background:rgba(0,0,0,0.2);border-radius:10px;padding:16px;margin:12px 0;text-align:center;overflow-x:auto}
+.highlight{
+  display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;
+  font-family:'JetBrains Mono',monospace;font-weight:600;
+}
+.hl-t{background:rgba(134,239,172,.1);color:var(--green-t);border:1px solid rgba(134,239,172,.2)}
+.hl-c{background:rgba(252,165,165,.1);color:var(--red-t);border:1px solid rgba(252,165,165,.2)}
+
+/* Flow steps */
+.flow{display:flex;gap:0;margin:16px 0;flex-wrap:wrap}
+.flow-step{display:flex;align-items:center;gap:0}
+.flow-box{
+  background:rgba(45,125,154,.06);border:1px solid rgba(45,125,154,.15);
+  border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;
+  color:var(--teal);white-space:nowrap;
+}
+.flow-arrow{color:var(--text4);font-size:18px;padding:0 6px}
+
+/* Truss type cards */
+.truss-types{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0}
+@media(max-width:600px){.truss-types{grid-template-columns:1fr}}
+.truss-type{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:12px;padding:20px;text-align:center;
+}
+.truss-type h4{font-size:16px;font-weight:700;margin-bottom:4px}
+.truss-type .en{font-size:12px;color:var(--text4);margin-bottom:10px}
+.truss-type svg{display:block;margin:0 auto 10px}
+.truss-type p{font-size:13px;color:var(--text2);line-height:1.7}
+
+/* Zero force SVG panels */
+.zf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+@media(max-width:600px){.zf-grid{grid-template-columns:1fr}}
+.zf-card{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:12px;padding:16px;
+}
+.zf-card h4{font-size:12px;font-weight:600;margin-bottom:8px}
+.zf-card svg{display:block;margin:0 auto 8px;width:100%;max-width:260px}
+.zf-card p{font-size:11px;color:var(--text3);line-height:1.6}
+
+/* ── Interactive Analysis Panels ── */
+.svg-panel{
+  background:rgba(0,0,0,0.2);border:1px solid var(--border2);
+  border-radius:14px;padding:14px 8px;margin-bottom:14px;position:relative;
+  box-shadow:0 4px 20px rgba(0,0,0,.25);
+}
+.svg-panel svg{display:block;width:100%}
+
+.fbd-btn{
+  position:absolute;top:10px;right:10px;
+  background:rgba(0,0,0,0.3);border:1px solid var(--border2);color:var(--text3);
+  padding:5px 12px;border-radius:7px;font-size:10px;cursor:pointer;
+  font-family:inherit;font-weight:500;transition:all .2s;z-index:5;
+}
+.fbd-btn:hover{border-color:var(--border);color:var(--text2)}
+.fbd-btn.active{background:rgba(45,125,154,.15);border-color:var(--teal);color:var(--teal)}
+
+.nav-bar{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.nav-btn{
+  background:var(--card2);border:1px solid var(--border);color:var(--text3);
+  padding:6px 11px;border-radius:7px;font-size:11px;cursor:pointer;
+  font-family:inherit;font-weight:500;transition:all .2s;white-space:nowrap;
+}
+.nav-btn:hover{border-color:var(--border2);color:var(--text2)}
+.nav-btn.aj{background:rgba(45,125,154,.1);border-color:rgba(45,125,154,.35);color:var(--teal)}
+.nav-btn.as{background:rgba(212,165,116,.08);border-color:rgba(212,165,116,.3);color:var(--tan)}
+.nav-btn.play{font-weight:600;margin-left:auto}
+.nav-btn.running{background:rgba(59,165,93,.1);border-color:var(--green);color:var(--green)}
+
+.sub-dots{display:flex;gap:7px;margin-bottom:12px;align-items:center;min-height:26px}
+.sub-dot{
+  width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;cursor:pointer;transition:all .2s;
+  font-family:'JetBrains Mono',monospace;
+}
+.sub-dot.done{background:rgba(59,165,93,.1);border:1px solid rgba(59,165,93,.3);color:var(--green-t)}
+.sub-dot.active{background:rgba(212,165,116,.12);border:2px solid var(--tan);color:var(--tan)}
+.sub-dot.future{background:rgba(0,0,0,.2);border:1px solid var(--border2);color:var(--text4)}
+.sub-label{font-size:10px;color:var(--text3);margin-left:3px}
+
+.analysis-panel{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:20px;min-height:180px;
+}
+.step-title{font-size:16px;font-weight:600;margin-bottom:3px}
+.step-title.j{color:var(--teal)}
+.step-title.s{color:var(--tan)}
+.step-title-en{font-size:10px;color:var(--text4);margin-bottom:12px}
+.step-desc{font-size:12.5px;color:var(--text2);line-height:1.75;margin-bottom:14px}
+
+.eq-box{
+  background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;
+  border:1px solid var(--border2);margin-bottom:14px;
+}
+.eq-box h3{font-size:10px;margin-bottom:8px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.eq-box h3.jc{color:var(--teal)}
+.eq-box h3.sc{color:var(--tan)}
+.eq-line{
+  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);
+  padding:4px 0;border-bottom:1px solid var(--border2);line-height:1.6;
+}
+.eq-line:last-child{border-bottom:none}
+.eq-line.check{color:var(--green)}
+.eq-line.compression{color:var(--red-t)}
+.eq-line.tension{color:var(--green-t)}
+.eq-line.result{color:var(--tan);font-weight:500}
+
+.member-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.member-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  border-radius:5px;padding:3px 8px;font-size:10px;
+  font-family:'JetBrains Mono',monospace;
+}
+.member-tag.tension{background:rgba(134,239,172,.07);border:1px solid rgba(134,239,172,.18);color:var(--green-t)}
+.member-tag.compression{background:rgba(252,165,165,.07);border:1px solid rgba(252,165,165,.18);color:var(--red-t)}
+.member-tag .badge{border-radius:3px;padding:1px 4px;font-weight:600;font-size:9px}
+.member-tag.tension .badge{background:rgba(134,239,172,.12)}
+.member-tag.compression .badge{background:rgba(252,165,165,.12)}
+
+.step-nav{display:flex;justify-content:space-between;margin-top:18px}
+.step-nav button{
+  background:var(--card2);border:1px solid var(--border);color:var(--text3);
+  padding:7px 18px;border-radius:7px;font-size:12px;cursor:pointer;
+  font-family:inherit;font-weight:500;transition:all .2s;
+}
+.step-nav button:hover:not(:disabled){border-color:var(--border2);color:var(--text2)}
+.step-nav .nj{background:rgba(45,125,154,.08);border-color:rgba(45,125,154,.3);color:var(--teal);font-weight:600}
+.step-nav .ns{background:rgba(212,165,116,.08);border-color:rgba(212,165,116,.3);color:var(--tan);font-weight:600}
+.step-nav button:disabled{opacity:.25;cursor:not-allowed}
+
+.moment-badge{
+  display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;
+  padding:4px 10px;background:rgba(168,85,247,.05);border:1px solid rgba(168,85,247,.15);border-radius:6px;
+}
+.moment-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--purple)}
+.moment-badge span{font-size:10px;color:#e9d5ff;font-family:'JetBrains Mono',monospace}
+
+.hint-box{
+  background:rgba(45,125,154,.02);border-radius:10px;padding:12px 14px;
+  border:1px solid rgba(45,125,154,.06);margin-top:14px;
+}
+.hint-box p{font-size:12px;color:var(--text3);line-height:1.7}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+@media(max-width:600px){.info-grid{grid-template-columns:1fr}}
+
+.compare-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+.compare-table th{text-align:left;color:var(--purple);padding:7px;border-bottom:1px solid rgba(45,125,154,.25);font-weight:600;font-size:10px}
+.compare-table td{padding:7px;border-bottom:1px solid var(--border2);color:var(--text2)}
+.compare-table td:first-child{color:var(--text3);font-size:10px}
+
+.summary-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:12px 0}
+@media(max-width:700px){.summary-grid{grid-template-columns:repeat(4,1fr)}}
+.summary-card{background:var(--card2);border-radius:6px;padding:6px 4px;text-align:center;border:1px solid var(--border)}
+.summary-card .name{font-size:9px;color:var(--text4);font-family:'JetBrains Mono',monospace;margin-bottom:1px}
+.summary-card .force{font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600}
+.summary-card .force.t{color:var(--green-t)}
+.summary-card .force.c{color:var(--red-t)}
+.summary-card .type{font-size:8px;margin-top:1px}
+.summary-card .type.t{color:rgba(134,239,172,.45)}
+.summary-card .type.c{color:rgba(252,165,165,.45)}
+
+.legend{display:flex;gap:14px;justify-content:center;margin-top:14px;font-size:10px;color:var(--text4);flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:4px}
+.legend-line{display:inline-block;width:14px;height:3px;border-radius:2px}
+
+.interactive-box{background:rgba(0,0,0,0.15);border:1px solid var(--border2);border-radius:12px;padding:18px;margin:14px 0}
+.interactive-box h4{font-size:14px;font-weight:700;color:var(--teal);margin-bottom:10px}
+.mat-input{display:inline-grid;gap:4px;margin:8px}
+.mat-input input{width:52px;height:36px;text-align:center;border:1px solid var(--border2);border-radius:6px;background:rgba(255,255,255,0.04);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px}
+.mat-input input:focus{outline:none;border-color:var(--teal);background:rgba(45,125,154,0.1)}
+.vec-input input{width:64px;height:36px;text-align:center;border:1px solid var(--border2);border-radius:6px;background:rgba(255,255,255,0.04);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;margin:2px}
+.vec-input input:focus{outline:none;border-color:var(--teal);background:rgba(45,125,154,0.1)}
+
+.btn{display:inline-block;padding:8px 20px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-teal{background:rgba(45,125,154,0.2);color:var(--teal)}.btn-teal:hover{background:rgba(45,125,154,0.35)}
+.btn-gold{background:rgba(232,179,57,0.2);color:var(--gold)}.btn-gold:hover{background:rgba(232,179,57,0.35)}
+.btn-purple{background:rgba(168,85,247,0.2);color:var(--purple)}.btn-purple:hover{background:rgba(168,85,247,0.35)}
+.result-box{background:rgba(0,0,0,0.25);border-radius:8px;padding:12px 16px;margin-top:10px;min-height:40px;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text2)}
+
+/* Animations */
+@keyframes pulse{0%,100%{r:18;opacity:.4}50%{r:23;opacity:.12}}
+
+/* Simple truss growth demo */
+.stg-wrap{
+  background:rgba(0,0,0,0.2);border:1px solid var(--border2);
+  border-radius:14px;padding:20px;margin:16px 0;
+}
+.stg-wrap h3{font-size:15px;font-weight:600;color:var(--teal);margin-bottom:4px}
+.stg-wrap .sub{font-size:11px;color:var(--text3);margin-bottom:14px}
+.stg-svg-box{position:relative;margin-bottom:14px}
+.stg-svg-box svg{display:block;width:100%}
+.stg-ctrl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.stg-btn{
+  background:var(--card2);border:1px solid var(--border);color:var(--text3);
+  padding:8px 18px;border-radius:7px;font-size:13px;cursor:pointer;
+  font-family:inherit;font-weight:500;transition:all .2s;
+}
+.stg-btn:hover:not(:disabled){border-color:var(--border2);color:var(--text2)}
+.stg-btn.primary{background:rgba(45,125,154,.1);border-color:rgba(45,125,154,.35);color:var(--teal);font-weight:600}
+.stg-btn.running{background:rgba(59,165,93,.1);border-color:var(--green);color:var(--green)}
+.stg-btn:disabled{opacity:.25;cursor:not-allowed}
+.stg-info{
+  margin-left:auto;display:flex;align-items:center;gap:12px;
+  font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text3);
+}
+.stg-info .val{color:var(--teal);font-weight:600}
+.stg-step-label{
+  font-size:14px;color:var(--text2);margin-top:12px;line-height:1.8;
+  min-height:50px;
+}
+.stg-step-label strong{color:var(--teal)}
+.stg-step-label .new-tag{
+  display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;
+  font-family:'JetBrains Mono',monospace;font-weight:600;
+  background:rgba(45,125,154,.12);border:1px solid rgba(45,125,154,.25);
+  color:var(--teal);margin-left:4px;vertical-align:middle;
+}
+
+/* SVG transitions */
+.stg-member{transition:opacity .5s,stroke .3s}
+.stg-node-g{transition:opacity .5s}
+.stg-new-member{stroke:#2d7d9a!important;stroke-width:3.5!important}
+.stg-new-node{stroke:#2d7d9a!important;stroke-width:2.5!important}
+@keyframes stgAppear{0%{opacity:0;transform:scale(.3)}60%{transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+.stg-appear{animation:stgAppear .5s ease-out forwards}
+@keyframes stgGrow{0%{stroke-dashoffset:200}100%{stroke-dashoffset:0}}
+.stg-grow{stroke-dasharray:200;animation:stgGrow .6s ease-out forwards}
+@keyframes stgRing{0%{r:8;opacity:.6}100%{r:28;opacity:0}}
+.stg-ring{animation:stgRing .8s ease-out forwards}
+.pulse-ring{animation:pulse 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:.4}50%{opacity:.95}}
+.unknown-force{animation:blink 1.5s ease-in-out infinite}
+@keyframes dashMove{to{stroke-dashoffset:-26}}
+.cut-anim{stroke-dasharray:8 5;animation:dashMove 1s linear infinite}
+@keyframes zfFlash{0%,100%{opacity:.7}50%{opacity:.25}}
+.zf-flash{animation:zfFlash 1.2s ease-in-out infinite}
+@keyframes momentPulse{0%,100%{r:16;opacity:.45}50%{r:21;opacity:.12}}
+.moment-pulse{animation:momentPulse 2s ease-in-out infinite}
+.shade-region{fill:rgba(0,0,0,.35);transition:opacity .3s}
+.node-group{cursor:pointer}
+.node-group:hover .node-main{stroke-width:3}
+.node-group .hit-area{fill:transparent}
+
+.footer{text-align:center;margin-top:36px;padding:14px 0;border-top:1px solid var(--border);color:var(--text4);font-size:11px;font-family:'JetBrains Mono',monospace}
+.katex{font-size:1.05em!important}.katex-display{margin:10px 0!important;overflow-x:auto;overflow-y:hidden}
+canvas{border:1px solid var(--border2);border-radius:8px;background:rgba(0,0,0,0.2);margin:10px 0;max-width:100%}
+</style>
+</head>
+<body>
+
+<button class="hamburger" id="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<div class="layout">
+<!-- ── Sidebar ── -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h1>靜定桁架分析</h1>
+    <div class="sub">Statically Determinate Truss Analysis</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">基礎理論</div>
+    <div class="nav-item active" data-sec="s1"><span class="num">一</span><span>分析流程</span></div>
+    <div class="nav-item" data-sec="s2"><span class="num">二</span><span>符號及方向定義</span></div>
+    <div class="nav-item" data-sec="s3"><span class="num">三</span><span>桁架型式</span></div>
+    <div class="nav-item" data-sec="s4"><span class="num">四</span><span>零桿判別</span></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">互動分析</div>
+    <div class="nav-item" data-sec="s5"><span class="icon">⊕</span><span>節點法 Method of Joints</span></div>
+    <div class="nav-item" data-sec="s6"><span class="icon">✂</span><span>剖面法 Method of Sections</span></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">總結</div>
+    <div class="nav-item" data-sec="s7"><span class="icon">⇌</span><span>方法比較</span></div>
+    <div class="nav-item" data-sec="s8"><span class="icon">★</span><span>進階範例：合併分析</span></div>
+  </div>
+</nav>
+
+<!-- ── Main ── -->
+<div class="main">
+
+<!-- ════════ 一、分析流程 ════════ -->
+<div class="section active" id="s1">
+  <div class="section-tag">UNIT 01</div>
+  <div class="section-title">一、分析流程</div>
+  <div class="section-sub">Analysis Procedure</div>
+
+  <div class="flow">
+    <div class="flow-step"><div class="flow-box">1. 判別桁架種類</div><span class="flow-arrow">→</span></div>
+    <div class="flow-step"><div class="flow-box">2. 解反力</div><span class="flow-arrow">→</span></div>
+    <div class="flow-step"><div class="flow-box">3. 判別零桿</div><span class="flow-arrow">→</span></div>
+    <div class="flow-step"><div class="flow-box">4. 剖面法＋節點法解題</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">步驟說明 <span class="en">Step Description</span></div>
+    <ul>
+      <li><strong>判別桁架種類</strong>：確認是簡單桁架、複合桁架或複雜桁架，決定適用的分析方法。</li>
+      <li><strong>解反力</strong>：由整體平衡（ΣFx=0、ΣFy=0、ΣM=0）求出支承反力，這是所有分析方法的第一步。</li>
+      <li><strong>判別零桿</strong>：利用零力桿件判別規則，先找出零力桿件可簡化後續計算。</li>
+      <li><strong>剖面法＋節點法解題</strong>：根據需求選擇適當方法。需要特定桿件力用剖面法，需要全部桿件力用節點法，實務上經常搭配使用。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">靜不定數公式（桁架） <span class="en">Degree of Indeterminacy</span></div>
+    <div class="prop-box">
+      <div class="label">公式</div>
+      <div class="formula">
+        n = b + r − 2j<br>
+        <span style="color:var(--text3)">b：桿件數　r：反力數　j：節點數（含支承）</span><br>
+        <span style="color:var(--text3)">b + r：未知數個數　2j：平衡方程式個數</span><br><br>
+        n = 0 → 穩定靜定<br>
+        n > 0 → 靜不定（n 度）<br>
+        n < 0 → 不穩定（需再檢查幾何穩定性）
+      </div>
+    </div>
+    <p style="margin-top:8px">注意：即使 n ≥ 0 也可能因幾何配置不當而不穩定，需另行檢查。</p>
+  </div>
+
+  <div class="note-box">
+    <div class="label">提示</div>
+    <p>以下各節將依此流程逐步展開，最後在「節點法」和「剖面法」互動分析中完整示範一個 Warren Truss 的求解過程。</p>
+  </div>
+</div>
+
+<!-- ════════ 二、符號及方向定義 ════════ -->
+<div class="section" id="s2">
+  <div class="section-tag">UNIT 02</div>
+  <div class="section-title">二、符號及方向定義</div>
+  <div class="section-sub">Sign Convention & Direction Definition</div>
+
+  <div class="card">
+    <div class="card-title">軸力方向規定 <span class="en">Axial Force Direction</span></div>
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin:12px 0">
+      <div>
+        <svg width="220" height="80" viewBox="0 0 220 80">
+          <defs><filter id="g1"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <!-- Tension -->
+          <circle cx="40" cy="40" r="12" fill="#0f2d1f" stroke="#22c55e" stroke-width="2"/>
+          <text x="40" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#86efac" font-family="JetBrains Mono">J</text>
+          <line x1="56" y1="40" x2="100" y2="40" stroke="#22c55e" stroke-width="2.5"/>
+          <polygon points="100,40 92,36 92,44" fill="#22c55e"/>
+          <text x="108" y="44" font-size="10" fill="#86efac" font-family="JetBrains Mono" font-weight="500">T (+)</text>
+          <text x="40" y="70" text-anchor="middle" font-size="10" fill="#64748b">離開節點</text>
+        </svg>
+      </div>
+      <div>
+        <svg width="220" height="80" viewBox="0 0 220 80">
+          <!-- Compression -->
+          <circle cx="40" cy="40" r="12" fill="#2d1319" stroke="#ef4444" stroke-width="2"/>
+          <text x="40" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#fca5a5" font-family="JetBrains Mono">J</text>
+          <line x1="100" y1="40" x2="56" y2="40" stroke="#ef4444" stroke-width="2.5"/>
+          <polygon points="56,40 64,36 64,44" fill="#ef4444"/>
+          <text x="108" y="44" font-size="10" fill="#fca5a5" font-family="JetBrains Mono" font-weight="500">C (−)</text>
+          <text x="40" y="70" text-anchor="middle" font-size="10" fill="#64748b">指向節點</text>
+        </svg>
+      </div>
+    </div>
+    <ul>
+      <li><span class="highlight hl-t">拉力 T（正）</span>　力的方向<strong>離開</strong>節點 — 桿件被拉伸</li>
+      <li><span class="highlight hl-c">壓力 C（負）</span>　力的方向<strong>指向</strong>節點 — 桿件被壓縮</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">分析技巧 <span class="en">Analysis Tricks</span></div>
+    <p>分析時可先假設所有軸力為<strong style="color:var(--text)">正（拉力 T）</strong>，計算結果：</p>
+    <ul>
+      <li>結果為<strong style="color:var(--green-t)">正值</strong> → 假設正確，確為拉力（T）</li>
+      <li>結果為<strong style="color:var(--red-t)">負值</strong> → 實際為壓力（C），方向與假設相反</li>
+    </ul>
+    <p style="margin-top:8px">此規則在節點法和剖面法中均適用。</p>
+  </div>
+</div>
+
+<!-- ════════ 三、桁架型式 ════════ -->
+<div class="section" id="s3">
+  <div class="section-tag">UNIT 03</div>
+  <div class="section-title">三、桁架型式</div>
+  <div class="section-sub">Types of Trusses</div>
+
+  <div class="truss-types">
+    <!-- Simple -->
+    <div class="truss-type">
+      <h4 style="color:var(--blue)">簡單桁架</h4>
+      <div class="en">Simple Truss</div>
+      <svg width="220" height="110" viewBox="0 0 220 110">
+        <line x1="20" y1="80" x2="110" y2="20" stroke="#38bdf8" stroke-width="2.5"/>
+        <line x1="110" y1="20" x2="200" y2="80" stroke="#38bdf8" stroke-width="2.5"/>
+        <line x1="20" y1="80" x2="200" y2="80" stroke="#38bdf8" stroke-width="2.5"/>
+        <line x1="110" y1="20" x2="65" y2="80" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 3" opacity=".5"/>
+        <line x1="110" y1="20" x2="155" y2="80" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 3" opacity=".5"/>
+        <circle cx="20" cy="80" r="5" fill="#0c2d4a" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="110" cy="20" r="5" fill="#0c2d4a" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="200" cy="80" r="5" fill="#0c2d4a" stroke="#38bdf8" stroke-width="2"/>
+        <text x="110" y="104" text-anchor="middle" font-size="11" fill="#64748b" font-family="JetBrains Mono">基本三角形</text>
+      </svg>
+      <p>由基本三角形組成，可由<strong>兩桿一節點</strong>擴大到整個桁架。可用節點法逐步求解。</p>
+    </div>
+    <!-- Compound -->
+    <div class="truss-type">
+      <h4 style="color:var(--orange)">複合桁架</h4>
+      <div class="en">Compound Truss</div>
+      <svg width="220" height="50" viewBox="0 0 220 50">
+        <text x="110" y="30" text-anchor="middle" font-size="11" fill="#94a3b8" font-family="Noto Sans TC">詳見下方三種連接方式</text>
+      </svg>
+      <p>兩個以上的簡單桁架以下列方式連接而成。</p>
+    </div>
+    <!-- Complex -->
+    <div class="truss-type">
+      <h4 style="color:var(--red)">複雜桁架</h4>
+      <div class="en">Complex Truss</div>
+      <svg width="160" height="170" viewBox="0 0 160 170">
+        <!-- Diamond/hexagonal complex truss: 6 nodes, crossing has NO node -->
+        <!-- T(80,8) UL(25,48) UR(135,48) LL(25,108) LR(135,108) B(80,148) -->
+        <!-- Top V -->
+        <line x1="80" y1="8" x2="25" y2="48" stroke="#ef4444" stroke-width="2.5"/>
+        <line x1="80" y1="8" x2="135" y2="48" stroke="#ef4444" stroke-width="2.5"/>
+
+        <!-- Center vertical T→B -->
+        <line x1="80" y1="8" x2="80" y2="148" stroke="#ef4444" stroke-width="2.5"/>
+        <!-- Left vertical -->
+        <line x1="25" y1="48" x2="25" y2="108" stroke="#ef4444" stroke-width="2.5"/>
+        <!-- Right vertical -->
+        <line x1="135" y1="48" x2="135" y2="108" stroke="#ef4444" stroke-width="2.5"/>
+        <!-- Cross diagonals (NO node at intersection!) -->
+        <line x1="25" y1="48" x2="135" y2="108" stroke="#ef4444" stroke-width="2.5"/>
+        <line x1="135" y1="48" x2="25" y2="108" stroke="#ef4444" stroke-width="2.5"/>
+
+        <!-- Bottom V -->
+        <line x1="25" y1="108" x2="80" y2="148" stroke="#ef4444" stroke-width="2.5"/>
+        <line x1="135" y1="108" x2="80" y2="148" stroke="#ef4444" stroke-width="2.5"/>
+        <!-- Nodes -->
+        <circle cx="80" cy="8" r="4.5" fill="#2d1319" stroke="#ef4444" stroke-width="2"/>
+        <circle cx="25" cy="48" r="4.5" fill="#2d1319" stroke="#ef4444" stroke-width="2"/>
+        <circle cx="135" cy="48" r="4.5" fill="#2d1319" stroke="#ef4444" stroke-width="2"/>
+        <circle cx="25" cy="108" r="4.5" fill="#2d1319" stroke="#ef4444" stroke-width="2"/>
+        <circle cx="135" cy="108" r="4.5" fill="#2d1319" stroke="#ef4444" stroke-width="2"/>
+        <circle cx="80" cy="148" r="4.5" fill="#2d1319" stroke="#ef4444" stroke-width="2"/>
+        <!-- Supports -->
+        <polygon points="25,112 18,124 32,124" fill="none" stroke="#8ecae6" stroke-width="1.5"/>
+        <line x1="16" y1="126" x2="34" y2="126" stroke="#8ecae6" stroke-width="1.5"/>
+        <line x1="18" y1="129" x2="21" y2="126" stroke="#8ecae6" stroke-width="1"/>
+        <line x1="23" y1="129" x2="26" y2="126" stroke="#8ecae6" stroke-width="1"/>
+        <line x1="28" y1="129" x2="31" y2="126" stroke="#8ecae6" stroke-width="1"/>
+        <polygon points="135,112 128,124 142,124" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+        <circle cx="132" cy="128" r="3" fill="none" stroke="#38bdf8" stroke-width="1.2"/>
+        <circle cx="138" cy="128" r="3" fill="none" stroke="#38bdf8" stroke-width="1.2"/>
+        <line x1="127" y1="132" x2="143" y2="132" stroke="#38bdf8" stroke-width="1.2"/>
+      </svg>
+      <p>非簡單桁架亦非複合桁架。需用替代桿法或迴路法求解。</p>
+    </div>
+  </div>
+
+  <!-- Simple Truss Growth Animation Demo -->
+  <div class="stg-wrap" id="stgWrap">
+    <h3>▸ 簡單桁架生長動態示範</h3>
+    <div class="sub">Simple Truss Growth — 從基本三角形出發，每次增加「兩桿一節點」擴大桁架</div>
+    <div class="stg-svg-box">
+      <svg id="stgSvg" viewBox="0 0 720 220"></svg>
+    </div>
+    <div class="stg-ctrl">
+      <button class="stg-btn" id="stgReset" onclick="stgReset()">⟲ 重置</button>
+      <button class="stg-btn" id="stgPrev" onclick="stgPrev()">← 上一步</button>
+      <button class="stg-btn primary" id="stgNext" onclick="stgNext()">下一步 →</button>
+      <button class="stg-btn" id="stgAuto" onclick="stgAutoToggle()">▶ 自動播放</button>
+      <div class="stg-info">
+        <span>節點 <span class="val" id="stgNj">3</span></span>
+        <span>桿件 <span class="val" id="stgNb">3</span></span>
+        <span>2j = b+r → <span class="val" id="stgEq">6 = 6</span></span>
+      </div>
+    </div>
+    <div class="stg-step-label" id="stgLabel">
+      <strong>基本三角形</strong>：3 個節點、3 根桿件 — 這是最基本的穩定結構單元。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">複合桁架三種連接方式 <span class="en">Three Connection Types</span></div>
+    <p style="margin-bottom:14px">由兩個或兩個以上的簡單桁架，以下列方式連接而成：</p>
+
+    <!-- (1) Three bars -->
+    <div style="background:rgba(26,24,20,.5);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:var(--orange);margin-bottom:8px">(1) 三根不相互平行與相交之桿件連結</div>
+      <svg viewBox="0 0 600 220" style="width:100%;max-width:600px;display:block;margin:0 auto 8px">
+        <!--
+          13 nodes (no top-center, no bot-center):
+          A(55,28) B(170,28)          D(430,28) E(545,28)
+          F(55,103) G(170,103)        I(430,103) J(545,103)
+          K(55,178) L(170,178)        N(430,178) O(545,178)
+
+          THREE BARS (purple): B→D(top), G→N(diag↘), I→L(diag↙)
+        -->
+
+        <!-- ═══ LEFT TRUSS ═══ -->
+        <line x1="55" y1="28" x2="170" y2="28" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="55" y1="103" x2="170" y2="103" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="55" y1="178" x2="170" y2="178" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="55" y1="28" x2="55" y2="103" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="55" y1="103" x2="55" y2="178" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="170" y1="28" x2="170" y2="103" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="170" y1="103" x2="170" y2="178" stroke="#f59e0b" stroke-width="2.5"/>
+        <!-- Upper-left single diag: B→F (↙) -->
+        <line x1="170" y1="28" x2="55" y2="103" stroke="#f59e0b" stroke-width="2.5"/>
+        <!-- Lower-left single diag: F→L (↘) -->
+        <line x1="55" y1="103" x2="170" y2="178" stroke="#f59e0b" stroke-width="2.5"/>
+
+        <!-- ═══ RIGHT TRUSS ═══ -->
+        <line x1="430" y1="28" x2="545" y2="28" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="430" y1="103" x2="545" y2="103" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="430" y1="178" x2="545" y2="178" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="430" y1="28" x2="430" y2="103" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="430" y1="103" x2="430" y2="178" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="545" y1="28" x2="545" y2="103" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="545" y1="103" x2="545" y2="178" stroke="#f59e0b" stroke-width="2.5"/>
+        <!-- Upper-right single diag: D→J (↘) -->
+        <line x1="430" y1="28" x2="545" y2="103" stroke="#f59e0b" stroke-width="2.5"/>
+        <!-- Lower-right single diag: J→N (↙) -->
+        <line x1="545" y1="103" x2="430" y2="178" stroke="#f59e0b" stroke-width="2.5"/>
+
+        <!-- ═══ THREE CONNECTING BARS (purple dashed) ═══ -->
+        <line x1="170" y1="28" x2="430" y2="28" stroke="#8b5cf6" stroke-width="3" stroke-dasharray="7 4"/>
+        <line x1="170" y1="103" x2="430" y2="178" stroke="#8b5cf6" stroke-width="3" stroke-dasharray="7 4"/>
+        <line x1="430" y1="103" x2="170" y2="178" stroke="#8b5cf6" stroke-width="3" stroke-dasharray="7 4"/>
+
+        <!-- ═══ NODES ═══ -->
+        <circle cx="55" cy="28" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="170" cy="28" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="430" cy="28" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="545" cy="28" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="55" cy="103" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="170" cy="103" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="430" cy="103" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="545" cy="103" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="55" cy="178" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="170" cy="178" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="430" cy="178" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="545" cy="178" r="5.5" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+
+        <!-- ═══ Supports ═══ -->
+        <polygon points="55,182 45,198 65,198" fill="none" stroke="#8ecae6" stroke-width="1.8"/>
+        <line x1="42" y1="200" x2="68" y2="200" stroke="#8ecae6" stroke-width="1.8"/>
+        <line x1="45" y1="204" x2="49" y2="200" stroke="#8ecae6" stroke-width="1.2"/>
+        <line x1="51" y1="204" x2="55" y2="200" stroke="#8ecae6" stroke-width="1.2"/>
+        <line x1="57" y1="204" x2="61" y2="200" stroke="#8ecae6" stroke-width="1.2"/>
+        <line x1="63" y1="204" x2="67" y2="200" stroke="#8ecae6" stroke-width="1.2"/>
+        <polygon points="545,182 535,196 555,196" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="540" cy="201" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+        <circle cx="550" cy="201" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+        <line x1="533" y1="206" x2="557" y2="206" stroke="#38bdf8" stroke-width="1.5"/>
+
+        <!-- Label -->
+        <text x="300" y="110" text-anchor="middle" font-size="12" fill="#c4b5fd" font-family="JetBrains Mono" font-weight="600">三桿</text>
+        <text x="300" y="216" text-anchor="middle" font-size="14" fill="#64748b" font-family="JetBrains Mono" font-weight="500">(1)</text>
+      </svg>
+    </div>
+
+    <!-- (2) One hinge + one bar -->
+    <div style="background:rgba(26,24,20,.5);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:var(--orange);margin-bottom:8px">(2) 一鉸＋一桿</div>
+      <svg viewBox="0 0 500 250" style="width:100%;max-width:500px;display:block;margin:0 auto 8px">
+        <!--
+          9 nodes, 15 members. b+r = 15+3 = 18 = 2(9) ✓
+          T(250,25)  top apex = HINGE (一鉸)
+          ML1(155,118) ML2(210,118) MR1(290,118) MR2(345,118)
+          BL(60,210) B2(180,210) B3(320,210) BR(440,210)
+          ML1 collinear with T-BL, MR2 collinear with T-BR
+          一桿 = B2-B3
+        -->
+
+        <!-- ═══ MEMBERS ═══ -->
+        <!-- Outer left edge: T → ML1 → BL (collinear) -->
+        <line x1="250" y1="25" x2="155" y2="118" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="155" y1="118" x2="60" y2="210" stroke="#f59e0b" stroke-width="2.8"/>
+        <!-- Outer right edge: T → MR2 → BR (collinear) -->
+        <line x1="250" y1="25" x2="345" y2="118" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="345" y1="118" x2="440" y2="210" stroke="#f59e0b" stroke-width="2.8"/>
+        <!-- Inner fan: T → ML2, T → MR1 -->
+        <line x1="250" y1="25" x2="210" y2="118" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="250" y1="25" x2="290" y2="118" stroke="#f59e0b" stroke-width="2.8"/>
+
+        <!-- Mid-row horizontal bars (two separate, gap in middle!) -->
+        <line x1="155" y1="118" x2="210" y2="118" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="290" y1="118" x2="345" y2="118" stroke="#f59e0b" stroke-width="2.8"/>
+
+        <!-- Left mid → bottom: inverted V to B2 -->
+        <line x1="155" y1="118" x2="180" y2="210" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="210" y1="118" x2="180" y2="210" stroke="#f59e0b" stroke-width="2.8"/>
+        <!-- Right mid → bottom: inverted V to B3 -->
+        <line x1="290" y1="118" x2="320" y2="210" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="345" y1="118" x2="320" y2="210" stroke="#f59e0b" stroke-width="2.8"/>
+
+        <!-- Bottom chord -->
+        <line x1="60" y1="210" x2="180" y2="210" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="320" y1="210" x2="440" y2="210" stroke="#f59e0b" stroke-width="2.8"/>
+        <!-- 一桿: B2–B3 (purple dashed connecting bar) -->
+        <line x1="180" y1="210" x2="320" y2="210" stroke="#8b5cf6" stroke-width="3.5" stroke-dasharray="8 4"/>
+
+        <!-- ═══ NODES ═══ -->
+        <!-- Mid row -->
+        <circle cx="155" cy="118" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="210" cy="118" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="290" cy="118" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="345" cy="118" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <!-- Bottom row -->
+        <circle cx="60" cy="210" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="180" cy="210" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="320" cy="210" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="440" cy="210" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <!-- Top apex = HINGE (purple, larger) -->
+        <circle cx="250" cy="25" r="8" fill="#2d1b4e" stroke="#8b5cf6" stroke-width="2.5"/>
+
+        <!-- ═══ Supports ═══ -->
+        <!-- Pin at BL(60,210) -->
+        <polygon points="60,214 50,230 70,230" fill="none" stroke="#8ecae6" stroke-width="1.8"/>
+        <line x1="47" y1="232" x2="73" y2="232" stroke="#8ecae6" stroke-width="1.8"/>
+        <line x1="50" y1="236" x2="54" y2="232" stroke="#8ecae6" stroke-width="1.2"/>
+        <line x1="56" y1="236" x2="60" y2="232" stroke="#8ecae6" stroke-width="1.2"/>
+        <line x1="62" y1="236" x2="66" y2="232" stroke="#8ecae6" stroke-width="1.2"/>
+        <line x1="68" y1="236" x2="72" y2="232" stroke="#8ecae6" stroke-width="1.2"/>
+        <!-- Roller at BR(440,210) -->
+        <polygon points="440,214 430,228 450,228" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="435" cy="233" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+        <circle cx="445" cy="233" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+        <line x1="428" y1="238" x2="452" y2="238" stroke="#38bdf8" stroke-width="1.5"/>
+
+        <!-- ═══ Labels ═══ -->
+        <text x="268" y="22" text-anchor="start" font-size="12" fill="#c4b5fd" font-family="JetBrains Mono" font-weight="600">一鉸</text>
+        <text x="250" y="203" text-anchor="middle" font-size="12" fill="#c4b5fd" font-family="JetBrains Mono" font-weight="600">一桿</text>
+        <text x="250" y="248" text-anchor="middle" font-size="14" fill="#64748b" font-family="JetBrains Mono" font-weight="500">(2)</text>
+      </svg>
+    </div>
+
+    <!-- (3) Three hinges -->
+    <div style="background:rgba(26,24,20,.5);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:13px;font-weight:600;color:var(--orange);margin-bottom:8px">(3) 三鉸</div>
+      <svg viewBox="0 0 500 270" style="width:100%;max-width:500px;display:block;margin:0 auto 8px">
+        <!--
+          10 nodes, 4 rows. Traced from textbook:
+          T(250,22)                         apex
+          UL(85,88)        UR(415,88)       upper row
+          ML1(65,158) ML2(195,158) MR1(305,158) MR2(435,158) mid row
+          BL(65,228) BC(250,228) BR(435,228)  bottom row
+          三鉸 = T, ML2, MR1
+
+          Upper panel: T→UL, T→UR, UL—UR bar
+            UL→ML1, UL→ML2, UR→MR1, UR→MR2 (V shapes)
+            Cross diags: UR→ML2, UL→MR1 (big X)
+            Mid bars: ML1—ML2, MR1—MR2 (gap between ML2 & MR1)
+          Lower left: ML1→BL(vert), ML2→BL(diag), ML2→BC(diag), BL—BC(bar)
+          Lower right: MR2→BR(vert), MR1→BR(diag), MR1→BC(diag), BC—BR(bar)
+        -->
+
+        <!-- ═══ UPPER TRIANGLE ═══ -->
+        <line x1="250" y1="22" x2="85" y2="88" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="250" y1="22" x2="415" y2="88" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="85" y1="88" x2="415" y2="88" stroke="#f59e0b" stroke-width="2.8"/>
+
+        <!-- ═══ UPPER → MID: V shapes ═══ -->
+        <line x1="85" y1="88" x2="85" y2="158" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="85" y1="88" x2="195" y2="158" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="415" y1="88" x2="415" y2="158" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="415" y1="88" x2="305" y2="158" stroke="#f59e0b" stroke-width="2.8"/>
+
+
+        <!-- ═══ MID HORIZONTALS (gap in center) ═══ -->
+        <line x1="85" y1="158" x2="195" y2="158" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="305" y1="158" x2="415" y2="158" stroke="#f59e0b" stroke-width="2.8"/>
+
+        <!-- ═══ LOWER LEFT PANEL ═══ -->
+        <line x1="85" y1="158" x2="85" y2="228" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="195" y1="158" x2="85" y2="228" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="195" y1="158" x2="250" y2="228" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="85" y1="228" x2="250" y2="228" stroke="#f59e0b" stroke-width="2.8"/>
+
+        <!-- ═══ LOWER RIGHT PANEL ═══ -->
+        <line x1="415" y1="158" x2="415" y2="228" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="305" y1="158" x2="415" y2="228" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="305" y1="158" x2="250" y2="228" stroke="#f59e0b" stroke-width="2.8"/>
+        <line x1="250" y1="228" x2="415" y2="228" stroke="#f59e0b" stroke-width="2.8"/>
+
+        <!-- ═══ NODES ═══ -->
+        <circle cx="85" cy="88" r="8" fill="#2d1b4e" stroke="#8b5cf6" stroke-width="2.5"/>
+        <circle cx="415" cy="88" r="8" fill="#2d1b4e" stroke="#8b5cf6" stroke-width="2.5"/>
+        <circle cx="85" cy="158" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="415" cy="158" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="85" cy="228" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="250" cy="228" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="415" cy="228" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <!-- THREE HINGES (purple) -->
+        <circle cx="250" cy="22" r="8" fill="#2d1b4e" stroke="#8b5cf6" stroke-width="2.5"/>
+        <circle cx="195" cy="158" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="305" cy="158" r="6" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+
+        <!-- ═══ Supports ═══ -->
+        <polygon points="85,232 75,248 95,248" fill="none" stroke="#8ecae6" stroke-width="1.8"/>
+        <line x1="72" y1="250" x2="98" y2="250" stroke="#8ecae6" stroke-width="1.8"/>
+        <line x1="75" y1="254" x2="79" y2="250" stroke="#8ecae6" stroke-width="1.2"/>
+        <line x1="81" y1="254" x2="85" y2="250" stroke="#8ecae6" stroke-width="1.2"/>
+        <line x1="87" y1="254" x2="91" y2="250" stroke="#8ecae6" stroke-width="1.2"/>
+        <line x1="93" y1="254" x2="97" y2="250" stroke="#8ecae6" stroke-width="1.2"/>
+        <polygon points="415,232 405,246 425,246" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="410" cy="251" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+        <circle cx="420" cy="251" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+        <line x1="403" y1="256" x2="427" y2="256" stroke="#38bdf8" stroke-width="1.5"/>
+
+        <!-- ═══ Labels ═══ -->
+        <text x="268" y="20" text-anchor="start" font-size="11" fill="#c4b5fd" font-family="JetBrains Mono" font-weight="600">鉸₁</text>
+        <text x="72" y="82" text-anchor="end" font-size="11" fill="#c4b5fd" font-family="JetBrains Mono" font-weight="600">鉸₂</text>
+        <text x="428" y="82" text-anchor="start" font-size="11" fill="#c4b5fd" font-family="JetBrains Mono" font-weight="600">鉸₃</text>
+        <text x="250" y="264" text-anchor="middle" font-size="14" fill="#64748b" font-family="JetBrains Mono" font-weight="500">(3)</text>
+      </svg>
+    </div>
+
+    <p style="margin-top:10px;color:var(--text3)">本教學的 Warren Truss 屬於<strong style="color:var(--text)">簡單桁架</strong>，可直接使用節點法和剖面法求解。</p>
+  </div>
+</div>
+
+<!-- ════════ 四、零桿判別 ════════ -->
+<div class="section" id="s4">
+  <div class="section-tag">UNIT 04</div>
+  <div class="section-title">四、零桿判別</div>
+  <div class="section-sub">Zero-Force Member Identification</div>
+
+  <div class="zf-grid">
+    <div class="zf-card">
+      <h4 style="color:var(--orange)">情況一：未載重兩桿節點</h4>
+      <svg width="200" height="140" viewBox="0 0 200 140">
+        <defs><filter id="g2"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        <!-- Two members at angle, not collinear -->
+        <line x1="30" y1="110" x2="100" y2="50" stroke="#f59e0b" stroke-width="2.5"/>
+        <line x1="100" y1="50" x2="170" y2="100" stroke="#f59e0b" stroke-width="2.5"/>
+        <!-- Node -->
+        <circle cx="100" cy="50" r="10" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity=".3" filter="url(#g2)"/>
+        <circle cx="100" cy="50" r="8" fill="#1a1207" stroke="#f59e0b" stroke-width="2"/>
+        <!-- Labels -->
+        <text x="55" y="74" font-size="11" fill="#f59e0b" font-family="JetBrains Mono" font-weight="500">F₁=0</text>
+        <text x="130" y="68" font-size="11" fill="#f59e0b" font-family="JetBrains Mono" font-weight="500">F₂=0</text>
+        <!-- No external load indicator -->
+        <text x="100" y="30" text-anchor="middle" font-size="9" fill="#64748b" font-family="JetBrains Mono">無外力</text>
+        <line x1="85" y1="33" x2="115" y2="33" stroke="#475569" stroke-width="1" stroke-dasharray="3 2"/>
+      </svg>
+      <p>兩桿件交於<strong>未載重</strong>節點，且<strong>不共線</strong>。<br>→ 無法同時平衡 x, y 方向<br>→ <strong style="color:var(--orange)">兩桿件力均為零</strong></p>
+    </div>
+    <div class="zf-card">
+      <h4 style="color:var(--teal)">情況二：共線桿＋斜桿</h4>
+      <svg width="200" height="140" viewBox="0 0 200 140">
+        <!-- Two collinear + one at angle -->
+        <line x1="20" y1="80" x2="100" y2="80" stroke="#2dd4bf" stroke-width="2.5"/>
+        <line x1="100" y1="80" x2="180" y2="80" stroke="#2dd4bf" stroke-width="2.5"/>
+        <line x1="100" y1="80" x2="130" y2="30" stroke="#f59e0b" stroke-width="2.5"/>
+        <!-- Node -->
+        <circle cx="100" cy="80" r="8" fill="#0a1a17" stroke="#2dd4bf" stroke-width="2"/>
+        <!-- Labels -->
+        <text x="50" y="96" text-anchor="middle" font-size="10" fill="#2dd4bf" font-family="JetBrains Mono" font-weight="500">F₁</text>
+        <text x="150" y="96" text-anchor="middle" font-size="10" fill="#2dd4bf" font-family="JetBrains Mono" font-weight="500">F₂</text>
+        <text x="128" y="45" font-size="11" fill="#f59e0b" font-family="JetBrains Mono" font-weight="500">F₃=0</text>
+        <!-- No load -->
+        <text x="100" y="120" text-anchor="middle" font-size="9" fill="#64748b" font-family="JetBrains Mono">無外力</text>
+      </svg>
+      <p>兩桿件<strong>共線</strong>，第三桿有 y 方向分力。<br>→ 僅能平衡 x 方向<br>→ <strong style="color:var(--orange)">有 y 分力的桿件力為零</strong><br>→ 且 F₁ = F₂</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">判別要點 <span class="en">Key Points</span></div>
+    <ul>
+      <li>零桿判別僅適用於<strong>該節點無外力作用</strong>的情況</li>
+      <li>若節點有外力或支承反力，即使只有兩桿也不一定是零桿</li>
+      <li>先找出零桿可大幅簡化後續計算，是重要的解題技巧</li>
+      <li>零桿雖然內力為零，但在結構中仍有維持<strong>穩定性</strong>的功能，不能隨意移除</li>
+    </ul>
+  </div>
+
+  <!-- Zero-Force Member Interactive Demo -->
+  <div class="stg-wrap" id="zfDemo">
+    <h3>▸ 零桿判別互動範例</h3>
+    <div class="sub">點擊「下一步」逐步找出零力桿件 — 觀察判別規則如何套用</div>
+
+    <!-- Example selector tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <button class="stg-btn primary" id="zfTab0" onclick="zfSelectEx(0)">範例一</button>
+      <button class="stg-btn" id="zfTab1" onclick="zfSelectEx(1)">範例二</button>
+      <button class="stg-btn" id="zfTab2" onclick="zfSelectEx(2)">範例三</button>
+    </div>
+
+    <div class="stg-svg-box">
+      <svg id="zfSvg" viewBox="0 0 600 240" style="width:100%"></svg>
+    </div>
+
+    <div class="stg-ctrl">
+      <button class="stg-btn" onclick="zfReset()">⟲ 重置</button>
+      <button class="stg-btn" id="zfPrev" onclick="zfPrev()" disabled>← 上一步</button>
+      <button class="stg-btn primary" id="zfNextBtn" onclick="zfNext()">找零桿 →</button>
+      <div class="stg-info">
+        <span>已找到 <span class="val" id="zfCount">0</span> 根零桿</span>
+      </div>
+    </div>
+    <div class="stg-step-label" id="zfLabel">
+      <strong>範例一</strong>：點擊「找零桿」開始逐步判別。
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 五、節點法 ════════ -->
+<div class="section" id="s5">
+  <div class="section-tag">UNIT 05</div>
+  <div class="section-title">五、節點法互動分析</div>
+  <div class="section-sub">Method of Joints Interactive Analysis — 點擊節點或使用導覽按鈕逐步分析</div>
+  <div class="svg-panel">
+    <svg id="jSvg" viewBox="0 0 720 300"></svg>
+    <button class="fbd-btn" id="jFbdBtn" style="display:none" onclick="toggleJFBD()">◇ 顯示 FBD</button>
+  </div>
+  <div class="nav-bar" id="jNav"></div>
+  <div class="analysis-panel" id="jPanel"></div>
+  <div class="legend" id="jLegend"></div>
+</div>
+
+<!-- ════════ 六、剖面法 ════════ -->
+<div class="section" id="s6">
+  <div class="section-tag">UNIT 06</div>
+  <div class="section-title">六、剖面法互動分析</div>
+  <div class="section-sub">Method of Sections Interactive Analysis — 選擇截面，逐步觀看力矩點法求解過程</div>
+  <div class="svg-panel">
+    <svg id="sSvg" viewBox="0 0 720 300"></svg>
+  </div>
+  <div class="nav-bar" id="sNav"></div>
+  <div class="sub-dots" id="sDots"></div>
+  <div class="analysis-panel" id="sPanel"></div>
+  <div class="legend" id="sLegend"></div>
+</div>
+
+<!-- ════════ 七、方法比較 ════════ -->
+<div class="section" id="s7">
+  <div class="section-tag">UNIT 07</div>
+  <div class="section-title">方法比較</div>
+  <div class="section-sub">Comparison — 節點法 vs 剖面法</div>
+  <div class="svg-panel">
+    <svg id="cSvg" viewBox="0 0 720 300"></svg>
+  </div>
+  <div class="analysis-panel" id="cPanel"></div>
+</div>
+
+<!-- ════════ 八、進階範例：合併分析 ════════ -->
+<div class="section" id="s8">
+  <div class="section-tag">UNIT 08</div>
+  <div class="section-title">八、進階範例：節點法＋剖面法合併分析</div>
+  <div class="section-sub">Advanced Example — 8 節點 Pratt 桁架，展示如何策略性搭配兩種方法</div>
+
+  <div class="card">
+    <div class="card-title">分析策略 <span class="en">Strategy</span></div>
+    <p style="line-height:1.8">面對較大桁架時，若只需特定桿件力，<strong style="color:var(--orange)">剖面法</strong>可直接求解；若需全部桿件力，先用剖面法切入中段，再從兩端以<strong style="color:var(--blue)">節點法</strong>逐步推進，最後用多餘方程式驗算。</p>
+  </div>
+
+  <div class="stg-wrap" id="advDemo">
+    <h3 style="font-size:16px">▸ 8 節點 Pratt 桁架 — 逐步合併分析</h3>
+    <div class="sub" style="font-size:13px">先求反力 → 剖面法求中段桿件 → 節點法求其餘桿件 → 驗算</div>
+    <div class="stg-svg-box">
+      <svg id="advSvg" viewBox="0 0 700 320" style="width:100%"></svg>
+    </div>
+    <div class="stg-ctrl">
+      <button class="stg-btn" onclick="advReset()">⟲ 重置</button>
+      <button class="stg-btn" id="advPrev" onclick="advPrev()" disabled>← 上一步</button>
+      <button class="stg-btn primary" id="advNextBtn" onclick="advNext()">下一步 →</button>
+      <div class="stg-info">
+        <span>Step <span class="val" id="advStepNum">0</span>/<span id="advStepTotal">7</span></span>
+      </div>
+    </div>
+    <div id="advEqPanel" style="margin-top:14px"></div>
+    <div class="stg-step-label" id="advLabel" style="min-height:60px">
+      <strong>Pratt 桁架</strong>：8 節點、13 桿件，載重 P = 12 kN 作用於節點 E。點擊「下一步」開始分析。
+    </div>
+  </div>
+</div>
+
+<div class="footer">結構學 — 靜定桁架分析互動教學 © 2025</div>
+</div><!-- .main -->
+</div><!-- .layout -->
+
+<script>
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
+let currentSection='s1';
+const navItems=document.querySelectorAll('.nav-item');
+navItems.forEach(item=>{
+  item.addEventListener('click',()=>{
+    const sec=item.dataset.sec;
+    navItems.forEach(n=>n.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(sec).classList.add('active');
+    currentSection=sec;
+    document.getElementById('sidebar').classList.remove('open');
+    if(sec==='s3') stgDraw();
+    if(sec==='s4') zfInit();
+    if(sec==='s5') renderJoints();
+    if(sec==='s6') renderSections();
+    if(sec==='s7') renderCompare();
+    if(sec==='s8') advInit();
+    window.scrollTo(0,0);
+  });
+});
+
+// ═══════════════════════════════════════
+//  SHARED TRUSS DATA
+// ═══════════════════════════════════════
+const NODES={A:{x:0,y:0,label:"A",support:"pin"},B:{x:1.5,y:2,label:"B"},C:{x:3,y:0,label:"C",load:-10},D:{x:4.5,y:2,label:"D"},E:{x:6,y:0,label:"E",support:"roller"}};
+const MEMBERS=[{id:"AB",from:"A",to:"B",force:-6.25},{id:"AC",from:"A",to:"C",force:3.75},{id:"BC",from:"B",to:"C",force:6.25},{id:"BD",from:"B",to:"D",force:-7.5},{id:"CD",from:"C",to:"D",force:6.25},{id:"CE",from:"C",to:"E",force:3.75},{id:"DE",from:"D",to:"E",force:-6.25}];
+const REACTIONS={A:{Ax:0,Ay:5},E:{Ey:5}};
+
+// ═══════════════════════════════════════
+//  SVG UTILS
+// ═══════════════════════════════════════
+const SC=88,OX=90,OY=50,SW=720,SH=300,NS="http://www.w3.org/2000/svg";
+function toS(x,y){return{x:OX+x*SC,y:SH-OY-y*SC}}
+function mk(t,a,p){const e=document.createElementNS(NS,t);if(a)Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));if(p)p.appendChild(e);return e}
+function arr(p,x1,y1,x2,y2,col,sz){
+  sz=sz||8;const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy);if(!l)return;
+  const ux=dx/l,uy=dy/l,px=-uy,py=ux;
+  mk("line",{x1,y1,x2,y2,stroke:col,"stroke-width":2},p);
+  mk("polygon",{points:`${x2},${y2} ${x2-ux*sz+px*sz*.4},${y2-uy*sz+py*sz*.4} ${x2-ux*sz-px*sz*.4},${y2-uy*sz-py*sz*.4}`,fill:col},p);
+}
+
+function drawBase(svg,showR){
+  const pa=toS(0,0),pe=toS(6,0);
+  const pg=mk("g",{},svg);
+  mk("polygon",{points:`${pa.x},${pa.y} ${pa.x-14},${pa.y+20} ${pa.x+14},${pa.y+20}`,fill:"none",stroke:"#8ecae6","stroke-width":2},pg);
+  mk("line",{x1:pa.x-18,y1:pa.y+22,x2:pa.x+18,y2:pa.y+22,stroke:"#8ecae6","stroke-width":2},pg);
+  [-12,-4,4,12].forEach(d=>mk("line",{x1:pa.x+d-3,y1:pa.y+28,x2:pa.x+d+3,y2:pa.y+22,stroke:"#8ecae6","stroke-width":1.5},pg));
+  const rg=mk("g",{},svg);
+  mk("polygon",{points:`${pe.x},${pe.y} ${pe.x-14},${pe.y+18} ${pe.x+14},${pe.y+18}`,fill:"none",stroke:"#8ecae6","stroke-width":2},rg);
+  mk("circle",{cx:pe.x-8,cy:pe.y+23,r:4,fill:"none",stroke:"#8ecae6","stroke-width":1.5},rg);
+  mk("circle",{cx:pe.x+8,cy:pe.y+23,r:4,fill:"none",stroke:"#8ecae6","stroke-width":1.5},rg);
+  mk("line",{x1:pe.x-18,y1:pe.y+29,x2:pe.x+18,y2:pe.y+29,stroke:"#8ecae6","stroke-width":2},rg);
+  const pc=toS(3,0);
+  arr(svg,pc.x,pc.y-55,pc.x,pc.y-10,"#f59e0b",9);
+  mk("text",{x:pc.x+12,y:pc.y-40,"font-size":12,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":500},svg).textContent="P = 10 kN";
+  if(showR){
+    arr(svg,pa.x,pa.y+50,pa.x,pa.y+8,"#8ecae6");
+    mk("text",{x:pa.x-44,y:pa.y+55,"font-size":10,"font-family":"JetBrains Mono",fill:"#8ecae6"},svg).textContent="Ay=5kN";
+    arr(svg,pe.x,pe.y+50,pe.x,pe.y+8,"#8ecae6");
+    mk("text",{x:pe.x+10,y:pe.y+55,"font-size":10,"font-family":"JetBrains Mono",fill:"#8ecae6"},svg).textContent="Ey=5kN";
+  }
+}
+
+function drawNodes(svg,opts){
+  Object.entries(NODES).forEach(([key,node])=>{
+    const pos=toS(node.x,node.y);
+    const isMoment=opts.momentPt===key;
+    const isActive=opts.activeNode===key;
+    const dimmed=opts.dimNodes&&!opts.dimNodes.includes(key);
+    const solved=opts.solvedNodes&&opts.solvedNodes.includes(key);
+    const g=mk("g",{class:opts.clickable?"node-group":""},svg);
+    if(opts.clickable) mk("circle",{cx:pos.x,cy:pos.y,r:28,class:"hit-area"},g);
+    if(isActive) mk("circle",{cx:pos.x,cy:pos.y,r:20,fill:"none",stroke:"#38bdf8","stroke-width":1.5,class:"pulse-ring"},g);
+    if(isMoment){
+      mk("circle",{cx:pos.x,cy:pos.y,r:18,fill:"none",stroke:"#8b5cf6","stroke-width":1.5,class:"moment-pulse"},svg);
+      mk("circle",{cx:pos.x,cy:pos.y,r:22,fill:"none",stroke:"#8b5cf6","stroke-width":2,opacity:.25,filter:"url(#glowO)"},svg);
+      mk("text",{x:pos.x,y:pos.y-26,"text-anchor":"middle","font-size":11,"font-family":"JetBrains Mono",fill:"#8b5cf6","font-weight":700},svg).textContent="ΣM_"+key;
+    }
+    mk("circle",{
+      cx:pos.x,cy:pos.y,r:isMoment?14:isActive?14:11,
+      fill:isMoment?"#2d1b4e":isActive?"#2a2418":"#1a1207",
+      stroke:isMoment?"#8b5cf6":isActive?"#38bdf8":solved?"#60a5fa":"#334155",
+      "stroke-width":isActive||isMoment?2.5:2,
+      filter:isActive?"url(#glow)":isMoment?"url(#glowO)":"",
+      opacity:dimmed?.35:1,class:"node-main",
+    },g);
+    mk("text",{
+      x:pos.x,y:pos.y+4.5,"text-anchor":"middle",
+      "font-size":isActive||isMoment?13:11,"font-weight":isActive||isMoment?700:600,
+      "font-family":"JetBrains Mono",
+      fill:isMoment?"#c4b5fd":isActive?"#38bdf8":solved?"#93c5fd":"#64748b",
+      opacity:dimmed?.35:1,style:"pointer-events:none",
+    },g).textContent=node.label;
+    if(opts.clickable&&opts.onClick) g.addEventListener("click",ev=>{ev.stopPropagation();opts.onClick(key)});
+  });
+}
+
+function svgDefs(svg){
+  const d=mk("defs",{},svg);
+  d.innerHTML=`<pattern id="grid" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M 18 0 L 0 0 0 18" fill="none" stroke="rgba(100,116,139,0.04)" stroke-width="0.5"/></pattern><filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="glowO"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  mk("rect",{width:SW,height:SH,fill:"url(#grid)"},svg);
+}
+
+// ═══════════════════════════════════════
+//  ZERO FORCE INTERACTIVE DEMO (Section 4)
+// ═══════════════════════════════════════
+const ZF_EXAMPLES=[
+  {// Example 1: Case 1 — two-member unloaded joint
+    title:"範例一：情況一 — 兩桿未載重節點",
+    nodes:{
+      A:{x:80,y:185,label:"A",sup:"pin"},
+      B:{x:200,y:185,label:"B"},
+      C:{x:320,y:185,label:"C"},
+      D:{x:440,y:185,label:"D",sup:"roller"},
+      E:{x:160,y:85,label:"E"},
+      F:{x:360,y:85,label:"F"},
+      G:{x:260,y:18,label:"G"}
+    },
+    members:[
+      {f:"A",t:"B"},{f:"B",t:"C"},{f:"C",t:"D"},
+      {f:"A",t:"E"},{f:"B",t:"E"},{f:"B",t:"F"},{f:"C",t:"F"},{f:"D",t:"F"},
+      {f:"E",t:"F"},{f:"E",t:"G"},{f:"F",t:"G"}
+    ],
+    load:{node:"B",dx:0,dy:-1,label:"P"},
+    steps:[
+      {
+        check:"G",
+        rule:"情況一",
+        zeroMembers:["E-G","F-G"],
+        desc:"<strong>節點 G</strong>：只有 2 根桿件（EG、FG），<strong>無外力</strong>作用，且不共線。<br>→ 情況一 → <strong style='color:#ef4444'>EG = 0、FG = 0</strong>"
+      }
+    ]
+  },
+  {// Example 2: Case 2 — collinear + perpendicular
+    title:"範例二：情況二 — 共線桿＋垂直桿",
+    nodes:{
+      A:{x:100,y:55,label:"A"},
+      B:{x:280,y:55,label:"B"},
+      C:{x:460,y:55,label:"C"},
+      D:{x:100,y:185,label:"D",sup:"pin"},
+      E:{x:280,y:185,label:"E"},
+      F:{x:460,y:185,label:"F",sup:"roller"}
+    },
+    members:[
+      {f:"A",t:"B"},{f:"B",t:"C"},
+      {f:"D",t:"E"},{f:"E",t:"F"},
+      {f:"A",t:"D"},{f:"C",t:"F"},
+      {f:"A",t:"E"},{f:"B",t:"E"},{f:"C",t:"E"}
+    ],
+    load:{node:"E",dx:0,dy:-1,label:"P"},
+    steps:[
+      {
+        check:"B",
+        rule:"情況二",
+        zeroMembers:["B-E"],
+        desc:"<strong>節點 B</strong>：AB、BC 共線（水平），BE 有垂直分量，<strong>無外力</strong>。<br>→ 情況二 → <strong style='color:#ef4444'>BE = 0</strong>，且 F<sub>AB</sub> = F<sub>BC</sub>"
+      },
+      {
+        check:"F",
+        rule:"情況二",
+        zeroMembers:["E-F"],
+        desc:"<strong>節點 F</strong>：滾支承 = 一根垂直桿，與 CF 共線（皆垂直），EF（水平）為非共線桿。<br>→ 情況二 → <strong style='color:#ef4444'>EF = 0</strong>，且 F<sub>CF</sub> = 滾支反力"
+      }
+    ]
+  },
+    {// Example 3: Cascade — Case 2 then Case 1
+    title:"範例三：連鎖判別 — 先情況二再情況一",
+    nodes:{
+      A:{x:80,y:105,label:"A"},
+      B:{x:440,y:105,label:"B"},
+      C:{x:260,y:105,label:"C"},
+      D:{x:260,y:20,label:"D"},
+      E:{x:80,y:200,label:"E",sup:"pin"},
+      F:{x:440,y:200,label:"F",sup:"roller"},
+      G:{x:260,y:200,label:"G"}
+    },
+    members:[
+      {f:"A",t:"C"},{f:"C",t:"B"},{f:"C",t:"D"},
+      {f:"A",t:"D"},{f:"B",t:"D"},
+      {f:"A",t:"E"},{f:"B",t:"F"},
+      {f:"E",t:"G"},{f:"G",t:"F"},
+      {f:"A",t:"G"},{f:"B",t:"G"}
+    ],
+    load:{node:"G",dx:0,dy:-1,label:"P"},
+    steps:[
+      {
+        check:"C",
+        rule:"情況二",
+        zeroMembers:["C-D"],
+        desc:"<strong>節點 C</strong>：AC、CB 共線（水平），CD 有垂直分量，<strong>無外力</strong>。<br>→ 情況二 → <strong style='color:#ef4444'>CD = 0</strong>，且 F<sub>AC</sub> = F<sub>CB</sub>"
+      },
+      {
+        check:"D",
+        rule:"情況一",
+        zeroMembers:["A-D","B-D"],
+        desc:"<strong>節點 D</strong>：CD 已為零桿，僅剩 AD、BD 兩桿，<strong>無外力</strong>，不共線。<br>→ 情況一 → <strong style='color:#ef4444'>AD = 0、BD = 0</strong>"
+      },
+      {
+        check:"F",
+        rule:"情況二",
+        zeroMembers:["F-G"],
+        desc:"<strong>節點 F</strong>：滾支承 = 一根垂直桿，與 BF 共線（皆垂直），GF（水平）為非共線桿。<br>→ 情況二 → <strong style='color:#ef4444'>GF = 0</strong>，且 F<sub>BF</sub> = 滾支反力"
+      }
+    ]
+  }
+];
+
+let zfCurEx=0, zfCurStep=-1;
+function mkey(a,b){return [a,b].sort().join("-");}
+function zfInit(){zfSelectEx(0);}
+function zfSelectEx(idx){
+  zfCurEx=idx;zfCurStep=-1;
+  document.querySelectorAll("[id^=zfTab]").forEach((t,i)=>{
+    t.className=i===idx?"stg-btn primary":"stg-btn";
+  });
+  zfDraw();
+}
+
+function zfDraw(){
+  const svg=document.getElementById("zfSvg");if(!svg)return;
+  svg.innerHTML="";
+  const ex=ZF_EXAMPLES[zfCurEx];
+  const d=mk("defs",{},svg);
+  d.innerHTML='<pattern id="zfGrid" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M 18 0 L 0 0 0 18" fill="none" stroke="rgba(100,116,139,0.04)" stroke-width="0.5"/></pattern><filter id="zfGlow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  mk("rect",{width:600,height:240,fill:"url(#zfGrid)"},svg);
+  const zeroSet=new Set();
+  for(let i=0;i<=zfCurStep&&i<ex.steps.length;i++){
+    ex.steps[i].zeroMembers.forEach(m=>zeroSet.add(m));
+  }
+  // Members
+  ex.members.forEach(m=>{
+    const fn=ex.nodes[m.f], tn=ex.nodes[m.t];
+    const key=mkey(m.f,m.t);
+    const isZero=zeroSet.has(key);
+    const isNew=zfCurStep>=0&&zfCurStep<ex.steps.length&&ex.steps[zfCurStep].zeroMembers.includes(key);
+    let col="#475569",sw=2.8,op=1,da="";
+    if(isZero){col="#ef4444";sw=2.5;op=0.3;da="6 4";if(isNew){op=0.7;sw=3.5;}}
+    const line=mk("line",{x1:fn.x,y1:fn.y,x2:tn.x,y2:tn.y,stroke:col,"stroke-width":sw,opacity:op,"stroke-linecap":"round"},svg);
+    if(da)line.setAttribute("stroke-dasharray",da);
+    if(isNew){
+      line.setAttribute("filter","url(#zfGlow)");
+      const mx=(fn.x+tn.x)/2,my=(fn.y+tn.y)/2;
+      const dx=tn.x-fn.x,dy=tn.y-fn.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+      const nx=-dy/len*16,ny=dx/len*16;
+      mk("text",{x:mx+nx,y:my+ny+5,"text-anchor":"middle","font-size":14,"font-weight":700,"font-family":"JetBrains Mono",fill:"#ef4444"},svg).textContent="= 0";
+    }
+  });
+  // Load arrow
+  if(ex.load){
+    const ln=ex.nodes[ex.load.node];
+    arr(svg,ln.x,ln.y-55,ln.x,ln.y-12,"#f59e0b",8);
+    mk("text",{x:ln.x+14,y:ln.y-42,"font-size":14,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":600},svg).textContent=ex.load.label;
+  }
+  // Supports
+  Object.values(ex.nodes).forEach(n=>{
+    if(n.sup==="pin"){
+      mk("polygon",{points:`${n.x},${n.y+5} ${n.x-11},${n.y+20} ${n.x+11},${n.y+20}`,fill:"none",stroke:"#8ecae6","stroke-width":2},svg);
+      mk("line",{x1:n.x-14,y1:n.y+22,x2:n.x+14,y2:n.y+22,stroke:"#8ecae6","stroke-width":2},svg);
+      for(let i=0;i<4;i++)mk("line",{x1:n.x-11+i*7,y1:n.y+27,x2:n.x-7+i*7,y2:n.y+22,stroke:"#8ecae6","stroke-width":1.3},svg);
+    } else if(n.sup==="roller"){
+      mk("polygon",{points:`${n.x},${n.y+5} ${n.x-11},${n.y+18} ${n.x+11},${n.y+18}`,fill:"none",stroke:"#38bdf8","stroke-width":2},svg);
+      mk("circle",{cx:n.x-6,cy:n.y+22,r:3.5,fill:"none",stroke:"#38bdf8","stroke-width":1.5},svg);
+      mk("circle",{cx:n.x+6,cy:n.y+22,r:3.5,fill:"none",stroke:"#38bdf8","stroke-width":1.5},svg);
+      mk("line",{x1:n.x-13,y1:n.y+27,x2:n.x+13,y2:n.y+27,stroke:"#38bdf8","stroke-width":1.5},svg);
+    }
+  });
+  // Nodes
+  Object.entries(ex.nodes).forEach(([key,n])=>{
+    const isChecked=zfCurStep>=0&&zfCurStep<ex.steps.length&&ex.steps[zfCurStep].check===key;
+    if(isChecked){
+      const pr=mk("circle",{cx:n.x,cy:n.y,r:20,fill:"none",stroke:"#8b5cf6","stroke-width":1.5,opacity:.4},svg);
+      pr.classList.add("pulse-ring");
+    }
+    const r=isChecked?10:8;
+    mk("circle",{cx:n.x,cy:n.y,r:r,fill:isChecked?"#1a1040":"#1a1207",stroke:isChecked?"#8b5cf6":"#475569","stroke-width":isChecked?2.5:1.8},svg);
+    const ly=n.y<60?n.y-16:n.y>150?n.y-16:n.y+26;
+    mk("text",{x:n.x,y:ly,"text-anchor":"middle","font-size":14,"font-weight":600,"font-family":"JetBrains Mono",fill:isChecked?"#c4b5fd":"#94a3b8"},svg).textContent=n.label;
+    if(isChecked){
+      mk("text",{x:n.x,y:n.y<80?n.y+38:n.y-28,"text-anchor":"middle","font-size":12,"font-family":"JetBrains Mono",fill:"#8b5cf6","font-weight":500},svg).textContent="← 檢查此節點";
+    }
+  });
+  // Rule badge
+  if(zfCurStep>=0&&zfCurStep<ex.steps.length){
+    const st=ex.steps[zfCurStep];
+    const isC1=st.rule==="情況一";
+    const rf=isC1?"rgba(245,158,11,.12)":"rgba(45,212,191,.12)";
+    const rs=isC1?"rgba(245,158,11,.35)":"rgba(45,212,191,.35)";
+    const rc=isC1?"#f59e0b":"#2dd4bf";
+    mk("rect",{x:430,y:6,width:160,height:30,rx:8,fill:rf,stroke:rs,"stroke-width":1},svg);
+    mk("text",{x:510,y:27,"text-anchor":"middle","font-size":14,"font-weight":700,"font-family":"JetBrains Mono",fill:rc},svg).textContent=st.rule;
+  }
+  // UI
+  document.getElementById("zfCount").textContent=zeroSet.size;
+  document.getElementById("zfPrev").disabled=(zfCurStep<0);
+  const done=zfCurStep>=ex.steps.length-1;
+  const btn=document.getElementById("zfNextBtn");
+  btn.disabled=done;btn.textContent=done?"判別完成 ✓":"找零桿 →";
+  btn.className=done?"stg-btn":"stg-btn primary";
+  const lbl=document.getElementById("zfLabel");
+  if(zfCurStep<0) lbl.innerHTML=`<strong>${ex.title}</strong>：點擊「找零桿」開始逐步判別。`;
+  else lbl.innerHTML=`<strong>Step ${zfCurStep+1}/${ex.steps.length}</strong>｜${ex.steps[zfCurStep].desc}`;
+}
+function zfNext(){const ex=ZF_EXAMPLES[zfCurEx];if(zfCurStep<ex.steps.length-1){zfCurStep++;zfDraw();}}
+function zfPrev(){if(zfCurStep>=0){zfCurStep--;zfDraw();}}
+function zfReset(){zfCurStep=-1;zfDraw();}
+
+// ═══════════════════════════════════════
+//  METHOD OF JOINTS (Section 5)
+// ═══════════════════════════════════════
+const J_ORDER=["reactions","A","B","C","D","E"];
+const J_DATA={
+  reactions:{title:"Step 0：求支承反力",titleEn:"Step 0: Support Reactions",
+    equations:[{text:"ΣFx = 0 → Ax = 0",type:""},{text:"ΣM_A = 0 → Ey × 6 − 10 × 3 = 0 → Ey = 5 kN ↑",type:""},{text:"ΣFy = 0 → Ay + Ey − 10 = 0 → Ay = 5 kN ↑",type:""}],
+    description:"先由整體平衡求出支承反力。A 為鉸支承（兩個反力），E 為滾支承（一個反力）。",
+    conn:[],solved:[]},
+  A:{title:"Step 1：節點 A 分析",titleEn:"Step 1: Joint A Analysis",
+    equations:[{text:"ΣFy = 0 → 5 + F_AB sin θ = 0",type:""},{text:"sin θ = 0.8 → F_AB = −6.25 kN（壓力 C）",type:"compression"},{text:"ΣFx = 0 → F_AB cos θ + F_AC = 0",type:""},{text:"cos θ = 0.6 → F_AC = 3.75 kN（拉力 T）",type:"tension"}],
+    description:"節點 A 只有 2 個未知桿件力（F_AB、F_AC），加上已知反力 Ay = 5kN，可直接求解。",
+    conn:["AB","AC"],solved:["AB","AC"]},
+  B:{title:"Step 2：節點 B 分析",titleEn:"Step 2: Joint B Analysis",
+    equations:[{text:"ΣFy = 0 → −F_AB sin θ + F_BC (−sin θ) = 0",type:""},{text:"5.0 − 0.8 × F_BC = 0 → F_BC = 6.25 kN（T）",type:"tension"},{text:"ΣFx = 0 → −F_AB cos θ + F_BC cos θ + F_BD = 0",type:""},{text:"3.75 + 3.75 + F_BD = 0 → F_BD = −7.5 kN（C）",type:"compression"}],
+    description:"節點 B 已知 F_AB，未知 F_BC 和 F_BD，2 個方程式解 2 個未知數。",
+    conn:["AB","BC","BD"],solved:["BC","BD"]},
+  C:{title:"Step 3：節點 C 分析",titleEn:"Step 3: Joint C Analysis",
+    equations:[{text:"ΣFy = 0 → −10 + F_BC sin θ + F_CD sin θ = 0",type:""},{text:"−10 + 5.0 + 0.8 × F_CD = 0 → F_CD = 6.25 kN（T）",type:"tension"},{text:"ΣFx = 0 → −F_AC − F_BC cos θ + F_CD cos θ + F_CE = 0",type:""},{text:"−3.75 − 3.75 + 3.75 + F_CE = 0 → F_CE = 3.75 kN（T）",type:"tension"}],
+    description:"節點 C 已知 F_AC、F_BC，加上外力 P = 10kN↓，求 F_CD 和 F_CE。",
+    conn:["AC","BC","CD","CE"],solved:["CD","CE"]},
+  D:{title:"Step 4：節點 D 驗證",titleEn:"Step 4: Joint D Verification",
+    equations:[{text:"ΣFx = 0 → −F_BD + (−F_CD cos θ) + F_DE cos θ = 0",type:""},{text:"7.5 − 3.75 + 0.6 × F_DE = 0 → F_DE = −6.25 kN（C）✔",type:"check"},{text:"ΣFy = 0 → −F_CD sin θ + F_DE (−sin θ) = 0",type:""},{text:"−5.0 + 5.0 = 0 ✔",type:"check"}],
+    description:"節點 D 可作為驗算。所有已知力代入，檢查平衡是否滿足。",
+    conn:["BD","CD","DE"],solved:["DE"]},
+  E:{title:"Step 5：節點 E 驗證",titleEn:"Step 5: Joint E Verification",
+    equations:[{text:"ΣFx = 0 → −F_CE + (−F_DE cos θ) = 0",type:""},{text:"−3.75 + 3.75 = 0 ✔",type:"check"},{text:"ΣFy = 0 → 5 + F_DE sin θ = 0",type:""},{text:"5.0 − 5.0 = 0 ✔",type:"check"}],
+    description:"最後用節點 E 驗證整體平衡。所有方程式都滿足，表示分析正確！",
+    conn:["CE","DE"],solved:[]},
+};
+
+let jStep=-1,showJFBD=false,jTimer=null;
+function jSolvedM(){const s=[];for(let i=0;i<=jStep&&i<J_ORDER.length;i++){s.push(...J_DATA[J_ORDER[i]].solved);}return s;}
+function jSolvedN(){const n=[];for(let i=0;i<=jStep&&i<J_ORDER.length;i++){if(J_ORDER[i]!=="reactions")n.push(J_ORDER[i]);}return n;}
+
+function renderJoints(){
+  const svg=document.getElementById("jSvg");svg.innerHTML="";svgDefs(svg);
+  const sm=jSolvedM(),sn=jSolvedN();
+  const sk=jStep>=0?J_ORDER[jStep]:null;
+  const ana=sk?J_DATA[sk]:null;
+
+  MEMBERS.forEach(m=>{
+    const f=toS(NODES[m.from].x,NODES[m.from].y),t=toS(NODES[m.to].x,NODES[m.to].y);
+    const solved=sm.includes(m.id),conn=ana&&ana.conn.includes(m.id);
+    const col=solved?(m.force<0?"#ef4444":"#22c55e"):"#475569";
+    const w=conn?4:solved?3:2.5;
+    if(conn)mk("line",{x1:f.x,y1:f.y,x2:t.x,y2:t.y,stroke:col,"stroke-width":w+6,opacity:.1},svg);
+    mk("line",{x1:f.x,y1:f.y,x2:t.x,y2:t.y,stroke:col,"stroke-width":w,"stroke-linecap":"round"},svg);
+    if(solved) mk("text",{x:(f.x+t.x)/2,y:(f.y+t.y)/2-8,"text-anchor":"middle","font-size":10,"font-family":"JetBrains Mono",fill:col,"font-weight":500},svg).textContent=`${Math.abs(m.force).toFixed(2)} kN ${m.force<0?"(C)":"(T)"}`;
+  });
+  drawBase(svg,jStep>=0);
+
+  // FBD
+  if(showJFBD&&sk&&sk!=="reactions"&&ana){
+    const nd=NODES[sk],sp=toS(nd.x,nd.y),al=50;
+    if(nd.load){arr(svg,sp.x,sp.y-al,sp.x,sp.y,"#f59e0b");mk("text",{x:sp.x+10,y:sp.y-al+10,"font-size":9,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":500},svg).textContent=`${Math.abs(nd.load)} kN`;}
+    if(REACTIONS[sk]){const r=REACTIONS[sk];if(r.Ay!==undefined){arr(svg,sp.x,sp.y+al,sp.x,sp.y,"#8ecae6");mk("text",{x:sp.x-48,y:sp.y+al-5,"font-size":9,"font-family":"JetBrains Mono",fill:"#8ecae6","font-weight":500},svg).textContent=`Ay=${r.Ay} kN`;}if(r.Ey!==undefined){arr(svg,sp.x,sp.y+al,sp.x,sp.y,"#8ecae6");mk("text",{x:sp.x+10,y:sp.y+al-5,"font-size":9,"font-family":"JetBrains Mono",fill:"#8ecae6","font-weight":500},svg).textContent=`Ey=${r.Ey} kN`;}}
+    ana.conn.forEach(mid=>{
+      const mb=MEMBERS.find(m=>m.id===mid);if(!mb)return;
+      const ok=mb.from===sk?mb.to:mb.from,on=NODES[ok];
+      const dx=on.x-nd.x,dy=on.y-nd.y,len=Math.hypot(dx,dy),ux=dx/len,uy=-dy/len;
+      const isT=mb.force>0,isS=sm.includes(mid);
+      let ax1,ay1,ax2,ay2;
+      if(isT){ax1=sp.x+ux*15;ay1=sp.y+uy*15;ax2=sp.x+ux*(15+al);ay2=sp.y+uy*(15+al);}
+      else{ax2=sp.x+ux*15;ay2=sp.y+uy*15;ax1=sp.x+ux*(15+al);ay1=sp.y+uy*(15+al);}
+      const col=mb.force<0?"#ef4444":"#22c55e";
+      const g=mk("g",{class:isS?"":"unknown-force"},svg);
+      arr(g,ax1,ay1,ax2,ay2,col,7);
+      const lx=(ax1+ax2)/2+(uy>0.3?-60:uy<-0.3?10:ux>0?10:-65),ly=(ay1+ay2)/2+(Math.abs(uy)<0.3?-10:0);
+      const v=Math.abs(mb.force).toFixed(2),tl=mb.force<0?"C":"T";
+      mk("text",{x:lx,y:ly,"font-size":9,"font-family":"JetBrains Mono",fill:col,"font-weight":500},g).textContent=isS?`F_${mid}=${v}(${tl})`:`F_${mid}=?`;
+    });
+  }
+
+  drawNodes(svg,{activeNode:sk&&sk!=="reactions"?sk:null,solvedNodes:sn,clickable:true,onClick:k=>{const i=J_ORDER.indexOf(k);if(i>=0)jGoTo(i);}});
+
+  // Nav
+  const nav=document.getElementById("jNav");nav.innerHTML="";
+  const btn=(t,a,fn)=>{const b=document.createElement("button");b.className="nav-btn"+(a?" aj":"");b.textContent=t;b.onclick=fn;nav.appendChild(b);};
+  btn("總覽",jStep===-1,()=>jGoTo(-1));
+  J_ORDER.forEach((k,i)=>btn(k==="reactions"?"反力":`節點 ${k}`,jStep===i,()=>jGoTo(i)));
+  const sp=document.createElement("div");sp.style.flex="1";nav.appendChild(sp);
+  const pb=document.createElement("button");pb.className="nav-btn play"+(jTimer?" running":"");pb.textContent=jTimer?"⏸ 暫停":"▶ 自動";pb.onclick=toggleJAuto;nav.appendChild(pb);
+
+  // FBD button
+  document.getElementById("jFbdBtn").style.display=jStep>0?"":"none";
+
+  // Panel
+  renderJointsPanel();
+  // Legend
+  document.getElementById("jLegend").innerHTML=`<span class="legend-item"><span class="legend-line" style="background:#22c55e"></span>拉力 T</span><span class="legend-item"><span class="legend-line" style="background:#ef4444"></span>壓力 C</span><span class="legend-item"><span class="legend-line" style="background:#475569"></span>未求解</span>`;
+}
+
+function renderJointsPanel(){
+  const p=document.getElementById("jPanel"),sm=jSolvedM();
+  if(jStep===-1){
+    p.innerHTML=`<h2 style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:12px">節點法 Method of Joints</h2>
+    <div class="info-grid"><div class="card" style="margin:0"><h3 class="blue">桁架資訊</h3><p class="mono"><span class="val">5</span> 節點　<span class="val">7</span> 桿件　<span class="val">3</span> 反力<br>2n = m + r → 10 = 7 + 3 ✔ 靜定</p></div>
+    <div class="card" style="margin:0"><h3 class="orange">載重條件</h3><p>P = 10 kN ↓（節點 C）<br>A：鉸支承　E：滾支承</p></div></div>
+    <div class="hint-box"><p>💡 點擊桁架節點或使用導覽按鈕逐步分析。開啟「顯示 FBD」可看到力的方向。</p></div>`;
+    return;
+  }
+  const sk=J_ORDER[jStep],a=J_DATA[sk];
+  const eqH=a.equations.map(eq=>`<div class="eq-line${eq.type?" "+eq.type:""}">${eq.text}</div>`).join("");
+  let tags="";MEMBERS.filter(m=>sm.includes(m.id)).forEach(m=>{const tp=m.force<0?"compression":"tension",bd=m.force<0?"C":"T";tags+=`<div class="member-tag ${tp}"><span style="font-weight:600">F_${m.id}</span><span>=</span><span>${Math.abs(m.force).toFixed(2)} kN</span><span class="badge">${bd}</span></div>`;});
+  const nd=jStep>=J_ORDER.length-1;
+  p.innerHTML=`<div class="step-title j">${a.title}</div><div class="step-title-en">${a.titleEn}</div><div class="step-desc">${a.description}</div>
+  <div class="eq-box"><h3 class="jc">平衡方程式 EQUILIBRIUM EQUATIONS</h3>${eqH}</div>
+  ${tags?`<div class="member-tags">${tags}</div>`:""}
+  <div class="step-nav"><button onclick="jGoTo(${jStep-1})">← 上一步</button><button class="${nd?"":"nj"}" ${nd?"disabled":""} onclick="jGoTo(${jStep+1})">下一步 →</button></div>`;
+}
+
+function jGoTo(s){jStep=Math.max(-1,Math.min(J_ORDER.length-1,s));stopJ();renderJoints();}
+function toggleJFBD(){showJFBD=!showJFBD;const b=document.getElementById("jFbdBtn");b.className="fbd-btn"+(showJFBD?" active":"");b.textContent=showJFBD?"✦ 隱藏 FBD":"◇ 顯示 FBD";renderJoints();}
+function toggleJAuto(){if(jTimer){stopJ();renderJoints();return;}if(jStep>=J_ORDER.length-1)jStep=-1;jTimer=setInterval(()=>{if(jStep>=J_ORDER.length-1){stopJ();renderJoints();return;}jStep++;renderJoints();},4000);renderJoints();}
+function stopJ(){if(jTimer){clearInterval(jTimer);jTimer=null;}}
+
+// ═══════════════════════════════════════
+//  METHOD OF SECTIONS (Section 6)
+// ═══════════════════════════════════════
+const SEC_DATA={
+  section_aa:{label:"截面 a-a",cutMembers:["BC","BD","AC"],cutLine:{x1:2.25,y1:-0.4,x2:2.25,y2:2.6},leftNodes:["A","B"],
+    sub:[
+      {id:"cut",title:"選擇截面 a-a",titleEn:"Choose Section a-a",desc:"截面 a-a 通過桿件 BC、BD、AC，共切斷 3 根桿件（≤ 3 個未知數，可由 3 個平衡方程式求解）。分析左側部分（節點 A、B）。",equations:[],mp:null,sm:[]},
+      {id:"mB",title:"取矩於 B → 求 F_AC",titleEn:"Moment about B → Solve F_AC",desc:"取矩於 B 點可消去 F_BC 和 F_BD（作用線都通過 B 點），只剩 F_AC 一個未知數。",equations:[{text:"ΣM_B = 0（左側部分）",type:""},{text:"Ay × 1.5 − F_AC × 2 = 0",type:""},{text:"5 × 1.5 = F_AC × 2",type:""},{text:"F_AC = 3.75 kN（拉力 T）",type:"tension"}],mp:"B",sm:["AC"]},
+      {id:"mC",title:"取矩於 C → 求 F_BD",titleEn:"Moment about C → Solve F_BD",desc:"取矩於 C 點可消去 F_BC 和 F_AC（作用線通過 C 點），只剩 F_BD。",equations:[{text:"ΣM_C = 0（左側部分）",type:""},{text:"Ay × 3 + F_BD × 2 = 0",type:""},{text:"5 × 3 + F_BD × 2 = 0",type:""},{text:"F_BD = −7.5 kN（壓力 C）",type:"compression"}],mp:"C",sm:["AC","BD"]},
+      {id:"fy",title:"ΣFy = 0 → 求 F_BC",titleEn:"ΣFy = 0 → Solve F_BC",desc:"用垂直方向平衡求 F_BC。F_AC 和 F_BD 都是水平力，只有 F_BC 有垂直分量。",equations:[{text:"ΣFy = 0（左側部分）",type:""},{text:"Ay − F_BC × sin θ = 0",type:""},{text:"5 − F_BC × 0.8 = 0",type:""},{text:"F_BC = 6.25 kN（拉力 T）",type:"tension"}],mp:null,sm:["AC","BD","BC"]},
+    ]},
+  section_bb:{label:"截面 b-b",cutMembers:["CD","BD","CE"],cutLine:{x1:3.75,y1:-0.4,x2:3.75,y2:2.6},leftNodes:["A","B","C"],
+    sub:[
+      {id:"cut",title:"選擇截面 b-b",titleEn:"Choose Section b-b",desc:"截面 b-b 通過桿件 CD、BD、CE，切斷 3 根桿件。分析左側部分（節點 A、B、C），其上有反力 Ay 和外力 P。",equations:[],mp:null,sm:[]},
+      {id:"mD",title:"取矩於 D → 求 F_CE",titleEn:"Moment about D → Solve F_CE",desc:"取矩於 D 點消去 F_BD（通過 D）和 F_CD（通過 D），只剩 F_CE。",equations:[{text:"ΣM_D = 0（左側部分）",type:""},{text:"Ay × 4.5 − P × 1.5 − F_CE × 2 = 0",type:""},{text:"5 × 4.5 − 10 × 1.5 − F_CE × 2 = 0",type:""},{text:"F_CE = 3.75 kN（拉力 T）",type:"tension"}],mp:"D",sm:["CE"]},
+      {id:"mC",title:"取矩於 C → 求 F_BD",titleEn:"Moment about C → Solve F_BD",desc:"取矩於 C 點消去 F_CE（通過 C）和 F_CD（通過 C），只剩 F_BD。",equations:[{text:"ΣM_C = 0（左側部分）",type:""},{text:"Ay × 3 + F_BD × 2 = 0",type:""},{text:"5 × 3 + F_BD × 2 = 0",type:""},{text:"F_BD = −7.5 kN（壓力 C）",type:"compression"}],mp:"C",sm:["CE","BD"]},
+      {id:"fy",title:"ΣFy = 0 → 求 F_CD",titleEn:"ΣFy = 0 → Solve F_CD",desc:"垂直平衡：F_BD 和 F_CE 是水平力，只有 F_CD 有垂直分量。",equations:[{text:"ΣFy = 0（左側部分）",type:""},{text:"Ay − P + F_CD × sin θ = 0",type:""},{text:"5 − 10 + F_CD × 0.8 = 0",type:""},{text:"F_CD = 6.25 kN（拉力 T）",type:"tension"}],mp:null,sm:["CE","BD","CD"]},
+    ]},
+};
+let sMain=0,sSub=0,sTimer=null;
+function cSec(){return sMain===2?SEC_DATA.section_aa:sMain===3?SEC_DATA.section_bb:null}
+function cSS(){const s=cSec();return s?s.sub[sSub]||null:null}
+function sSolved(){const s=[];if(sMain>2){const l=SEC_DATA.section_aa.sub;s.push(...(l[l.length-1].sm||[]));}const ss=cSS();if(ss&&ss.sm)s.push(...ss.sm);return[...new Set(s)];}
+
+function renderSections(){
+  const svg=document.getElementById("sSvg");svg.innerHTML="";svgDefs(svg);
+  const sec=cSec(),ss=cSS(),solved=sSolved();
+
+  if(sec&&sSub>0){const cx=toS(sec.cutLine.x1,0).x;mk("rect",{x:cx,y:0,width:SW-cx,height:SH,class:"shade-region"},svg);}
+
+  MEMBERS.forEach(m=>{
+    const f=toS(NODES[m.from].x,NODES[m.from].y),t=toS(NODES[m.to].x,NODES[m.to].y);
+    const isCut=sec&&sec.cutMembers.includes(m.id),isSolved=solved.includes(m.id);
+    let col="#475569",w=2.5;
+    if(isSolved){col=m.force<0?"#ef4444":"#22c55e";w=3;}
+    if(isCut&&!isSolved){col="#f59e0b";w=3;}
+    if(isCut)mk("line",{x1:f.x,y1:f.y,x2:t.x,y2:t.y,stroke:col,"stroke-width":w+5,opacity:.08},svg);
+    mk("line",{x1:f.x,y1:f.y,x2:t.x,y2:t.y,stroke:col,"stroke-width":w,"stroke-linecap":"round"},svg);
+    if(isSolved)mk("text",{x:(f.x+t.x)/2,y:(f.y+t.y)/2-8,"text-anchor":"middle","font-size":10,"font-family":"JetBrains Mono",fill:col,"font-weight":500},svg).textContent=`${Math.abs(m.force).toFixed(2)} kN ${m.force<0?"(C)":"(T)"}`;
+  });
+  drawBase(svg,sMain>=1);
+
+  if(sec){
+    const c1=toS(sec.cutLine.x1,sec.cutLine.y1),c2=toS(sec.cutLine.x2,sec.cutLine.y2);
+    mk("line",{x1:c1.x,y1:c1.y,x2:c2.x,y2:c2.y,stroke:"#f59e0b","stroke-width":5,opacity:.08},svg);
+    mk("line",{x1:c1.x,y1:c1.y,x2:c2.x,y2:c2.y,stroke:"#f59e0b","stroke-width":2.5,class:"cut-anim"},svg);
+    const lbl=sec===SEC_DATA.section_aa?"a":"b";
+    mk("text",{x:c1.x-14,y:c1.y-4,"font-size":13,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":700},svg).textContent=lbl;
+    mk("text",{x:c2.x-14,y:c2.y+16,"font-size":13,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":700},svg).textContent=lbl;
+
+    if(sSub>0){
+      sec.cutMembers.forEach(mid=>{
+        const mb=MEMBERS.find(m=>m.id===mid);if(!mb)return;
+        const isSv=solved.includes(mid);
+        const aEnd=sec.leftNodes.includes(mb.from)?mb.from:mb.to,oEnd=aEnd===mb.from?mb.to:mb.from;
+        const aN=NODES[aEnd],oN=NODES[oEnd];
+        const mx=(aN.x+oN.x)/2,my=(aN.y+oN.y)/2,sp=toS(mx,my);
+        const dx=oN.x-aN.x,dy=oN.y-aN.y,len=Math.hypot(dx,dy),ux=dx/len,uy=-dy/len;
+        const al=40;let ax1,ay1,ax2,ay2;
+        if(mb.force>0){ax1=sp.x;ay1=sp.y;ax2=sp.x+ux*al;ay2=sp.y+uy*al;}
+        else{ax2=sp.x;ay2=sp.y;ax1=sp.x+ux*al;ay1=sp.y+uy*al;}
+        const col=isSv?(mb.force<0?"#ef4444":"#22c55e"):"#f59e0b";
+        const g=mk("g",{class:isSv?"":"unknown-force"},svg);
+        arr(g,ax1,ay1,ax2,ay2,col,7);
+        const lx=sp.x+ux*al*.5+(Math.abs(uy)>.3?(uy>0?-8:8):0)+(ux>0?12:-55);
+        const ly=sp.y+uy*al*.5+(Math.abs(uy)<.3?-12:0);
+        mk("text",{x:lx,y:ly,"font-size":9,"font-family":"JetBrains Mono",fill:col,"font-weight":500},svg).textContent=isSv?`F_${mid}=${Math.abs(mb.force).toFixed(2)}(${mb.force<0?"C":"T"})`:`F_${mid}=?`;
+      });
+    }
+  }
+
+  drawNodes(svg,{momentPt:ss?ss.mp:null,dimNodes:sec&&sSub>0?sec.leftNodes:null});
+
+  // Nav
+  const nav=document.getElementById("sNav");nav.innerHTML="";
+  ["總覽","反力","截面 a-a","截面 b-b"].forEach((lb,i)=>{
+    const b=document.createElement("button");b.className="nav-btn"+(sMain===i?" as":"");b.textContent=lb;
+    b.onclick=()=>{sMain=i;sSub=0;stopS();renderSections();};nav.appendChild(b);
+  });
+  const sp2=document.createElement("div");sp2.style.flex="1";nav.appendChild(sp2);
+  const pb2=document.createElement("button");pb2.className="nav-btn play"+(sTimer?" running":"");pb2.textContent=sTimer?"⏸ 暫停":"▶ 自動";pb2.onclick=toggleSAuto;nav.appendChild(pb2);
+
+  // Sub dots
+  const dots=document.getElementById("sDots");dots.innerHTML="";
+  if(sec){dots.style.display="flex";sec.sub.forEach((s,i)=>{
+    const d=document.createElement("div");d.className="sub-dot "+(i<sSub?"done":i===sSub?"active":"future");
+    d.textContent=i+1;d.onclick=()=>{sSub=i;stopS();renderSections();};dots.appendChild(d);
+    if(i===sSub){const lb=document.createElement("span");lb.className="sub-label";lb.textContent=s.title;dots.appendChild(lb);}
+  });}else dots.style.display="none";
+
+  renderSectionsPanel();
+  document.getElementById("sLegend").innerHTML=`<span class="legend-item"><span class="legend-line" style="background:#22c55e"></span>拉力 T</span><span class="legend-item"><span class="legend-line" style="background:#ef4444"></span>壓力 C</span><span class="legend-item"><span class="legend-line" style="background:#f59e0b"></span>截面切割</span><span class="legend-item"><span class="legend-line" style="background:#8b5cf6;height:5px;width:5px;border-radius:50%"></span>力矩點</span>`;
+}
+
+function renderSectionsPanel(){
+  const p=document.getElementById("sPanel");
+  if(sMain===0){p.innerHTML=`<h2 style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:12px">剖面法 Method of Sections</h2>
+  <div class="info-grid"><div class="card" style="margin:0"><h3 class="orange">剖面法要點</h3><ul><li>通過桁架做一截面，切斷 ≤ 3 根桿件</li><li>取其中一側做自由體，列 3 個平衡方程式</li><li>巧妙選擇力矩點，一次只解一個未知數</li></ul></div>
+  <div class="card" style="margin:0"><h3 class="blue">本範例截面</h3><p class="mono"><span style="color:var(--orange)">截面 a-a</span>：切 BC, BD, AC<br><span style="color:var(--orange)">截面 b-b</span>：切 CD, BD, CE</p></div></div>
+  <div class="hint-box"><p>💡 選擇截面按鈕開始分析。核心在於<strong style="color:#c4b5fd">選擇力矩點</strong>來消去不需要的未知數。</p></div>`;return;}
+
+  if(sMain===1){p.innerHTML=`<div class="step-title s">Step 0：求支承反力</div><div class="step-title-en">Support Reactions</div><div class="step-desc">剖面法的第一步和節點法相同：先由整體平衡求支承反力。</div>
+  <div class="eq-box"><h3 class="sc">平衡方程式</h3><div class="eq-line">ΣFx = 0 → Ax = 0</div><div class="eq-line">ΣM_A = 0 → Ey × 6 − 10 × 3 = 0 → Ey = 5 kN ↑</div><div class="eq-line">ΣFy = 0 → Ay + Ey − 10 = 0 → Ay = 5 kN ↑</div></div>
+  <div class="step-nav"><button onclick="sMain=0;sSub=0;stopS();renderSections()">← 總覽</button><button class="ns" onclick="sMain=2;sSub=0;stopS();renderSections()">開始截面分析 →</button></div>`;return;}
+
+  const sec=cSec(),ss=cSS();if(!sec||!ss)return;
+  const solved=sSolved();
+  let eqH="";if(ss.equations.length>0){eqH=`<div class="eq-box"><h3 class="sc">平衡方程式</h3>`;ss.equations.forEach(eq=>{let c="eq-line";if(eq.type)c+=" "+eq.type;eqH+=`<div class="${c}">${eq.text}</div>`;});eqH+=`</div>`;}
+  let tags="";solved.forEach(mid=>{const m=MEMBERS.find(mb=>mb.id===mid);if(!m)return;const tp=m.force<0?"compression":"tension",bd=m.force<0?"C":"T";tags+=`<div class="member-tag ${tp}"><span style="font-weight:600">F_${m.id}</span><span>=</span><span>${Math.abs(m.force).toFixed(2)} kN</span><span class="badge">${bd}</span></div>`;});
+  let mi="";if(ss.mp)mi=`<div class="moment-badge"><span class="dot"></span><span>力矩點：${ss.mp}（消去通過此點的力）</span></div>`;
+  const isLast=sMain===3&&sSub>=sec.sub.length-1;
+  p.innerHTML=`<div class="step-title s">${ss.title}</div><div class="step-title-en">${ss.titleEn}</div><div class="step-desc">${ss.desc}</div>${mi}${eqH}${tags?`<div class="member-tags">${tags}</div>`:""}
+  <div class="step-nav"><button onclick="sPrevStep()">← 上一步</button><button class="${isLast?"":"ns"}" ${isLast?"disabled":""} onclick="sNextStep()">下一步 →</button></div>`;
+}
+
+function sPrevStep(){stopS();if(sSub>0)sSub--;else if(sMain>0){sMain--;if(sMain>=2){const s=sMain===2?SEC_DATA.section_aa:SEC_DATA.section_bb;sSub=s.sub.length-1;}else sSub=0;}renderSections();}
+function sNextStep(){stopS();const sec=cSec();if(sec&&sSub<sec.sub.length-1)sSub++;else if(sMain<3){sMain++;sSub=0;}renderSections();}
+function toggleSAuto(){if(sTimer){stopS();renderSections();return;}sTimer=setInterval(()=>{const sec=cSec();if(sMain===3&&sec&&sSub>=sec.sub.length-1){stopS();renderSections();return;}sNextStep();},3500);renderSections();}
+function stopS(){if(sTimer){clearInterval(sTimer);sTimer=null;}}
+
+// ═══════════════════════════════════════
+//  COMPARE (Section 7)
+// ═══════════════════════════════════════
+function renderCompare(){
+  const svg=document.getElementById("cSvg");svg.innerHTML="";svgDefs(svg);
+  MEMBERS.forEach(m=>{
+    const f=toS(NODES[m.from].x,NODES[m.from].y),t=toS(NODES[m.to].x,NODES[m.to].y);
+    const col=m.force<0?"#ef4444":"#22c55e";
+    mk("line",{x1:f.x,y1:f.y,x2:t.x,y2:t.y,stroke:col,"stroke-width":3,"stroke-linecap":"round"},svg);
+    mk("text",{x:(f.x+t.x)/2,y:(f.y+t.y)/2-8,"text-anchor":"middle","font-size":10,"font-family":"JetBrains Mono",fill:col,"font-weight":500},svg).textContent=`${Math.abs(m.force).toFixed(2)} kN ${m.force<0?"(C)":"(T)"}`;
+  });
+  drawBase(svg,true);
+  drawNodes(svg,{});
+
+  let sc="";MEMBERS.forEach(m=>{const tp=m.force<0?"c":"t";sc+=`<div class="summary-card"><div class="name">${m.id}</div><div class="force ${tp}">${Math.abs(m.force).toFixed(2)}</div><div class="type ${tp}">${m.force<0?"壓力 C":"拉力 T"}</div></div>`;});
+
+  document.getElementById("cPanel").innerHTML=`
+  <div class="card"><h3 class="purple">方法特性比較</h3>
+  <table class="compare-table"><tr><th></th><th style="color:var(--blue)">節點法 Joints</th><th style="color:var(--orange)">剖面法 Sections</th></tr>
+  <tr><td>分析對象</td><td>逐一節點</td><td>整個截面（一側）</td></tr>
+  <tr><td>每步未知數</td><td>≤ 2</td><td>≤ 3</td></tr>
+  <tr><td>方程式</td><td>ΣFx=0, ΣFy=0</td><td>ΣFx=0, ΣFy=0, ΣM=0</td></tr>
+  <tr><td>適用場景</td><td>求所有桿件力</td><td>快速求特定桿件力</td></tr>
+  <tr><td>關鍵技巧</td><td>從已知節點推進</td><td>選擇力矩點消未知數</td></tr>
+  <tr><td>本例步驟數</td><td>6 步（含反力+驗證）</td><td>2 截面 × 4 子步驟</td></tr></table></div>
+  <div class="card"><h3 class="green">全部桿件力結果（兩種方法一致）</h3><div class="summary-grid">${sc}</div><div style="font-size:10px;color:var(--text4);text-align:center;margin-top:4px">單位：kN</div></div>
+  <div class="info-grid"><div class="card" style="margin:0"><h3 class="blue">何時用節點法？</h3><ul><li>需要求出所有桿件力</li><li>桁架較小，節點數不多</li><li>搭配電腦程式化計算</li></ul></div>
+  <div class="card" style="margin:0"><h3 class="orange">何時用剖面法？</h3><ul><li>只需求特定桿件力</li><li>桁架很大，不想逐一分析</li><li>考試中需要快速解題</li></ul></div></div>
+  <div class="hint-box" style="border-color:rgba(139,92,246,.08);background:rgba(139,92,246,.02)"><p>💡 實務上經常<strong style="color:#c4b5fd">搭配使用</strong>：先用剖面法快速求出關鍵桿件力，再用節點法逐步求出其餘桿件力，最後用多餘的平衡方程式驗算。</p></div>`;
+}
+
+// ═══════════════════════════════════════
+//  SIMPLE TRUSS GROWTH ANIMATION (Section 3)
+// ═══════════════════════════════════════
+const STG_NODES=[
+  {id:"N1",x:60,y:180,label:"①"},
+  {id:"N2",x:150,y:60,label:"②"},
+  {id:"N3",x:240,y:180,label:"③"},
+  {id:"N4",x:330,y:60,label:"④"},
+  {id:"N5",x:420,y:180,label:"⑤"},
+  {id:"N6",x:510,y:60,label:"⑥"},
+  {id:"N7",x:600,y:180,label:"⑦"},
+];
+const STG_STEPS=[
+  {nodes:[0,1,2],members:[[0,1],[1,2],[0,2]],newNode:-1,newMembers:[],
+   nj:3,nb:3,title:"<strong>基本三角形</strong>：3 個節點、3 根桿件 — 這是最基本的穩定結構單元。"},
+  {nodes:[0,1,2,3],members:[[0,1],[1,2],[0,2],[2,3],[1,3]],newNode:3,newMembers:[[2,3],[1,3]],
+   nj:4,nb:5,title:'新增 <span class="new-tag">節點 ④</span> ＋ <span class="new-tag">桿件 ③→④</span> <span class="new-tag">桿件 ②→④</span> — 兩桿一節點擴展！'},
+  {nodes:[0,1,2,3,4],members:[[0,1],[1,2],[0,2],[2,3],[1,3],[2,4],[3,4]],newNode:4,newMembers:[[2,4],[3,4]],
+   nj:5,nb:7,title:'新增 <span class="new-tag">節點 ⑤</span> ＋ <span class="new-tag">桿件 ③→⑤</span> <span class="new-tag">桿件 ④→⑤</span> — 持續擴展！'},
+  {nodes:[0,1,2,3,4,5],members:[[0,1],[1,2],[0,2],[2,3],[1,3],[2,4],[3,4],[4,5],[3,5]],newNode:5,newMembers:[[4,5],[3,5]],
+   nj:6,nb:9,title:'新增 <span class="new-tag">節點 ⑥</span> ＋ <span class="new-tag">桿件 ⑤→⑥</span> <span class="new-tag">桿件 ④→⑥</span>'},
+  {nodes:[0,1,2,3,4,5,6],members:[[0,1],[1,2],[0,2],[2,3],[1,3],[2,4],[3,4],[4,5],[3,5],[4,6],[5,6]],newNode:6,newMembers:[[4,6],[5,6]],
+   nj:7,nb:11,title:'新增 <span class="new-tag">節點 ⑦</span> ＋ <span class="new-tag">桿件 ⑤→⑦</span> <span class="new-tag">桿件 ⑥→⑦</span> — 完整 Warren 桁架！'},
+];
+let stgStep=0,stgAutoTimer=null;
+
+function stgDraw(){
+  const svg=document.getElementById("stgSvg");if(!svg)return;
+  svg.innerHTML="";
+  const NS2="http://www.w3.org/2000/svg";
+  // defs
+  const d=document.createElementNS(NS2,"defs");
+  d.innerHTML=`<pattern id="stgGrid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(100,116,139,.04)" stroke-width=".5"/></pattern><filter id="stgGlow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  svg.appendChild(d);
+  const bg=document.createElementNS(NS2,"rect");
+  bg.setAttribute("width","720");bg.setAttribute("height","220");bg.setAttribute("fill","url(#stgGrid)");svg.appendChild(bg);
+
+  const step=STG_STEPS[stgStep];
+  const isNew=(id)=>{const m=step.newMembers;return m.some(p=>p[0]===id[0]&&p[1]===id[1]);};
+
+  // Draw all existing members
+  step.members.forEach((pair,mi)=>{
+    const a=STG_NODES[pair[0]],b=STG_NODES[pair[1]];
+    const isNewM=isNew(pair);
+    const line=document.createElementNS(NS2,"line");
+    line.setAttribute("x1",a.x);line.setAttribute("y1",a.y);
+    line.setAttribute("x2",b.x);line.setAttribute("y2",b.y);
+    line.setAttribute("stroke",isNewM?"#38bdf8":"#475569");
+    line.setAttribute("stroke-width",isNewM?"3.5":"2.5");
+    line.setAttribute("stroke-linecap","round");
+    if(isNewM){
+      line.classList.add("stg-grow");
+      // glow behind
+      const gl=document.createElementNS(NS2,"line");
+      gl.setAttribute("x1",a.x);gl.setAttribute("y1",a.y);
+      gl.setAttribute("x2",b.x);gl.setAttribute("y2",b.y);
+      gl.setAttribute("stroke","#38bdf8");gl.setAttribute("stroke-width","10");
+      gl.setAttribute("opacity","0.08");gl.setAttribute("stroke-linecap","round");
+      gl.classList.add("stg-grow");svg.appendChild(gl);
+    }
+    svg.appendChild(line);
+  });
+
+  // Support indicators at first and last bottom nodes
+  const firstBot=STG_NODES[0],lastBotIdx=step.nodes.filter(i=>STG_NODES[i].y===180).pop();
+  const lastBot=STG_NODES[lastBotIdx];
+  // Pin at first
+  const pg=document.createElementNS(NS2,"g");
+  pg.innerHTML=`<polygon points="${firstBot.x},${firstBot.y+2} ${firstBot.x-10},${firstBot.y+16} ${firstBot.x+10},${firstBot.y+16}" fill="none" stroke="#8ecae6" stroke-width="1.5"/><line x1="${firstBot.x-13}" y1="${firstBot.y+18}" x2="${firstBot.x+13}" y2="${firstBot.y+18}" stroke="#8ecae6" stroke-width="1.5"/>`;
+  svg.appendChild(pg);
+  // Roller at last
+  const rg=document.createElementNS(NS2,"g");
+  rg.innerHTML=`<polygon points="${lastBot.x},${lastBot.y+2} ${lastBot.x-10},${lastBot.y+14} ${lastBot.x+10},${lastBot.y+14}" fill="none" stroke="#8ecae6" stroke-width="1.5"/><circle cx="${lastBot.x-6}" cy="${lastBot.y+19}" r="3" fill="none" stroke="#8ecae6" stroke-width="1"/><circle cx="${lastBot.x+6}" cy="${lastBot.y+19}" r="3" fill="none" stroke="#8ecae6" stroke-width="1"/>`;
+  svg.appendChild(rg);
+
+  // Draw nodes
+  step.nodes.forEach(ni=>{
+    const n=STG_NODES[ni];
+    const isNewN=step.newNode===ni;
+    const g=document.createElementNS(NS2,"g");
+    g.classList.add("stg-node-g");
+    if(isNewN){
+      // Expanding ring
+      const ring=document.createElementNS(NS2,"circle");
+      ring.setAttribute("cx",n.x);ring.setAttribute("cy",n.y);ring.setAttribute("r","8");
+      ring.setAttribute("fill","none");ring.setAttribute("stroke","#38bdf8");
+      ring.setAttribute("stroke-width","2");ring.classList.add("stg-ring");
+      svg.appendChild(ring);
+      g.classList.add("stg-appear");
+    }
+    // Node circle
+    const c=document.createElementNS(NS2,"circle");
+    c.setAttribute("cx",n.x);c.setAttribute("cy",n.y);
+    c.setAttribute("r",isNewN?"10":"8");
+    c.setAttribute("fill",isNewN?"#2a2418":"#1a1207");
+    c.setAttribute("stroke",isNewN?"#38bdf8":"#475569");
+    c.setAttribute("stroke-width",isNewN?"2.5":"2");
+    if(isNewN)c.setAttribute("filter","url(#stgGlow)");
+    g.appendChild(c);
+    // Label
+    const t=document.createElementNS(NS2,"text");
+    t.setAttribute("x",n.x);t.setAttribute("y",n.y+5);
+    t.setAttribute("text-anchor","middle");t.setAttribute("font-size",isNewN?"14":"12");
+    t.setAttribute("font-weight",isNewN?"700":"600");
+    t.setAttribute("font-family","JetBrains Mono");
+    t.setAttribute("fill",isNewN?"#38bdf8":"#94a3b8");
+    t.textContent=n.label;g.appendChild(t);
+    svg.appendChild(g);
+  });
+
+  // "Step n" badge in top-right corner
+  const stepBadge=document.createElementNS(NS2,"text");
+  stepBadge.setAttribute("x","690");stepBadge.setAttribute("y","25");
+  stepBadge.setAttribute("text-anchor","end");stepBadge.setAttribute("font-size","12");
+  stepBadge.setAttribute("font-family","JetBrains Mono");stepBadge.setAttribute("fill","#334155");
+  stepBadge.setAttribute("font-weight","500");
+  stepBadge.textContent=stgStep===0?"基本三角形":`擴展 ${stgStep}/4`;
+  svg.appendChild(stepBadge);
+
+  // Formula: 2j = b + r
+  const r=3;
+  document.getElementById("stgNj").textContent=step.nj;
+  document.getElementById("stgNb").textContent=step.nb;
+  document.getElementById("stgEq").textContent=`${2*step.nj} = ${step.nb}+${r}`;
+  document.getElementById("stgLabel").innerHTML=step.title;
+  // button states
+  document.getElementById("stgPrev").disabled=(stgStep===0);
+  document.getElementById("stgNext").disabled=(stgStep>=STG_STEPS.length-1);
+  const ab=document.getElementById("stgAuto");
+  if(stgAutoTimer){ab.textContent="⏸ 暫停";ab.className="stg-btn running";}
+  else{ab.textContent="▶ 自動播放";ab.className="stg-btn";}
+}
+function stgNext(){if(stgStep<STG_STEPS.length-1){stgStep++;stgDraw();}}
+function stgPrev(){if(stgStep>0){stgStep--;stgDraw();}}
+function stgReset(){stgStopAuto();stgStep=0;stgDraw();}
+function stgAutoToggle(){
+  if(stgAutoTimer){stgStopAuto();stgDraw();return;}
+  if(stgStep>=STG_STEPS.length-1)stgStep=0;
+  stgAutoTimer=setInterval(()=>{
+    if(stgStep>=STG_STEPS.length-1){stgStopAuto();stgDraw();return;}
+    stgStep++;stgDraw();
+  },1800);
+  stgDraw();
+}
+function stgStopAuto(){if(stgAutoTimer){clearInterval(stgAutoTimer);stgAutoTimer=null;}}
+
+// ═══════════════════════════════════════
+//  ADVANCED COMBINED ANALYSIS (Section 8)
+// ═══════════════════════════════════════
+const ADV={
+  // 8-node Pratt truss, panel=3m, h=4m (3-4-5 triangle diagonals)
+  nodes:{
+    A:{x:70,y:250,label:"A",gx:0,gy:0},B:{x:70,y:10,label:"B",gx:0,gy:4},
+    C:{x:250,y:250,label:"C",gx:3,gy:0},D:{x:250,y:10,label:"D",gx:3,gy:4},
+    E:{x:430,y:250,label:"E",gx:6,gy:0},F:{x:430,y:10,label:"F",gx:6,gy:4},
+    G:{x:610,y:250,label:"G",gx:9,gy:0},H:{x:610,y:10,label:"H",gx:9,gy:4}
+  },
+  members:[
+    {id:"AB",f:"A",t:"B",force:-4},{id:"AC",f:"A",t:"C",force:0},
+    {id:"BC",f:"B",t:"C",force:5},{id:"BD",f:"B",t:"D",force:-3},
+    {id:"CD",f:"C",t:"D",force:-4},{id:"CE",f:"C",t:"E",force:3},
+    {id:"DE",f:"D",t:"E",force:5},{id:"DF",f:"D",t:"F",force:-6},
+    {id:"EF",f:"E",t:"F",force:8},{id:"EG",f:"E",t:"G",force:6},
+    {id:"FG",f:"F",t:"G",force:-10},{id:"FH",f:"F",t:"H",force:0},
+    {id:"GH",f:"G",t:"H",force:0}
+  ]
+};
+
+const ADV_STEPS=[
+  {// Step 0: Initial overview
+    method:"概覽",methodColor:"#8b5cf6",
+    title:"<strong>Pratt 桁架概覽</strong>：8 節點（A–H）、13 桿件。P = 12 kN ↓ 作用於節點 E。<br>A 為鉸支承（2 反力），G 為滾支承（1 反力），r = 3。2j = 16 = 13+3 ✓ 靜定。",
+    solved:[],activeNode:null,cut:false,
+    eqs:[]
+  },
+  {// Step 1: Reactions
+    method:"整體平衡",methodColor:"#8ecae6",
+    title:"<strong>Step 1：整體平衡求反力</strong>",
+    solved:[],activeNode:null,cut:false,showReactions:true,
+    eqs:[
+      {t:"ΣFₓ = 0 → Aₓ = 0",c:""},
+      {t:"ΣM_A = 0 → G_y(9) − 12(6) = 0 → G_y = 8 kN ↑",c:""},
+      {t:"ΣF_y = 0 → A_y + 8 − 12 = 0 → A_y = 4 kN ↑",c:""}
+    ]
+  },
+  {// Step 2: Method of Sections — cut through DF, DE, CE
+    method:"剖面法",methodColor:"#f59e0b",
+    title:"<strong>Step 2：剖面法 — 截面切過 DF、DE、CE</strong><br>取<strong>左側</strong>自由體，利用力矩點法逐一求解三根被切桿件。",
+    solved:["DF","DE","CE"],activeNode:null,cut:true,showReactions:true,
+    cutMembers:["DF","DE","CE"],momentPt:"E",
+    eqs:[
+      {t:"── 取力矩於 E（消去 F_DE、F_CE）──",c:"#8b5cf6"},
+      {t:"ΣM_E = 0 → A_y(6) + F_DF(4) = 0",c:""},
+      {t:"4(6) + 4·F_DF = 0 → F_DF = −6 kN（C）",c:"compression"},
+      {t:"── 取力矩於 D（消去 F_DF、F_DE）──",c:"#8b5cf6"},
+      {t:"ΣM_D = 0 → A_y(3) − F_CE(4) = 0",c:""},
+      {t:"4(3) − 4·F_CE = 0 → F_CE = 3 kN（T）",c:"tension"},
+      {t:"── 垂直方向平衡 ──",c:"#8b5cf6"},
+      {t:"ΣF_y = 0 → 4 − F_DE(4/5) = 0",c:""},
+      {t:"F_DE = 5 kN（T）",c:"tension"}
+    ]
+  },
+  {// Step 3: Joint A
+    method:"節點法",methodColor:"#38bdf8",
+    title:"<strong>Step 3：節點法 — 節點 A</strong><br>只有 2 根桿件（AB、AC），加上已知反力 A_y = 4 kN，可直接求解。",
+    solved:["DF","DE","CE","AB","AC"],activeNode:"A",cut:false,showReactions:true,
+    eqs:[
+      {t:"ΣF_y = 0 → 4 + F_AB = 0 → F_AB = −4 kN（C）",c:"compression"},
+      {t:"ΣFₓ = 0 → F_AC = 0（零桿！）",c:"result"}
+    ]
+  },
+  {// Step 4: Joint B
+    method:"節點法",methodColor:"#38bdf8",
+    title:"<strong>Step 4：節點法 — 節點 B</strong><br>已知 F_AB = −4（C），求 F_BC 和 F_BD。斜桿 BC 為 3-4-5 三角形。",
+    solved:["DF","DE","CE","AB","AC","BC","BD"],activeNode:"B",cut:false,showReactions:true,
+    eqs:[
+      {t:"BC 方向：B(0,4)→C(3,0)，cosθ = 3/5，sinθ = 4/5",c:"#64748b"},
+      {t:"ΣF_y = 0 → 4 − F_BC(4/5) = 0 → F_BC = 5 kN（T）",c:"tension"},
+      {t:"ΣFₓ = 0 → F_BD + F_BC(3/5) = 0",c:""},
+      {t:"F_BD + 3 = 0 → F_BD = −3 kN（C）",c:"compression"}
+    ]
+  },
+  {// Step 5: Joint C
+    method:"節點法",methodColor:"#38bdf8",
+    title:"<strong>Step 5：節點法 — 節點 C</strong><br>已知 F_AC = 0、F_BC = 5、F_CE = 3，求 F_CD。同時驗算 CE。",
+    solved:["DF","DE","CE","AB","AC","BC","BD","CD"],activeNode:"C",cut:false,showReactions:true,
+    eqs:[
+      {t:"CB 在 C 的分量：x = −3，y = +4",c:"#64748b"},
+      {t:"ΣF_y = 0 → 4 + F_CD = 0 → F_CD = −4 kN（C）",c:"compression"},
+      {t:"ΣFₓ = 0 → 0 + (−3) + F_CE = 0 → F_CE = 3 kN ✓ 驗算通過！",c:"check"}
+    ]
+  },
+  {// Step 6: Joint E
+    method:"節點法",methodColor:"#38bdf8",
+    title:"<strong>Step 6：節點法 — 節點 E</strong><br>載重點！已知 F_CE = 3、F_DE = 5，加上 P = 12 kN ↓，求 F_EF 和 F_EG。",
+    solved:["DF","DE","CE","AB","AC","BC","BD","CD","EF","EG"],activeNode:"E",cut:false,showReactions:true,
+    eqs:[
+      {t:"DE 在 E 的分量：x = −3，y = +4",c:"#64748b"},
+      {t:"ΣF_y = 0 → −12 + 4 + F_EF = 0 → F_EF = 8 kN（T）",c:"tension"},
+      {t:"ΣFₓ = 0 → −3 + (−3) + F_EG = 0 → F_EG = 6 kN（T）",c:"tension"}
+    ]
+  },
+  {// Step 7: Joint F + G verify
+    method:"節點法",methodColor:"#38bdf8",
+    title:"<strong>Step 7：節點法 — 節點 F → G 驗算</strong><br>求出剩餘桿件，並在 G 點驗算平衡。",
+    solved:["DF","DE","CE","AB","AC","BC","BD","CD","EF","EG","FG","FH","GH"],activeNode:"G",cut:false,showReactions:true,
+    eqs:[
+      {t:"── 節點 F ──",c:"#8b5cf6"},
+      {t:"ΣF_y = 0 → −8 − F_FG(4/5) = 0 → F_FG = −10 kN（C）",c:"compression"},
+      {t:"ΣFₓ = 0 → 6 + (−6) + F_FH = 0 → F_FH = 0（零桿！）",c:"result"},
+      {t:"── 節點 G 驗算 ──",c:"#8b5cf6"},
+      {t:"ΣF_y = 0 → 8 + (−8) + F_GH = 0 → F_GH = 0 ✓",c:"check"},
+      {t:"ΣFₓ = 0 → −6 + 6 = 0 ✓ 完全平衡！",c:"check"}
+    ]
+  }
+];
+
+let advStep=0;
+function advInit(){advStep=0;advDraw();}
+
+function advDraw(){
+  const svg=document.getElementById("advSvg");if(!svg)return;
+  svg.innerHTML="";
+  const st=ADV_STEPS[advStep];
+  const solvedSet=new Set(st.solved);
+
+  // Defs
+  const d=document.createElementNS(NS,"defs");
+  d.innerHTML='<pattern id="advGrid" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M 18 0 L 0 0 0 18" fill="none" stroke="rgba(100,116,139,0.04)" stroke-width="0.5"/></pattern><filter id="advGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="advGlowO"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  svg.appendChild(d);
+  mk("rect",{width:700,height:320,fill:"url(#advGrid)"},svg);
+
+  // Cut region shading (for method of sections)
+  if(st.cut){
+    mk("rect",{x:0,y:0,width:340,height:320,fill:"rgba(245,158,11,.04)",stroke:"rgba(245,158,11,.2)","stroke-width":0},svg);
+    // Cut line
+    const cx=340;
+    mk("line",{x1:cx,y1:0,x2:cx,y2:320,stroke:"#f59e0b","stroke-width":2.5,"stroke-dasharray":"10 6",opacity:.7},svg);
+    mk("text",{x:cx+8,y:18,"font-size":12,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":600,opacity:.7},svg).textContent="截面";
+    // "Left FBD" label
+    mk("text",{x:20,y:18,"font-size":11,"font-family":"JetBrains Mono",fill:"rgba(245,158,11,.5)","font-weight":500},svg).textContent="← 左側自由體";
+  }
+
+  // Draw members
+  ADV.members.forEach(m=>{
+    const fn=ADV.nodes[m.f],tn=ADV.nodes[m.t];
+    const isSolved=solvedSet.has(m.id);
+    const isCut=st.cutMembers&&st.cutMembers.includes(m.id);
+    let col="#334155",sw=2.5,op=1;
+    if(isSolved){
+      col=m.force<0?"#ef4444":"#22c55e";
+      if(m.force===0)col="#475569";
+      sw=3;
+    }
+    if(isCut){col="#f59e0b";sw=3.5;op=1;}
+    const line=mk("line",{x1:fn.x,y1:fn.y,x2:tn.x,y2:tn.y,stroke:col,"stroke-width":sw,opacity:op,"stroke-linecap":"round"},svg);
+    // Force label on solved members
+    if(isSolved){
+      const mx=(fn.x+tn.x)/2,my=(fn.y+tn.y)/2;
+      const dx=tn.x-fn.x,dy=tn.y-fn.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+      const nx=-dy/len*16,ny=dx/len*16;
+      const fc=m.force<0?"#fca5a5":m.force>0?"#86efac":"#64748b";
+      const ft=m.force===0?"0":`${Math.abs(m.force)} ${m.force<0?"C":"T"}`;
+      mk("text",{x:mx+nx,y:my+ny+4,"text-anchor":"middle","font-size":12,"font-weight":600,"font-family":"JetBrains Mono",fill:fc},svg).textContent=ft;
+    }
+    if(isCut&&!isSolved){
+      const mx=(fn.x+tn.x)/2,my=(fn.y+tn.y)/2;
+      const dx=tn.x-fn.x,dy=tn.y-fn.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+      const nx=-dy/len*14,ny=dx/len*14;
+      mk("text",{x:mx+nx,y:my+ny+4,"text-anchor":"middle","font-size":11,"font-weight":600,"font-family":"JetBrains Mono",fill:"#f59e0b"},svg).textContent="F_"+m.id+" = ?";
+    }
+  });
+
+  // Load arrow at E
+  const eN=ADV.nodes.E;
+  arr(svg,eN.x,eN.y-65,eN.x,eN.y-12,"#f59e0b",9);
+  mk("text",{x:eN.x+14,y:eN.y-50,"font-size":13,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":600},svg).textContent="P = 12 kN";
+
+  // Supports
+  const aN=ADV.nodes.A,gN=ADV.nodes.G;
+  // Pin at A
+  mk("polygon",{points:`${aN.x},${aN.y+4} ${aN.x-12},${aN.y+20} ${aN.x+12},${aN.y+20}`,fill:"none",stroke:"#8ecae6","stroke-width":2},svg);
+  mk("line",{x1:aN.x-16,y1:aN.y+22,x2:aN.x+16,y2:aN.y+22,stroke:"#8ecae6","stroke-width":2},svg);
+  for(let i=0;i<4;i++)mk("line",{x1:aN.x-12+i*7,y1:aN.y+27,x2:aN.x-7+i*7,y2:aN.y+22,stroke:"#8ecae6","stroke-width":1.3},svg);
+  // Roller at G
+  mk("polygon",{points:`${gN.x},${gN.y+4} ${gN.x-12},${gN.y+18} ${gN.x+12},${gN.y+18}`,fill:"none",stroke:"#38bdf8","stroke-width":2},svg);
+  mk("circle",{cx:gN.x-6,cy:gN.y+23,r:4,fill:"none",stroke:"#38bdf8","stroke-width":1.5},svg);
+  mk("circle",{cx:gN.x+6,cy:gN.y+23,r:4,fill:"none",stroke:"#38bdf8","stroke-width":1.5},svg);
+  mk("line",{x1:gN.x-14,y1:gN.y+28,x2:gN.x+14,y2:gN.y+28,stroke:"#38bdf8","stroke-width":1.5},svg);
+
+  // Reaction arrows
+  if(st.showReactions){
+    arr(svg,aN.x,aN.y+55,aN.x,aN.y+8,"#8ecae6",7);
+    mk("text",{x:aN.x-40,y:aN.y+58,"font-size":12,"font-family":"JetBrains Mono",fill:"#8ecae6","font-weight":500},svg).textContent="4 kN";
+    arr(svg,gN.x,gN.y+55,gN.x,gN.y+8,"#8ecae6",7);
+    mk("text",{x:gN.x+12,y:gN.y+58,"font-size":12,"font-family":"JetBrains Mono",fill:"#8ecae6","font-weight":500},svg).textContent="8 kN";
+  }
+
+  // Moment point (for method of sections)
+  if(st.momentPt){
+    const mp=ADV.nodes[st.momentPt];
+    mk("circle",{cx:mp.x,cy:mp.y,r:22,fill:"none",stroke:"#8b5cf6","stroke-width":1.5,opacity:.3},svg).setAttribute("class","pulse-ring");
+    mk("text",{x:mp.x,y:mp.y-28,"text-anchor":"middle","font-size":12,"font-family":"JetBrains Mono",fill:"#8b5cf6","font-weight":700},svg).textContent="ΣM_"+st.momentPt;
+  }
+
+  // Nodes
+  Object.entries(ADV.nodes).forEach(([key,n])=>{
+    const isActive=st.activeNode===key;
+    if(isActive){
+      mk("circle",{cx:n.x,cy:n.y,r:22,fill:"none",stroke:"#38bdf8","stroke-width":1.5,opacity:.4},svg).setAttribute("class","pulse-ring");
+    }
+    const r=isActive?12:9;
+    mk("circle",{cx:n.x,cy:n.y,r:r,fill:isActive?"#2a2418":"#1a1207",stroke:isActive?"#38bdf8":"#475569","stroke-width":isActive?2.5:2},svg);
+    const ly=n.y<100?n.y+28:n.y-16;
+    mk("text",{x:n.x,y:ly,"text-anchor":"middle","font-size":14,"font-weight":isActive?700:600,"font-family":"JetBrains Mono",fill:isActive?"#38bdf8":"#94a3b8"},svg).textContent=n.label;
+  });
+
+  // Method badge (top-right)
+  if(st.method){
+    const bw=st.method.length*16+20;
+    mk("rect",{x:700-bw-10,y:6,width:bw,height:30,rx:8,fill:"rgba(0,0,0,.4)",stroke:st.methodColor,"stroke-width":1.5},svg);
+    mk("text",{x:700-bw/2-10,y:27,"text-anchor":"middle","font-size":14,"font-weight":700,"font-family":"JetBrains Mono",fill:st.methodColor},svg).textContent=st.method;
+  }
+
+  // Equations panel
+  const eqP=document.getElementById("advEqPanel");
+  if(st.eqs&&st.eqs.length>0){
+    let html='<div class="card" style="margin:0"><h3 style="color:'+st.methodColor+'">'+st.method+'方程式</h3>';
+    st.eqs.forEach(eq=>{
+      let cls="eq-line";
+      if(eq.c==="tension")cls+=" tension";
+      else if(eq.c==="compression")cls+=" compression";
+      else if(eq.c==="check")cls+=" check";
+      else if(eq.c==="result")cls+=" result";
+      const style=eq.c&&eq.c.startsWith("#")?` style="color:${eq.c}"`:"";
+      html+=`<div class="${cls}"${style}>${eq.t}</div>`;
+    });
+    html+='</div>';
+    eqP.innerHTML=html;
+  } else {
+    eqP.innerHTML="";
+  }
+
+  // Update UI
+  document.getElementById("advStepNum").textContent=advStep;
+  document.getElementById("advPrev").disabled=(advStep===0);
+  const done=advStep>=ADV_STEPS.length-1;
+  const btn=document.getElementById("advNextBtn");
+  btn.disabled=done;btn.textContent=done?"分析完成 ✓":"下一步 →";
+  btn.className=done?"stg-btn":"stg-btn primary";
+  document.getElementById("advLabel").innerHTML=st.title;
+}
+function advNext(){if(advStep<ADV_STEPS.length-1){advStep++;advDraw();}}
+function advPrev(){if(advStep>0){advStep--;advDraw();}}
+function advReset(){advStep=0;advDraw();}
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+// Pre-render the first interactive section if user navigates there
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+window.onload = function(){
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$', right:'$', display:true},
+      {left:'\\(', right:'\\)', display:false}
+    ]
+  });
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warren Truss — 節點法互動分析 | Method of Joints</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(165deg, #0c1222 0%, #162032 50%, #0f1b2d 100%);
+    color: #e2e8f0;
+    font-family: 'Source Sans Pro', 'Noto Sans TC', sans-serif;
+    padding: 20px;
+  }
+  .container { max-width: 920px; margin: 0 auto; }
+  h1 {
+    font-size: 26px; font-weight: 700; letter-spacing: 0.02em;
+    background: linear-gradient(135deg, #60a5fa, #38bdf8, #22d3ee);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .subtitle { color: #94a3b8; font-size: 14px; font-weight: 300; margin-bottom: 20px; }
+  .svg-panel {
+    background: rgba(15,23,42,0.7); border: 1px solid rgba(56,189,248,0.15);
+    border-radius: 16px; padding: 16px 8px; margin-bottom: 16px; position: relative;
+    backdrop-filter: blur(10px);
+  }
+  .svg-panel svg { display: block; width: 100%; }
+
+  .node-group { cursor: pointer; }
+  .node-group:hover .node-main { stroke-width: 3; }
+  .node-group .hit-area { fill: transparent; }
+
+  @keyframes pulse {
+    0%, 100% { r: 18; opacity: 0.4; }
+    50% { r: 23; opacity: 0.15; }
+  }
+  .pulse-ring { animation: pulse 2s ease-in-out infinite; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.9; }
+  }
+  .unknown-force { animation: blink 1.5s ease-in-out infinite; }
+
+  .nav-bar { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .nav-btn {
+    background: rgba(30,41,59,0.6); border: 1px solid #334155; color: #94a3b8;
+    padding: 8px 14px; border-radius: 8px; font-size: 12px; cursor: pointer;
+    font-family: inherit; font-weight: 500; transition: all 0.2s; white-space: nowrap;
+  }
+  .nav-btn:hover { border-color: #475569; color: #cbd5e1; }
+  .nav-btn.active { background: rgba(56,189,248,0.15); border-color: #38bdf8; color: #38bdf8; }
+  .nav-btn.play { font-weight: 600; margin-left: auto; }
+  .nav-btn.play.running { background: rgba(34,197,94,0.15); border-color: #22c55e; color: #22c55e; }
+
+  .fbd-btn {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(30,41,59,0.8); border: 1px solid #334155; color: #94a3b8;
+    padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer;
+    font-family: inherit; transition: all 0.2s; z-index: 5;
+  }
+  .fbd-btn.active { background: rgba(56,189,248,0.2); border-color: #38bdf8; color: #38bdf8; }
+
+  .analysis-panel {
+    background: rgba(15,23,42,0.7); border: 1px solid rgba(56,189,248,0.12);
+    border-radius: 16px; padding: 24px; backdrop-filter: blur(10px); min-height: 200px;
+  }
+  .step-title { font-size: 18px; font-weight: 600; color: #38bdf8; margin-bottom: 4px; }
+  .step-title-en { font-size: 12px; color: #64748b; margin-bottom: 16px; }
+  .step-desc { font-size: 13px; color: #cbd5e1; line-height: 1.7; margin-bottom: 16px; }
+
+  .eq-box {
+    background: rgba(30,41,59,0.5); border-radius: 12px; padding: 16px;
+    border: 1px solid rgba(71,85,105,0.3); margin-bottom: 16px;
+  }
+  .eq-box h3 { font-size: 12px; color: #60a5fa; margin-bottom: 10px; font-weight: 600; letter-spacing: 0.05em; }
+  .eq-line {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0;
+    padding: 5px 0; border-bottom: 1px solid rgba(51,65,85,0.3); line-height: 1.6;
+  }
+  .eq-line:last-child { border-bottom: none; }
+  .eq-line.check { color: #22c55e; }
+  .eq-line.compression { color: #fca5a5; }
+  .eq-line.tension { color: #86efac; }
+
+  .member-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .member-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 8px; padding: 4px 10px; font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .member-tag.tension { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); color: #86efac; }
+  .member-tag.compression { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; }
+  .member-tag .badge { border-radius: 4px; padding: 1px 5px; font-weight: 600; font-size: 10px; }
+  .member-tag.tension .badge { background: rgba(34,197,94,0.2); }
+  .member-tag.compression .badge { background: rgba(239,68,68,0.2); }
+
+  .step-nav { display: flex; justify-content: space-between; margin-top: 20px; }
+  .step-nav button {
+    background: rgba(30,41,59,0.6); border: 1px solid #334155; color: #94a3b8;
+    padding: 8px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .step-nav button:hover:not(:disabled) { border-color: #475569; color: #cbd5e1; }
+  .step-nav .next-btn { background: rgba(56,189,248,0.15); border-color: #38bdf8; color: #38bdf8; font-weight: 600; }
+  .step-nav .next-btn:disabled { background: rgba(30,41,59,0.3); border-color: #1e293b; color: #475569; cursor: not-allowed; }
+
+  .overview-title { font-size: 20px; font-weight: 600; color: #e2e8f0; margin-bottom: 12px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+  .info-card { background: rgba(30,41,59,0.5); border-radius: 12px; padding: 16px; border: 1px solid rgba(71,85,105,0.3); }
+  .info-card h3 { font-size: 13px; margin-bottom: 8px; font-weight: 600; }
+  .info-card .row { font-size: 13px; color: #cbd5e1; line-height: 1.8; }
+  .info-card .val { font-family: 'JetBrains Mono', monospace; }
+  .hint-box { background: rgba(56,189,248,0.06); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(56,189,248,0.1); }
+  .hint-box p { font-size: 13px; color: #94a3b8; line-height: 1.7; }
+
+  .legend { display: flex; gap: 20px; justify-content: center; margin-top: 16px; font-size: 11px; color: #64748b; }
+  .legend-line { display: inline-block; width: 20px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Warren Truss — 節點法互動分析</h1>
+  <p class="subtitle">Method of Joints Interactive Analysis ｜ 點擊節點或使用下方按鈕逐步分析</p>
+
+  <div class="svg-panel">
+    <svg id="trussSvg" viewBox="0 0 700 300"></svg>
+    <button class="fbd-btn" id="fbdBtn" style="display:none;" onclick="toggleFBD()">◇ 顯示 FBD</button>
+  </div>
+
+  <div class="nav-bar" id="navBar"></div>
+  <div class="analysis-panel" id="analysisPanel"></div>
+
+  <div class="legend">
+    <span><span class="legend-line" style="background:#22c55e"></span>拉力 Tension</span>
+    <span><span class="legend-line" style="background:#ef4444"></span>壓力 Compression</span>
+    <span><span class="legend-line" style="background:#475569"></span>未求解 Unknown</span>
+  </div>
+</div>
+
+<script>
+const NODES = {
+  A: { x: 0, y: 0, label: "A", support: "pin" },
+  B: { x: 1.5, y: 2, label: "B" },
+  C: { x: 3, y: 0, label: "C", load: -10 },
+  D: { x: 4.5, y: 2, label: "D" },
+  E: { x: 6, y: 0, label: "E", support: "roller" },
+};
+
+const MEMBERS = [
+  { id: "AB", from: "A", to: "B", force: -6.25 },
+  { id: "AC", from: "A", to: "C", force: 3.75 },
+  { id: "BC", from: "B", to: "C", force: 6.25 },
+  { id: "BD", from: "B", to: "D", force: -7.5 },
+  { id: "CD", from: "C", to: "D", force: 6.25 },
+  { id: "CE", from: "C", to: "E", force: 3.75 },
+  { id: "DE", from: "D", to: "E", force: -6.25 },
+];
+
+const REACTIONS = { A: { Ax: 0, Ay: 5 }, E: { Ey: 5 } };
+const SOLVE_ORDER = ["reactions", "A", "B", "C", "D", "E"];
+
+const NODE_ANALYSIS = {
+  reactions: {
+    title: "Step 0：求支承反力",
+    titleEn: "Step 0: Support Reactions",
+    equations: [
+      { text: "ΣFx = 0 → Ax = 0", type: "" },
+      { text: "ΣM_A = 0 → Ey × 6 − 10 × 3 = 0 → Ey = 5 kN ↑", type: "" },
+      { text: "ΣFy = 0 → Ay + Ey − 10 = 0 → Ay = 5 kN ↑", type: "" },
+    ],
+    description: "先由整體平衡求出支承反力。A 為鉸支承（兩個反力），E 為滾支承（一個反力）。",
+    connectedMembers: [], solvedMembers: [],
+  },
+  A: {
+    title: "Step 1：節點 A 分析",
+    titleEn: "Step 1: Joint A Analysis",
+    equations: [
+      { text: "ΣFy = 0 → 5 + F_AB sin θ = 0", type: "" },
+      { text: "sin θ = 0.8 → F_AB = −6.25 kN（壓力 C）", type: "compression" },
+      { text: "ΣFx = 0 → F_AB cos θ + F_AC = 0", type: "" },
+      { text: "cos θ = 0.6 → F_AC = 3.75 kN（拉力 T）", type: "tension" },
+    ],
+    description: "節點 A 只有 2 個未知桿件力（F_AB、F_AC），加上已知反力 Ay = 5kN，可直接求解。",
+    connectedMembers: ["AB", "AC"], solvedMembers: ["AB", "AC"],
+  },
+  B: {
+    title: "Step 2：節點 B 分析",
+    titleEn: "Step 2: Joint B Analysis",
+    equations: [
+      { text: "ΣFy = 0 → −F_AB sin θ + F_BC (−sin θ) = 0", type: "" },
+      { text: "5.0 − 0.8 × F_BC = 0 → F_BC = 6.25 kN（T）", type: "tension" },
+      { text: "ΣFx = 0 → −F_AB cos θ + F_BC cos θ + F_BD = 0", type: "" },
+      { text: "3.75 + 3.75 + F_BD = 0 → F_BD = −7.5 kN（C）", type: "compression" },
+    ],
+    description: "節點 B 已知 F_AB，未知 F_BC 和 F_BD，2 個方程式解 2 個未知數。",
+    connectedMembers: ["AB", "BC", "BD"], solvedMembers: ["BC", "BD"],
+  },
+  C: {
+    title: "Step 3：節點 C 分析",
+    titleEn: "Step 3: Joint C Analysis",
+    equations: [
+      { text: "ΣFy = 0 → −10 + F_BC sin θ + F_CD sin θ = 0", type: "" },
+      { text: "−10 + 5.0 + 0.8 × F_CD = 0 → F_CD = 6.25 kN（T）", type: "tension" },
+      { text: "ΣFx = 0 → −F_AC − F_BC cos θ + F_CD cos θ + F_CE = 0", type: "" },
+      { text: "−3.75 − 3.75 + 3.75 + F_CE = 0 → F_CE = 3.75 kN（T）", type: "tension" },
+    ],
+    description: "節點 C 已知 F_AC、F_BC，加上外力 P = 10kN↓，求 F_CD 和 F_CE。",
+    connectedMembers: ["AC", "BC", "CD", "CE"], solvedMembers: ["CD", "CE"],
+  },
+  D: {
+    title: "Step 4：節點 D 驗證",
+    titleEn: "Step 4: Joint D Verification",
+    equations: [
+      { text: "ΣFx = 0 → −F_BD + (−F_CD cos θ) + F_DE cos θ = 0", type: "" },
+      { text: "7.5 − 3.75 + 0.6 × F_DE = 0 → F_DE = −6.25 kN（C）✓", type: "check" },
+      { text: "ΣFy = 0 → −F_CD sin θ + F_DE (−sin θ) = 0", type: "" },
+      { text: "−5.0 + 5.0 = 0 ✓", type: "check" },
+    ],
+    description: "節點 D 可作為驗算。所有已知力代入，檢查平衡是否滿足。",
+    connectedMembers: ["BD", "CD", "DE"], solvedMembers: ["DE"],
+  },
+  E: {
+    title: "Step 5：節點 E 驗證",
+    titleEn: "Step 5: Joint E Verification",
+    equations: [
+      { text: "ΣFx = 0 → −F_CE + (−F_DE cos θ) = 0", type: "" },
+      { text: "−3.75 + 3.75 = 0 ✓", type: "check" },
+      { text: "ΣFy = 0 → 5 + F_DE sin θ = 0", type: "" },
+      { text: "5.0 − 5.0 = 0 ✓", type: "check" },
+    ],
+    description: "最後用節點 E 驗證整體平衡。所有方程式都滿足，表示分析正確！",
+    connectedMembers: ["CE", "DE"], solvedMembers: [],
+  },
+};
+
+// ── State ──
+let currentStep = -1;
+let showFBD = false;
+let autoPlayTimer = null;
+
+// ── SVG Helpers ──
+const SCALE = 90, OX = 80, OY = 50, SW = 700, SH = 300;
+const NS = "http://www.w3.org/2000/svg";
+
+function toSvg(x, y) { return { x: OX + x * SCALE, y: SH - OY - y * SCALE }; }
+
+function mk(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => e.setAttribute(k, v));
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+function arrow(parent, x1, y1, x2, y2, color, sz) {
+  sz = sz || 8;
+  const dx = x2-x1, dy = y2-y1, len = Math.hypot(dx,dy);
+  if (!len) return;
+  const ux=dx/len, uy=dy/len, px=-uy, py=ux;
+  mk("line", { x1,y1,x2,y2, stroke:color, "stroke-width":2.2 }, parent);
+  mk("polygon", { points:`${x2},${y2} ${x2-ux*sz+px*sz*.4},${y2-uy*sz+py*sz*.4} ${x2-ux*sz-px*sz*.4},${y2-uy*sz-py*sz*.4}`, fill:color }, parent);
+}
+
+function solvedM() {
+  const s=[];
+  for(let i=0;i<=currentStep&&i<SOLVE_ORDER.length;i++){
+    const a=NODE_ANALYSIS[SOLVE_ORDER[i]];
+    if(a.solvedMembers) s.push(...a.solvedMembers);
+  }
+  return s;
+}
+
+function solvedN() {
+  const n=[];
+  for(let i=0;i<=currentStep&&i<SOLVE_ORDER.length;i++){
+    if(SOLVE_ORDER[i]!=="reactions") n.push(SOLVE_ORDER[i]);
+  }
+  return n;
+}
+
+// ── Main SVG Render (called only on state change) ──
+function renderSvg() {
+  const svg = document.getElementById("trussSvg");
+  svg.innerHTML = "";
+
+  const sm = solvedM(), sn = solvedN();
+  const stepKey = currentStep >= 0 ? SOLVE_ORDER[currentStep] : null;
+  const ana = stepKey ? NODE_ANALYSIS[stepKey] : null;
+
+  // defs
+  const defs = mk("defs",{},svg);
+  defs.innerHTML = `<pattern id="grid" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M 18 0 L 0 0 0 18" fill="none" stroke="rgba(56,189,248,0.04)" stroke-width="0.5"/></pattern><filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  mk("rect",{width:SW,height:SH,fill:"url(#grid)"},svg);
+
+  // supports
+  const pa=toSvg(0,0), pe=toSvg(6,0);
+  // pin A
+  const pg=mk("g",{},svg);
+  mk("polygon",{points:`${pa.x},${pa.y} ${pa.x-14},${pa.y+20} ${pa.x+14},${pa.y+20}`,fill:"none",stroke:"#8ecae6","stroke-width":2},pg);
+  mk("line",{x1:pa.x-18,y1:pa.y+22,x2:pa.x+18,y2:pa.y+22,stroke:"#8ecae6","stroke-width":2},pg);
+  [-12,-4,4,12].forEach(d=>mk("line",{x1:pa.x+d-3,y1:pa.y+28,x2:pa.x+d+3,y2:pa.y+22,stroke:"#8ecae6","stroke-width":1.5},pg));
+  // roller E
+  const rg=mk("g",{},svg);
+  mk("polygon",{points:`${pe.x},${pe.y} ${pe.x-14},${pe.y+18} ${pe.x+14},${pe.y+18}`,fill:"none",stroke:"#8ecae6","stroke-width":2},rg);
+  mk("circle",{cx:pe.x-8,cy:pe.y+23,r:4,fill:"none",stroke:"#8ecae6","stroke-width":1.5},rg);
+  mk("circle",{cx:pe.x+8,cy:pe.y+23,r:4,fill:"none",stroke:"#8ecae6","stroke-width":1.5},rg);
+  mk("line",{x1:pe.x-18,y1:pe.y+29,x2:pe.x+18,y2:pe.y+29,stroke:"#8ecae6","stroke-width":2},rg);
+
+  // members
+  MEMBERS.forEach(m=>{
+    const f=toSvg(NODES[m.from].x,NODES[m.from].y);
+    const t=toSvg(NODES[m.to].x,NODES[m.to].y);
+    const solved=sm.includes(m.id);
+    const conn=ana&&ana.connectedMembers&&ana.connectedMembers.includes(m.id);
+    const col=solved?(m.force<0?"#ef4444":"#22c55e"):"#475569";
+    const w=conn?4:solved?3:2.5;
+    if(conn) mk("line",{x1:f.x,y1:f.y,x2:t.x,y2:t.y,stroke:col,"stroke-width":w+6,opacity:0.15},svg);
+    mk("line",{x1:f.x,y1:f.y,x2:t.x,y2:t.y,stroke:col,"stroke-width":w,"stroke-linecap":"round"},svg);
+    if(solved){
+      const tx=mk("text",{x:(f.x+t.x)/2,y:(f.y+t.y)/2-8,"text-anchor":"middle","font-size":10,"font-family":"JetBrains Mono",fill:col,"font-weight":500},svg);
+      tx.textContent=`${Math.abs(m.force).toFixed(2)} kN ${m.force<0?"(C)":"(T)"}`;
+    }
+  });
+
+  // external load C
+  const pc=toSvg(3,0);
+  arrow(svg,pc.x,pc.y-55,pc.x,pc.y-10,"#f59e0b",9);
+  mk("text",{x:pc.x+12,y:pc.y-40,"font-size":13,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":500},svg).textContent="P = 10 kN";
+
+  // reactions
+  if(currentStep>=0){
+    arrow(svg,pa.x,pa.y+50,pa.x,pa.y+8,"#8ecae6");
+    mk("text",{x:pa.x-44,y:pa.y+55,"font-size":10,"font-family":"JetBrains Mono",fill:"#8ecae6"},svg).textContent="Ay=5kN";
+    arrow(svg,pe.x,pe.y+50,pe.x,pe.y+8,"#8ecae6");
+    mk("text",{x:pe.x+10,y:pe.y+55,"font-size":10,"font-family":"JetBrains Mono",fill:"#8ecae6"},svg).textContent="Ey=5kN";
+  }
+
+  // FBD
+  if(showFBD&&stepKey&&stepKey!=="reactions"&&ana){
+    const nd=NODES[stepKey], sp=toSvg(nd.x,nd.y), al=50;
+    if(nd.load){
+      arrow(svg,sp.x,sp.y-al,sp.x,sp.y,"#f59e0b");
+      mk("text",{x:sp.x+10,y:sp.y-al+10,"font-size":9,"font-family":"JetBrains Mono",fill:"#f59e0b","font-weight":500},svg).textContent=`${Math.abs(nd.load)} kN`;
+    }
+    if(REACTIONS[stepKey]){
+      const r=REACTIONS[stepKey];
+      if(r.Ay!==undefined){arrow(svg,sp.x,sp.y+al,sp.x,sp.y,"#8ecae6");mk("text",{x:sp.x-48,y:sp.y+al-5,"font-size":9,"font-family":"JetBrains Mono",fill:"#8ecae6","font-weight":500},svg).textContent=`Ay=${r.Ay} kN`;}
+      if(r.Ey!==undefined){arrow(svg,sp.x,sp.y+al,sp.x,sp.y,"#8ecae6");mk("text",{x:sp.x+10,y:sp.y+al-5,"font-size":9,"font-family":"JetBrains Mono",fill:"#8ecae6","font-weight":500},svg).textContent=`Ey=${r.Ey} kN`;}
+    }
+    ana.connectedMembers.forEach(mid=>{
+      const mb=MEMBERS.find(m=>m.id===mid); if(!mb) return;
+      const ok=mb.from===stepKey?mb.to:mb.from;
+      const on=NODES[ok];
+      const dx=on.x-nd.x,dy=on.y-nd.y,len=Math.hypot(dx,dy);
+      const ux=dx/len,uy=-dy/len;
+      const isT=mb.force>0, isS=sm.includes(mid);
+      let ax1,ay1,ax2,ay2;
+      if(isT){ax1=sp.x+ux*15;ay1=sp.y+uy*15;ax2=sp.x+ux*(15+al);ay2=sp.y+uy*(15+al);}
+      else{ax2=sp.x+ux*15;ay2=sp.y+uy*15;ax1=sp.x+ux*(15+al);ay1=sp.y+uy*(15+al);}
+      const col=mb.force<0?"#ef4444":"#22c55e";
+      const g=mk("g",{class:isS?"":"unknown-force"},svg);
+      arrow(g,ax1,ay1,ax2,ay2,col,7);
+      const lx=(ax1+ax2)/2+(uy>0.3?-60:uy<-0.3?10:ux>0?10:-65);
+      const ly=(ay1+ay2)/2+(Math.abs(uy)<0.3?-10:0);
+      const v=Math.abs(mb.force).toFixed(2), tl=mb.force<0?"C":"T";
+      mk("text",{x:lx,y:ly,"font-size":9,"font-family":"JetBrains Mono",fill:col,"font-weight":500},g).textContent=isS?`F_${mid}=${v}(${tl})`:`F_${mid}=?`;
+    });
+  }
+
+  // nodes (last = on top)
+  Object.entries(NODES).forEach(([key,node])=>{
+    const pos=toSvg(node.x,node.y);
+    const active=stepKey===key, solved=sn.includes(key);
+    const g=mk("g",{class:"node-group"},svg);
+
+    // large hit area
+    mk("circle",{cx:pos.x,cy:pos.y,r:28,class:"hit-area"},g);
+
+    // pulse (CSS animated)
+    if(active) mk("circle",{cx:pos.x,cy:pos.y,r:20,fill:"none",stroke:"#38bdf8","stroke-width":1.5,class:"pulse-ring"},g);
+
+    // main circle
+    mk("circle",{
+      cx:pos.x,cy:pos.y,
+      r:active?14:11,
+      fill:active?"#1e3a5f":solved?"#1a2e44":"#0f1b2d",
+      stroke:active?"#38bdf8":solved?"#60a5fa":"#475569",
+      "stroke-width":active?2.5:2,
+      filter:active?"url(#glow)":"",
+      class:"node-main",
+    },g);
+
+    // label
+    const txt=mk("text",{
+      x:pos.x,y:pos.y+4.5,"text-anchor":"middle",
+      "font-size":active?13:12,"font-weight":active?700:600,
+      "font-family":"JetBrains Mono",
+      fill:active?"#38bdf8":solved?"#93c5fd":"#94a3b8",
+      style:"pointer-events:none",
+    },g);
+    txt.textContent=node.label;
+
+    // click
+    g.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      const idx=SOLVE_ORDER.indexOf(key);
+      if(idx>=0) goToStep(idx);
+    });
+  });
+}
+
+// ── Nav ──
+function renderNav(){
+  const bar=document.getElementById("navBar");
+  bar.innerHTML="";
+  const btn=(text,active,fn,extra)=>{
+    const b=document.createElement("button");
+    b.className="nav-btn"+(active?" active":"")+(extra||"");
+    b.textContent=text; b.onclick=fn; bar.appendChild(b);
+  };
+  btn("總覽",currentStep===-1,()=>goToStep(-1));
+  SOLVE_ORDER.forEach((k,i)=>btn(k==="reactions"?"反力":`節點 ${k}`,currentStep===i,()=>goToStep(i)));
+  const sp=document.createElement("div"); sp.style.flex="1"; bar.appendChild(sp);
+  btn(autoPlayTimer?"⏸ 暫停":"▶ 自動播放",false,toggleAutoPlay," play"+(autoPlayTimer?" running":""));
+}
+
+// ── Panel ──
+function renderPanel(){
+  const panel=document.getElementById("analysisPanel");
+  document.getElementById("fbdBtn").style.display=currentStep>0?"":"none";
+
+  if(currentStep===-1){
+    panel.innerHTML=`
+      <h2 class="overview-title">Warren Truss 靜定桁架分析</h2>
+      <div class="info-grid">
+        <div class="info-card"><h3 style="color:#60a5fa">桁架資訊</h3>
+          <div class="row">節點數：<span class="val" style="color:#38bdf8">5</span></div>
+          <div class="row">桿件數：<span class="val" style="color:#38bdf8">7</span></div>
+          <div class="row">反力數：<span class="val" style="color:#38bdf8">3</span>（Ax, Ay, Ey）</div>
+          <div class="row">驗證：<span class="val" style="color:#22c55e">2n = m + r → 10 = 7 + 3 ✓</span></div>
+        </div>
+        <div class="info-card"><h3 style="color:#f59e0b">載重條件</h3>
+          <div class="row">外力：<span class="val" style="color:#f59e0b">P = 10 kN ↓</span>（節點 C）</div>
+          <div class="row">支承 A：鉸支承（pin）</div>
+          <div class="row">支承 E：滾支承（roller）</div>
+        </div>
+      </div>
+      <div class="hint-box"><p>💡 <strong style="color:#e2e8f0">操作方式：</strong>
+        點擊上方桁架的節點，或使用導覽按鈕，逐步觀看節點法（Method of Joints）的分析過程。
+        開啟「顯示 FBD」可以在圖上看到力的方向。
+        <span style="color:#22c55e">綠色</span> = 拉力(T)，<span style="color:#ef4444">紅色</span> = 壓力(C)。</p></div>`;
+    return;
+  }
+
+  const sk=SOLVE_ORDER[currentStep], a=NODE_ANALYSIS[sk], sm=solvedM();
+  const eqH=a.equations.map(eq=>`<div class="eq-line${eq.type?" "+eq.type:""}">${eq.text}</div>`).join("");
+  let tags="";
+  MEMBERS.filter(m=>sm.includes(m.id)).forEach(m=>{
+    const tp=m.force<0?"compression":"tension", bd=m.force<0?"C":"T";
+    tags+=`<div class="member-tag ${tp}"><span style="font-weight:600">F_${m.id}</span><span>=</span><span>${Math.abs(m.force).toFixed(2)} kN</span><span class="badge">${bd}</span></div>`;
+  });
+  const nd=currentStep>=SOLVE_ORDER.length-1;
+  panel.innerHTML=`
+    <div class="step-title">${a.title}</div>
+    <div class="step-title-en">${a.titleEn}</div>
+    <div class="step-desc">${a.description}</div>
+    <div class="eq-box"><h3>平衡方程式 EQUILIBRIUM EQUATIONS</h3>${eqH}</div>
+    ${tags?`<div class="member-tags">${tags}</div>`:""}
+    <div class="step-nav">
+      <button onclick="goToStep(${currentStep-1})">← 上一步</button>
+      <button class="${nd?"":"next-btn"}" ${nd?"disabled":""} onclick="goToStep(${currentStep+1})">下一步 →</button>
+    </div>`;
+}
+
+// ── Actions ──
+function goToStep(s){
+  currentStep=Math.max(-1,Math.min(SOLVE_ORDER.length-1,s));
+  stopAuto(); render();
+}
+
+function toggleFBD(){
+  showFBD=!showFBD;
+  const b=document.getElementById("fbdBtn");
+  b.className="fbd-btn"+(showFBD?" active":"");
+  b.textContent=showFBD?"✦ 隱藏 FBD":"◇ 顯示 FBD";
+  renderSvg();
+}
+
+function toggleAutoPlay(){
+  if(autoPlayTimer){stopAuto();renderNav();return;}
+  if(currentStep>=SOLVE_ORDER.length-1) currentStep=-1;
+  autoPlayTimer=setInterval(()=>{
+    if(currentStep>=SOLVE_ORDER.length-1){stopAuto();render();return;}
+    currentStep++; render();
+  },4000);
+  render();
+}
+
+function stopAuto(){if(autoPlayTimer){clearInterval(autoPlayTimer);autoPlayTimer=null;}}
+
+function render(){ renderSvg(); renderNav(); renderPanel(); }
+
+// ── Init ──
+render();
+</script>
+</body>
+</html>

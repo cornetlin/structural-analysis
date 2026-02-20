@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>穩定性與靜定性 — 互動教學</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1a1814;--card:rgba(255,255,255,0.03);--card2:rgba(255,255,255,0.05);
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#f0ead6;--text2:#c8c0b0;--text3:#8a8070;--text4:#5c4a3a;
+  --teal:#2d7d9a;--purple:#a855f7;--gold:#e8b339;--tan:#d4a574;
+  --red:#e05555;--green:#3ba55d;--blue:#5b9bd5;
+  --green-t:#86efac;--red-t:#fca5a5;
+  --nav-w:260px;
+}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:15px;line-height:1.85}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+button{font-family:inherit;cursor:pointer}
+.layout{display:flex;min-height:100vh;padding-left:var(--nav-w)}
+.sidebar{
+  width:var(--nav-w);min-height:100vh;position:fixed;left:0;top:0;
+  background:rgba(20,18,14,.97);border-right:1px solid var(--border);
+  padding:20px 0;overflow-y:auto;z-index:100;backdrop-filter:blur(12px);transition:transform .3s;
+}
+.sidebar-header{padding:0 18px 16px;border-bottom:1px solid var(--border)}
+.sidebar-header h1{font-size:16px;font-weight:800;font-family:'Playfair Display',serif;background:linear-gradient(135deg,var(--text),var(--tan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:3px}
+.sidebar-header .sub{font-size:11px;color:var(--text3);font-weight:400}
+.nav-group{padding:10px 0}
+.nav-group-title{font-size:10px;font-weight:700;color:var(--text4);letter-spacing:.12em;text-transform:uppercase;padding:0 18px;margin-bottom:4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 18px;cursor:pointer;transition:all .2s;font-size:12.5px;color:var(--text3);border-left:3px solid transparent}
+.nav-item:hover{color:var(--text2);background:rgba(255,255,255,.03)}
+.nav-item.active{color:var(--gold);background:rgba(232,179,57,.06);border-left-color:var(--gold);font-weight:700}
+.nav-item .num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text4);width:24px;flex-shrink:0}
+.hamburger{display:none;position:fixed;top:14px;left:14px;z-index:200;background:rgba(30,27,22,.95);border:1px solid var(--border);border-radius:10px;padding:10px 13px;cursor:pointer;color:var(--text2);font-size:18px}
+@media(max-width:860px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.hamburger{display:block}.layout{padding-left:0!important}.main{padding:20px!important;padding-top:56px!important}}
+.main{padding:36px 40px 60px;max-width:920px;width:100%;margin:0 auto}
+.section{display:none;animation:fadeIn .3s ease}.section.active{display:block}
+.section-tag{display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(45,125,154,0.15);color:var(--teal);font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.section-title{font-size:28px;font-weight:900;font-family:'Playfair Display',serif;background:linear-gradient(135deg,var(--text),var(--tan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.section-sub{font-size:14px;color:var(--text3);margin-bottom:28px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+.card-title{font-size:17px;font-weight:800;font-family:'Playfair Display',serif;margin-bottom:10px;color:var(--text)}
+.card-title .en{font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-left:8px;font-weight:400}
+.card p,.card li{font-size:13.5px;color:var(--text2);line-height:1.85}
+.card ul,.card ol{padding-left:18px;margin:6px 0}.card li{margin-bottom:3px}
+.def-box{background:rgba(45,125,154,0.08);border:1px solid rgba(45,125,154,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.def-box .label{font-size:11px;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:6px}
+.thm-box{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.thm-box .label{font-size:11px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:6px}
+.prop-box{background:rgba(232,179,57,0.08);border:1px solid rgba(232,179,57,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.prop-box .label{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:6px}
+.ex-box{background:rgba(59,165,93,0.08);border:1px solid rgba(59,165,93,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.ex-box .label{font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:6px}
+.note-box{background:rgba(212,165,116,0.08);border:1px solid rgba(212,165,116,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.note-box .label{font-size:11px;font-weight:700;color:var(--tan);letter-spacing:1px;margin-bottom:6px}
+.warn-box{background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.2);border-radius:10px;padding:14px 18px;margin:12px 0}
+.warn-box .label{font-size:11px;font-weight:700;color:var(--red);letter-spacing:1px;margin-bottom:6px}
+.formula-block{background:rgba(0,0,0,0.2);border-radius:10px;padding:16px;margin:12px 0;text-align:center;overflow-x:auto}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:12px 0}
+@media(max-width:600px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.type-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center;transition:all .3s}
+.type-card:hover{border-color:var(--border2);background:rgba(255,255,255,0.06)}
+.type-card .name{font-size:15px;font-weight:700;margin-bottom:2px}
+.type-card .en{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+svg.diagram{display:block;margin:10px auto;max-width:100%}
+.interactive-box{background:rgba(0,0,0,0.15);border:1px solid var(--border2);border-radius:12px;padding:18px;margin:14px 0}
+.interactive-box h4{font-size:14px;font-weight:700;color:var(--teal);margin-bottom:10px}
+.btn{display:inline-block;padding:8px 20px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-teal{background:rgba(45,125,154,0.2);color:var(--teal)}.btn-teal:hover{background:rgba(45,125,154,0.35)}
+.btn-gold{background:rgba(232,179,57,0.2);color:var(--gold)}.btn-gold:hover{background:rgba(232,179,57,0.35)}
+.btn-purple{background:rgba(168,85,247,0.2);color:var(--purple)}.btn-purple:hover{background:rgba(168,85,247,0.35)}
+.btn-green{background:rgba(59,165,93,0.2);color:var(--green)}.btn-green:hover{background:rgba(59,165,93,0.35)}
+.btn-red{background:rgba(224,85,85,0.2);color:var(--red)}.btn-red:hover{background:rgba(224,85,85,0.35)}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+.result-box{background:rgba(0,0,0,0.25);border-radius:8px;padding:12px 16px;margin-top:10px;min-height:40px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2);line-height:1.9;white-space:pre-wrap}
+input.input-num{width:52px;height:36px;text-align:center;border:1px solid var(--border2);border-radius:6px;background:rgba(255,255,255,0.04);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px}
+input.input-num:focus{outline:none;border-color:var(--teal);background:rgba(45,125,154,0.1)}
+.tag-s{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;background:rgba(59,165,93,.15);color:var(--green);border:1px solid rgba(59,165,93,.25)}
+.tag-u{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;background:rgba(224,85,85,.15);color:var(--red);border:1px solid rgba(224,85,85,.25)}
+.tag-d{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;background:rgba(91,155,213,.15);color:var(--blue);border:1px solid rgba(91,155,213,.25)}
+.tag-i{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;background:rgba(168,85,247,.15);color:var(--purple);border:1px solid rgba(168,85,247,.25)}
+.step-list{counter-reset:step;list-style:none;padding:0;margin:10px 0}
+.step-list li{counter-increment:step;padding:8px 0 8px 36px;position:relative;color:var(--text2);font-size:13.5px;border-bottom:1px solid var(--border)}
+.step-list li::before{content:counter(step);position:absolute;left:0;width:24px;height:24px;border-radius:50%;background:rgba(45,125,154,.15);color:var(--teal);text-align:center;line-height:24px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.step-list li:last-child{border-bottom:none}
+.support-btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.support-btn:hover,.support-btn.active{border-color:var(--teal);color:var(--teal);background:rgba(45,125,154,.1)}
+.quiz-option{display:block;padding:10px 16px;margin:6px 0;border-radius:8px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);cursor:pointer;font-size:13px;transition:all .2s;text-align:left;width:100%}
+.quiz-option:hover{border-color:var(--teal);background:rgba(45,125,154,.08)}
+.quiz-option.correct{border-color:var(--green);background:rgba(59,165,93,.12);color:var(--green)}
+.quiz-option.wrong{border-color:var(--red);background:rgba(224,85,85,.12);color:var(--red)}
+.tbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+.tbl th{background:rgba(45,125,154,.12);color:var(--teal);padding:8px 10px;text-align:center;border:1px solid var(--border2);font-weight:700;font-size:12px}
+.tbl td{padding:8px 10px;text-align:center;border:1px solid var(--border);color:var(--text2)}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.footer{text-align:center;margin-top:36px;padding:14px 0;border-top:1px solid var(--border);color:var(--text4);font-size:11px;font-family:'JetBrains Mono',monospace}
+.katex{font-size:1.05em!important}.katex-display{margin:10px 0!important;overflow-x:auto;overflow-y:hidden}
+/* ─── structural-teaching styles ─── */
+.support-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
+.support-card{background:rgba(255,255,255,0.025);border:2px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all 0.3s}
+.support-card.active{transform:scale(1.02)}
+.support-card .sname{font-size:17px;font-weight:800;font-family:'Playfair Display',serif}
+.support-card .en{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+.badge-row{display:flex;gap:14px}
+.badge{text-align:center}
+.badge-val{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.badge-label{font-size:11px;color:var(--text3)}
+.detail-panel{background:rgba(255,255,255,0.035);border-radius:16px;padding:22px;animation:fadeIn 0.35s ease}
+.detail-flex{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.svg-box{flex:0 0 auto;background:rgba(0,0,0,0.25);border-radius:12px;padding:8px;display:flex;align-items:center;justify-content:center}
+.detail-info{flex:1;min-width:220px}
+.detail-info h3{margin:0 0 6px;font-size:20px;font-weight:800;font-family:'Playfair Display',serif}
+.detail-info h3 span{font-size:13px;color:var(--text3);margin-left:10px;font-family:'JetBrains Mono',monospace}
+.detail-info p{color:var(--text2);font-size:13px;line-height:1.8;margin:0 0 12px}
+.info-row{margin-bottom:10px}
+.info-row .ilabel{font-size:11px;color:var(--text3)}
+.tag-row{display:flex;gap:6px;margin-top:3px;flex-wrap:wrap}
+.stag{padding:3px 11px;border-radius:18px;font-size:12px;font-weight:600;display:inline-block;margin:2px}
+.stag.mono{font-family:'JetBrains Mono',monospace}
+.real-box{background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 14px;border:1px dashed rgba(255,255,255,0.1);font-size:13px;color:var(--text2)}
+.toggle-btn{margin-top:16px;width:100%;padding:10px 20px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:var(--text2);border-radius:10px;font-size:13px}
+.conn-card{background:rgba(255,255,255,0.025);border:2px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px 18px;cursor:pointer;transition:all 0.3s;margin-bottom:10px}
+.conn-header{display:flex;justify-content:space-between;align-items:center}
+.conn-badges{display:flex;gap:16px;align-items:center}
+.conn-badge{text-align:center}
+.conn-badge .val{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.conn-badge .lbl{font-size:10px;color:var(--text3)}
+.conn-expand{margin-top:14px;animation:fadeIn 0.3s ease}
+.arrow{font-size:14px;transition:transform 0.3s;color:var(--text3)}
+.tip-box{margin-top:16px;padding:14px 18px;border-radius:14px}
+.tip-box .tip-title{font-size:13px;font-weight:700;margin-bottom:6px}
+.tip-box p{margin:0;font-size:13px;color:var(--text2);line-height:1.8}
+.st-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+.st-table th{padding:9px 12px;text-align:left;border-bottom:2px solid rgba(255,255,255,0.12);color:var(--text3);font-weight:600;white-space:nowrap}
+.st-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--text2)}
+.st-table td.mono{font-family:'JetBrains Mono',monospace}
+/* ─── Animations for stability demos ─── */
+@keyframes rockUnstable{0%{transform:rotate(0deg)}15%{transform:rotate(6deg)}30%{transform:rotate(-5deg)}45%{transform:rotate(4deg)}60%{transform:rotate(-3deg)}75%{transform:rotate(2deg)}100%{transform:rotate(12deg) translateX(20px)}}
+@keyframes slideUnstable{0%{transform:translateX(0)}100%{transform:translateX(40px)}}
+@keyframes collapseUnstable{0%{transform:rotate(0deg)}100%{transform:rotate(25deg)}}
+@keyframes stableShake{0%,100%{transform:translateY(0)}25%{transform:translateY(-2px)}50%{transform:translateY(1px)}75%{transform:translateY(-1px)}}
+@keyframes forceArrow{0%{opacity:0;transform:translateY(-12px)}30%{opacity:1;transform:translateY(0)}70%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-12px)}}
+@keyframes pulseGlow{0%,100%{filter:drop-shadow(0 0 2px rgba(59,165,93,.3))}50%{filter:drop-shadow(0 0 8px rgba(59,165,93,.6))}}
+@keyframes pulseRed{0%,100%{filter:drop-shadow(0 0 2px rgba(224,85,85,.3))}50%{filter:drop-shadow(0 0 8px rgba(224,85,85,.6))}}
+@keyframes flowStep{0%{opacity:.3;transform:scale(.95)}50%{opacity:1;transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
+@keyframes arrowBounce{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+@keyframes fadeLoop{0%,100%{opacity:.4}50%{opacity:1}}
+.anim-box{position:relative;background:rgba(0,0,0,.2);border-radius:14px;padding:20px;overflow:hidden;cursor:pointer}
+.anim-box .replay-hint{position:absolute;top:8px;right:12px;font-size:10px;color:var(--text4);font-family:'JetBrains Mono',monospace}
+.anim-label{text-align:center;margin-top:10px;font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.flow-chart{display:flex;flex-direction:column;gap:0;align-items:center;margin:16px 0}
+.fc-row{display:flex;gap:0;align-items:center;justify-content:center;flex-wrap:wrap}
+.fc-box{background:rgba(45,125,154,.08);border:2px solid rgba(45,125,154,.2);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;color:var(--teal);text-align:center;min-width:120px;transition:all .3s}
+.fc-box.danger{background:rgba(224,85,85,.08);border-color:rgba(224,85,85,.25);color:var(--red)}
+.fc-box.success{background:rgba(59,165,93,.08);border-color:rgba(59,165,93,.25);color:var(--green)}
+.fc-box.info{background:rgba(168,85,247,.08);border-color:rgba(168,85,247,.25);color:var(--purple)}
+.fc-box.gold{background:rgba(232,179,57,.08);border-color:rgba(232,179,57,.25);color:var(--gold)}
+.fc-arrow{color:var(--text4);font-size:20px;padding:4px 8px;font-family:'JetBrains Mono',monospace}
+.fc-arrow.down{padding:2px 0}
+.fc-branch{display:flex;gap:24px;align-items:flex-start;justify-content:center;margin-top:4px}
+.fc-branch-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+.fc-branch-label{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.flow{display:flex;gap:0;margin:12px 0;flex-wrap:wrap;align-items:center}
+.flow-box{background:rgba(45,125,154,.06);border:1px solid rgba(45,125,154,.15);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--teal);white-space:nowrap}
+.flow-arrow{color:var(--text4);font-size:16px;padding:0 5px}
+</style>
+</head>
+<body>
+<button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header"><h1>穩定性與靜定性</h1><div class="sub">結構學 I — 互動教學</div></div>
+  <div class="nav-group">
+    <div class="nav-group-title">壹、基礎觀念</div>
+    <div class="nav-item active" onclick="go(this,'s01')"><span class="num">01</span>支承與反力</div>
+    <div class="nav-item" onclick="go(this,'s02')"><span class="num">02</span>接續與條件方程式</div>
+    <div class="nav-item" onclick="go(this,'s03')"><span class="num">03</span>穩定性定義</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">貳、不穩定原因</div>
+    <div class="nav-item" onclick="go(this,'s04')"><span class="num">04</span>約束不足與幾何不穩定</div>
+    <div class="nav-item" onclick="go(this,'s05')"><span class="num">05</span>基本穩定結構</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">參、判定公式</div>
+    <div class="nav-item" onclick="go(this,'s06')"><span class="num">06</span>梁 — n = r − c − 3</div>
+    <div class="nav-item" onclick="go(this,'s07')"><span class="num">07</span>桁架 — b + r vs 2j</div>
+    <div class="nav-item" onclick="go(this,'s08')"><span class="num">08</span>剛架 — 3b+r−3j−c</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">肆、互動工具</div>
+    <div class="nav-item" onclick="go(this,'s09')"><span class="num">09</span>判別計算器</div>
+    <div class="nav-item" onclick="go(this,'s10')"><span class="num">10</span>範例演練</div>
+    <div class="nav-item" onclick="go(this,'s11')"><span class="num">11</span>隨堂測驗</div>
+  </div>
+</nav>
+
+<div class="main">
+
+<!-- ===== S01 支承與反力 ===== -->
+<div class="section active" id="s01">
+<div class="section-tag">UNIT 01</div>
+<div class="section-title">支承與反力</div>
+<div class="section-sub">Supports &amp; Reactions — 6 種外部約束的種類</div>
+<div id="supports-container"></div>
+</div>
+
+<!-- ===== S02 接續與條件方程式 ===== -->
+<div class="section" id="s02">
+<div class="section-tag">UNIT 02</div>
+<div class="section-title">接續與條件方程式</div>
+<div class="section-sub">Connections &amp; Condition Equations — 6 種內部接續方式</div>
+<div id="connections-container"></div>
+
+<div class="card" style="margin-top:16px">
+<div class="card-title">條件方程式的觀念 <span class="en">Condition Equations</span></div>
+<div class="thm-box">
+  <div class="label">核心觀念</div>
+  <p>每一個<strong style="color:var(--gold)">不能傳遞的內力</strong>就產生一個條件方程式。因為在該處該內力 = 0，可以多列一個方程式。</p>
+  <div class="formula-block">$$c = \sum \text{（各接續處不能傳遞的內力數量）}$$</div>
+</div>
+<div class="ex-box">
+  <div class="label">範例</div>
+  <p>一個內鉸不傳 M → \(c = 1\)；一個滾接不傳 V 和 M → \(c = 2\)</p>
+  <p style="margin-top:6px">若結構有 2 個內鉸 + 1 個滾接 → \(c = 2(1) + 1(2) = 4\)</p>
+</div>
+<div class="note-box">
+  <div class="label">抗彎彈簧的特殊性</div>
+  <p>鉸接 + 抗彎彈簧：鉸接本身不傳 M，但彈簧恢復了 M 的傳遞（\(M = k\theta\)），條件數 \(c = 0\)，等效於剛接。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">重要：內鉸在支承上 <span class="en">Hinge at Support</span></div>
+<div class="warn-box">
+  <div class="label">特殊情形</div>
+  <p>當內鉸位於支承處時，若有 \(m\) 根桿件匯聚於該內鉸，則產生的條件方程式數為：</p>
+  <div class="formula-block">$$c = m - 1$$</div>
+  <p style="margin-top:8px">例如：三根桿件匯聚於支承上的內鉸 → \(c = 3 - 1 = 2\)</p>
+</div>
+</div>
+</div>
+
+<!-- ===== S03 穩定性定義 ===== -->
+<div class="section" id="s03">
+<div class="section-tag">UNIT 03</div>
+<div class="section-title">穩定性定義</div>
+<div class="section-sub">Stability &amp; Determinacy — 先判穩定，再算靜不定度</div>
+
+<!-- 動畫圖示：穩定 vs 不穩定 -->
+<div class="card">
+<div class="card-title">穩定 vs 不穩定 — 動畫圖示 <span class="en">Animated Demo</span></div>
+<p style="font-size:13px;color:var(--text3);margin-bottom:14px">點擊下方結構觀察受力後的行為差異：</p>
+<div class="grid-2">
+  <!-- 穩定梁 -->
+  <div class="anim-box" id="anim-stable" onclick="playStable()">
+    <div class="replay-hint">▶ 點擊播放</div>
+    <svg width="100%" height="160" viewBox="0 0 320 160">
+      <defs>
+        <marker id="af-r" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#e05555"/></marker>
+        <marker id="af-g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#3ba55d"/></marker>
+      </defs>
+      <!-- 地面 -->
+      <line x1="20" y1="120" x2="100" y2="120" stroke="#6b5e50" stroke-width="2"/>
+      <line x1="220" y1="120" x2="300" y2="120" stroke="#6b5e50" stroke-width="2"/>
+      <!-- 支承 -->
+      <polygon points="60,88 45,118 75,118" fill="none" stroke="#a855f7" stroke-width="2"/>
+      <circle cx="60" cy="88" r="3.5" fill="#a855f7"/>
+      <circle cx="260" cy="112" r="6" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <polygon points="260,88 242,108 278,108" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <!-- 梁 -->
+      <g id="stable-beam">
+        <rect x="40" y="76" width="240" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+      </g>
+      <!-- 力箭頭 -->
+      <g id="stable-force" style="opacity:0">
+        <line x1="160" y1="72" x2="160" y2="36" stroke="#e05555" stroke-width="2.5" marker-end="url(#af-r)"/>
+        <text x="168" y="50" fill="#e05555" font-size="13" font-weight="700" font-family="serif">P</text>
+        <line x1="60" y1="74" x2="60" y2="42" stroke="#3ba55d" stroke-width="2" marker-end="url(#af-g)"/>
+        <text x="68" y="54" fill="#3ba55d" font-size="11" font-family="monospace">Ry</text>
+        <line x1="38" y1="82" x2="16" y2="82" stroke="#3ba55d" stroke-width="2" marker-end="url(#af-g)"/>
+        <text x="6" y="78" fill="#3ba55d" font-size="11" font-family="monospace">Rx</text>
+        <line x1="260" y1="74" x2="260" y2="42" stroke="#3ba55d" stroke-width="2" marker-end="url(#af-g)"/>
+        <text x="268" y="54" fill="#3ba55d" font-size="11" font-family="monospace">Ry</text>
+      </g>
+      <!-- 穩定標記 -->
+      <g id="stable-ok" style="opacity:0">
+        <circle cx="160" cy="140" r="10" fill="rgba(59,165,93,.15)" stroke="#3ba55d" stroke-width="2"/>
+        <text x="160" y="145" text-anchor="middle" fill="#3ba55d" font-size="14" font-weight="700">✓</text>
+      </g>
+    </svg>
+    <div class="anim-label" style="color:var(--green)">穩定 STABLE — 鉸 + 滾（r=3）</div>
+  </div>
+
+  <!-- 不穩定梁 -->
+  <div class="anim-box" id="anim-unstable" onclick="playUnstable()">
+    <div class="replay-hint">▶ 點擊播放</div>
+    <svg width="100%" height="160" viewBox="0 0 320 160">
+      <use href="#af-r"/><use href="#af-g"/>
+      <!-- 地面 -->
+      <line x1="20" y1="120" x2="100" y2="120" stroke="#6b5e50" stroke-width="2"/>
+      <line x1="220" y1="120" x2="300" y2="120" stroke="#6b5e50" stroke-width="2"/>
+      <!-- 兩個滾支承 -->
+      <circle cx="60" cy="112" r="6" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <polygon points="60,88 42,108 78,108" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <circle cx="260" cy="112" r="6" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <polygon points="260,88 242,108 278,108" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <!-- 梁 -->
+      <g id="unstable-beam" style="transform-origin:160px 82px">
+        <rect x="40" y="76" width="240" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+      </g>
+      <!-- 力箭頭 -->
+      <g id="unstable-force" style="opacity:0">
+        <line x1="120" y1="82" x2="80" y2="82" stroke="#e05555" stroke-width="2.5" marker-end="url(#af-r)"/>
+        <text x="78" y="76" fill="#e05555" font-size="13" font-weight="700" font-family="serif">P</text>
+      </g>
+      <!-- 滑動箭頭 -->
+      <g id="unstable-slide" style="opacity:0">
+        <line x1="160" y1="140" x2="220" y2="140" stroke="#e05555" stroke-width="2" stroke-dasharray="4" marker-end="url(#af-r)"/>
+        <text x="170" y="155" fill="#e05555" font-size="11" font-family="monospace">無法抵抗水平力！</text>
+      </g>
+      <!-- 不穩定標記 -->
+      <g id="unstable-x" style="opacity:0">
+        <circle cx="280" cy="140" r="10" fill="rgba(224,85,85,.15)" stroke="#e05555" stroke-width="2"/>
+        <text x="280" y="145" text-anchor="middle" fill="#e05555" font-size="14" font-weight="700">✗</text>
+      </g>
+    </svg>
+    <div class="anim-label" style="color:var(--red)">不穩定 UNSTABLE — 滾 + 滾（反力全平行）</div>
+  </div>
+</div>
+</div>
+
+<!-- 定義卡片 -->
+<div class="card">
+<div class="card-title">判別順序：先穩定 → 再靜不定度 <span class="en">Stability First!</span></div>
+<div class="warn-box">
+  <div class="label">最重要的觀念</div>
+  <p>結構分析的第一步永遠是<strong style="color:var(--red)">判斷穩定性</strong>。不穩定的結構根本不能使用，也不需要計算靜不定度。只有確認穩定後，才有意義去算 \(n\) 值。</p>
+</div>
+
+<div style="margin:20px 0">
+<!-- 動畫流程圖 -->
+<div class="flow-chart" id="flow-chart">
+  <!-- Step 1：數數量 -->
+  <div class="fc-row">
+    <div class="fc-box gold" style="font-size:14px">STEP 1：數數量<br><span style="font-size:11px;color:var(--text3)">支承反力 r、條件方程式 c、桿件 b、節點 j …</span></div>
+  </div>
+  <div class="fc-arrow down">↓</div>
+
+  <!-- Step 2：檢查必要條件（約束數量足夠？） -->
+  <div class="fc-row">
+    <div class="fc-box" style="border-color:rgba(224,85,85,.3);font-size:14px">STEP 2：約束數量足夠嗎？<br><span style="font-size:11px;color:var(--text3)">梁: r−c ≥ 3？ ｜ 桁架: b+r ≥ 2j？ ｜ 剛架: 3b+r ≥ 3j+c？</span></div>
+  </div>
+  <div class="fc-branch">
+    <div class="fc-branch-item">
+      <div class="fc-branch-label" style="color:var(--red)">不足</div>
+      <div class="fc-arrow">→</div>
+      <div class="fc-box danger" style="animation:pulseRed 2s infinite">約束不足<br><strong>必不穩定！</strong><br><span style="font-size:11px">結束，不需繼續</span></div>
+    </div>
+    <div class="fc-branch-item">
+      <div class="fc-branch-label" style="color:var(--green)">足夠 (≥)</div>
+      <div class="fc-arrow down">↓</div>
+      <!-- Step 3 -->
+      <div class="fc-box" style="border-color:rgba(224,85,85,.3);font-size:14px">STEP 3：幾何配置正確嗎？<br><span style="font-size:10px;color:var(--text3)">反力平行？共點？共線？三鉸共線？</span></div>
+    </div>
+  </div>
+  <div class="fc-arrow down" style="margin-left:120px">↓</div>
+  <!-- 幾何穩定分支 -->
+  <div class="fc-branch" style="margin-left:120px">
+    <div class="fc-branch-item">
+      <div class="fc-branch-label" style="color:var(--red)">幾何不穩定</div>
+      <div class="fc-arrow">→</div>
+      <div class="fc-box danger" style="animation:pulseRed 2s infinite 1s">幾何不穩定！<br><span style="font-size:11px">數量夠但配置不當</span></div>
+    </div>
+    <div class="fc-branch-item">
+      <div class="fc-branch-label" style="color:var(--green)">幾何穩定 ✓</div>
+      <div class="fc-arrow down">↓</div>
+      <div class="fc-box success" style="animation:pulseGlow 2s infinite;font-size:15px"><strong>確認穩定！</strong></div>
+    </div>
+  </div>
+  <div class="fc-arrow down" style="margin-left:240px">↓</div>
+  <!-- Step 4：穩定後才算 n -->
+  <div class="fc-row" style="margin-left:240px">
+    <div class="fc-box gold" style="font-size:14px">STEP 4：計算靜不定度 n<br><span style="font-size:11px;color:var(--text3)">梁: n=r−c−3 ｜ 桁架: n=b+r−2j ｜ 剛架: n=3b+r−3j−c</span></div>
+  </div>
+  <div class="fc-branch" style="margin-left:240px">
+    <div class="fc-branch-item">
+      <div class="fc-branch-label">n = 0</div>
+      <div class="fc-box success" style="min-width:110px">靜定<br><span style="font-size:10px">平衡方程式即可求解</span></div>
+    </div>
+    <div class="fc-branch-item">
+      <div class="fc-branch-label">n &gt; 0</div>
+      <div class="fc-box info" style="min-width:110px">n 度靜不定<br><span style="font-size:10px">需 n 個相容方程式</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="note-box">
+  <div class="label">為什麼不能先算 n？</div>
+  <p>n 值的意義是「多出來的未知數」，但如果結構本身就不穩定（約束不足或幾何配置錯誤），n 值根本沒有意義。所以正確順序是：<strong style="color:var(--gold)">判穩定（Step 2 + 3）→ 確認穩定 → 才算 n（Step 4）</strong>。</p>
+</div>
+</div>
+
+<!-- 定義總結 -->
+<div class="card">
+<div class="card-title">四種判別結果 — 動畫對照 <span class="en">Four Outcomes</span></div>
+<div id="outcome-demo" style="margin:10px 0"></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px">
+  <button class="btn btn-red btn-sm" onclick="showOutcome('unstable')">不穩定</button>
+  <button class="btn btn-green btn-sm" onclick="showOutcome('determinate')">靜定</button>
+  <button class="btn btn-purple btn-sm" onclick="showOutcome('indeterminate1')">1度靜不定</button>
+  <button class="btn btn-teal btn-sm" onclick="showOutcome('indeterminate3')">3度靜不定</button>
+</div>
+<div class="grid-2">
+  <div class="warn-box">
+    <div class="label">不穩定 UNSTABLE</div>
+    <p>n &lt; 0 或幾何不穩定 → 結構會發生剛體運動，<strong style="color:var(--red)">不能使用</strong>。不需要也不能計算靜不定度。</p>
+  </div>
+  <div class="def-box">
+    <div class="label">穩定 STABLE</div>
+    <p>結構在任意外力作用下都能維持平衡，<strong style="color:var(--green)">不發生剛體運動</strong>。確認穩定後才往下判。</p>
+  </div>
+</div>
+<div class="grid-2" style="margin-top:0">
+  <div class="prop-box">
+    <div class="label">靜定 DETERMINATE (n=0)</div>
+    <p>穩定 + 未知數 = 方程式數 → 僅靠<strong style="color:var(--gold)">平衡方程式</strong>即可求解所有反力。</p>
+  </div>
+  <div class="thm-box">
+    <div class="label">靜不定 INDETERMINATE (n&gt;0)</div>
+    <p>穩定 + 未知數 &gt; 方程式數 → 需<strong style="color:var(--purple)">額外 n 個相容方程式</strong>才能求解。</p>
+  </div>
+</div>
+
+<div class="note-box" style="margin-top:12px">
+  <div class="label">關鍵觀念</div>
+  <p>\(n \geq 0\) 是穩定的<strong>必要條件，不是充分條件</strong>！即使數量足夠，仍可能因幾何配置不當而不穩定。所以 Step 3 的幾何檢查不可省略。</p>
+</div>
+</div>
+</div>
+
+<!-- ===== S04 不穩定原因 ===== -->
+<div class="section" id="s04">
+<div class="section-tag">UNIT 04</div>
+<div class="section-title">不穩定的原因</div>
+<div class="section-sub">Causes of Instability</div>
+
+<div class="card">
+<div class="card-title">一、約束不足 <span class="en">Insufficient Constraints</span></div>
+<div class="warn-box">
+  <div class="label">反力數量不夠</div>
+  <p>2D 剛體需要<strong>至少 3 個</strong>獨立約束才能穩定。若反力數（扣除條件後）不足 3，結構必不穩定。</p>
+</div>
+<div style="text-align:center;margin:10px 0">
+  <svg width="360" height="90" viewBox="0 0 360 90" class="diagram">
+    <line x1="40" y1="40" x2="320" y2="40" stroke="#c8c0b0" stroke-width="3"/>
+    <circle cx="180" cy="55" r="10" fill="none" stroke="#e05555" stroke-width="2"/>
+    <line x1="50" y1="70" x2="310" y2="70" stroke="#5c4a3a" stroke-width="1.5"/>
+    <text x="180" y="88" text-anchor="middle" fill="#e05555" font-size="12" font-family="Noto Sans TC">僅 1 個滾支承 (r=1 &lt; 3) → 不穩定</text>
+  </svg>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">二、幾何不穩定 <span class="en">Geometric Instability</span></div>
+<p>即使 \(n \geq 0\)，若<strong style="color:var(--red)">反力配置不當</strong>，結構仍不穩定。</p>
+<div class="grid-2" style="margin-top:14px">
+  <div class="type-card">
+    <div class="name" style="color:var(--red)">外部幾何不穩定</div>
+    <div class="en">External</div>
+    <p style="font-size:12px;color:var(--text3);text-align:left;margin-top:8px">
+      <strong>① 反力全平行</strong>：無法抵抗垂直方向的力<br>
+      <strong>② 反力共點</strong>：無法抵抗對交點的力矩<br>
+      <strong>③ 反力共線</strong>：作用線在同一直線上
+    </p>
+  </div>
+  <div class="type-card">
+    <div class="name" style="color:var(--red)">內部幾何不穩定</div>
+    <div class="en">Internal</div>
+    <p style="font-size:12px;color:var(--text3);text-align:left;margin-top:8px">
+      <strong>① 三鉸共線</strong>：三個鉸在同一直線上 → 可繞該線旋轉<br>
+      <strong>② 組合不當</strong>：構件連結無法維持整體剛性<br>
+      <strong>③ 機構形成</strong>：可像連桿機構般運動
+    </p>
+  </div>
+</div>
+
+<!-- ===== 幾何不穩定動畫展示 ===== -->
+<p style="font-size:13px;color:var(--text3);margin:14px 0 10px">點擊每個結構觀察受力後的不穩定行為：</p>
+
+<!-- ① 反力全平行 -->
+<div class="card" style="border-color:rgba(224,85,85,.2)">
+<div class="card-title" style="color:var(--red)">① 反力全平行 <span class="en">All Reactions Parallel</span></div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:10px">三個滾支承的反力全部是垂直方向 → 無法抵抗水平力，結構整體水平滑動。</p>
+<div class="anim-box" id="anim-geo1" onclick="playGeo1()">
+  <div class="replay-hint">▶ 點擊播放</div>
+  <svg width="100%" height="180" viewBox="0 0 440 180">
+    <defs>
+      <marker id="geo-ar" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#e05555"/></marker>
+      <marker id="geo-ag" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#3ba55d"/></marker>
+    </defs>
+    <!-- 地面 -->
+    <line x1="20" y1="120" x2="420" y2="120" stroke="#5c4a3a" stroke-width="1.5"/>
+    <!-- 三個滾支承 -->
+    <g id="geo1-supports">
+      <circle cx="80" cy="112" r="6" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <polygon points="80,88 62,108 98,108" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <circle cx="220" cy="112" r="6" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <polygon points="220,88 202,108 238,108" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <circle cx="360" cy="112" r="6" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <polygon points="360,88 342,108 378,108" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    </g>
+    <!-- 反力箭頭（垂直） -->
+    <g id="geo1-reactions" style="opacity:0">
+      <line x1="80" y1="88" x2="80" y2="58" stroke="#3ba55d" stroke-width="2" marker-end="url(#geo-ag)"/>
+      <text x="88" y="70" fill="#3ba55d" font-size="10" font-family="monospace">Ry</text>
+      <line x1="220" y1="88" x2="220" y2="58" stroke="#3ba55d" stroke-width="2" marker-end="url(#geo-ag)"/>
+      <text x="228" y="70" fill="#3ba55d" font-size="10" font-family="monospace">Ry</text>
+      <line x1="360" y1="88" x2="360" y2="58" stroke="#3ba55d" stroke-width="2" marker-end="url(#geo-ag)"/>
+      <text x="368" y="70" fill="#3ba55d" font-size="10" font-family="monospace">Ry</text>
+    </g>
+    <!-- 梁 -->
+    <g id="geo1-beam">
+      <rect x="50" y="76" width="340" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+    </g>
+    <!-- 水平力 -->
+    <g id="geo1-force" style="opacity:0">
+      <line x1="50" y1="82" x2="14" y2="82" stroke="#e05555" stroke-width="2.5" marker-end="url(#geo-ar)"/>
+      <text x="10" y="76" fill="#e05555" font-size="13" font-weight="700" font-family="serif">P</text>
+    </g>
+    <!-- 滑動提示 -->
+    <g id="geo1-slide" style="opacity:0">
+      <text x="220" y="155" text-anchor="middle" fill="#e05555" font-size="12" font-weight="700">↔ 反力全垂直，無水平分量可抵抗 → 整體滑動！</text>
+    </g>
+    <!-- 不穩定標記 -->
+    <g id="geo1-x" style="opacity:0">
+      <circle cx="410" cy="155" r="10" fill="rgba(224,85,85,.15)" stroke="#e05555" stroke-width="2"/>
+      <text x="410" y="160" text-anchor="middle" fill="#e05555" font-size="14" font-weight="700">✗</text>
+    </g>
+  </svg>
+  <div class="anim-label" style="color:var(--red)">外部幾何不穩定 — 反力全平行（三滾支承）</div>
+</div>
+</div>
+
+<!-- ② 反力共點 -->
+<div class="card" style="border-color:rgba(224,85,85,.2)">
+<div class="card-title" style="color:var(--red)">② 反力共點 <span class="en">All Reactions Concurrent</span></div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:10px">所有反力的作用線交於一點 → 對該交點取矩不為零時無法平衡 → 結構繞交點旋轉。</p>
+<div class="anim-box" id="anim-geo2" onclick="playGeo2()">
+  <div class="replay-hint">▶ 點擊播放</div>
+  <svg width="100%" height="220" viewBox="0 0 440 220">
+    <!-- 地面 -->
+    <line x1="20" y1="185" x2="420" y2="185" stroke="#5c4a3a" stroke-width="1.5"/>
+    <!-- 交點 O -->
+    <circle cx="220" cy="24" r="5" fill="#e05555" opacity="0.6"/>
+    <text x="234" y="22" fill="#e05555" font-size="10" font-family="monospace">交點 O</text>
+
+    <!-- 三條反力作用線（虛線延伸到 O） -->
+    <g id="geo2-supports">
+      <!-- 左支承：斜向鏈桿，方向指向 O -->
+      <!-- 從梁(80,130)到地面錨點，方向是 O→梁 的延長 -->
+      <!-- O(220,24) → 梁(80,130)：dx=-140,dy=106, norm≈175.6 -->
+      <!-- 繼續延伸到地面: (80-140/175.6*40, 130+106/175.6*40) ≈ (48,154) -->
+      <line x1="80" y1="130" x2="220" y2="24" stroke="#e05555" stroke-width="1.2" stroke-dasharray="5" opacity="0.35"/>
+      <line x1="80" y1="130" x2="48" y2="154" stroke="#2d7d9a" stroke-width="2.5"/>
+      <!-- 地面錨 — 三角形沿桿方向 -->
+      <g transform="translate(48,154) rotate(37.2)">
+        <polygon points="0,0 -12,18 12,18" fill="none" stroke="#2d7d9a" stroke-width="1.8"/>
+        <line x1="-16" y1="20" x2="16" y2="20" stroke="#5c4a3a" stroke-width="1.5"/>
+      </g>
+      <circle cx="80" cy="130" r="4" fill="#a855f7"/>
+
+      <!-- 中間支承：垂直鏈桿，方向指向 O（正上方） -->
+      <line x1="220" y1="130" x2="220" y2="24" stroke="#e05555" stroke-width="1.2" stroke-dasharray="5" opacity="0.35"/>
+      <line x1="220" y1="130" x2="220" y2="168" stroke="#2d7d9a" stroke-width="2.5"/>
+      <g transform="translate(220,168)">
+        <polygon points="0,0 -12,18 12,18" fill="none" stroke="#2d7d9a" stroke-width="1.8"/>
+        <line x1="-16" y1="20" x2="16" y2="20" stroke="#5c4a3a" stroke-width="1.5"/>
+      </g>
+      <circle cx="220" cy="130" r="4" fill="#a855f7"/>
+
+      <!-- 右支承：斜向鏈桿，方向指向 O -->
+      <!-- O(220,24) → 梁(360,130)：dx=140,dy=106, 延伸到 (392,154) -->
+      <line x1="360" y1="130" x2="220" y2="24" stroke="#e05555" stroke-width="1.2" stroke-dasharray="5" opacity="0.35"/>
+      <line x1="360" y1="130" x2="392" y2="154" stroke="#2d7d9a" stroke-width="2.5"/>
+      <g transform="translate(392,154) rotate(-37.2)">
+        <polygon points="0,0 -12,18 12,18" fill="none" stroke="#2d7d9a" stroke-width="1.8"/>
+        <line x1="-16" y1="20" x2="16" y2="20" stroke="#5c4a3a" stroke-width="1.5"/>
+      </g>
+      <circle cx="360" cy="130" r="4" fill="#a855f7"/>
+    </g>
+
+    <!-- 反力箭頭（沿桿方向指向O） -->
+    <g id="geo2-reactions" style="opacity:0">
+      <!-- 左：從(80,130)向O方向 -->
+      <line x1="80" y1="130" x2="108" y2="109" stroke="#3ba55d" stroke-width="2.2" marker-end="url(#geo-ag)"/>
+      <text x="100" y="104" fill="#3ba55d" font-size="9" font-family="monospace">R₁</text>
+      <!-- 中：從(220,130)向上 -->
+      <line x1="220" y1="130" x2="220" y2="98" stroke="#3ba55d" stroke-width="2.2" marker-end="url(#geo-ag)"/>
+      <text x="228" y="112" fill="#3ba55d" font-size="9" font-family="monospace">R₂</text>
+      <!-- 右：從(360,130)向O方向 -->
+      <line x1="360" y1="130" x2="332" y2="109" stroke="#3ba55d" stroke-width="2.2" marker-end="url(#geo-ag)"/>
+      <text x="332" y="104" fill="#3ba55d" font-size="9" font-family="monospace">R₃</text>
+    </g>
+
+    <!-- 梁 -->
+    <g id="geo2-beam" style="transform-origin:220px 24px">
+      <rect x="50" y="118" width="340" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+    </g>
+
+    <!-- 外力（不過交點，產生力矩） -->
+    <g id="geo2-force" style="opacity:0">
+      <line x1="400" y1="124" x2="400" y2="82" stroke="#e05555" stroke-width="2.5" marker-end="url(#geo-ar)"/>
+      <text x="408" y="104" fill="#e05555" font-size="13" font-weight="700" font-family="serif">P</text>
+    </g>
+    <!-- 旋轉弧線 -->
+    <g id="geo2-arc" style="opacity:0">
+      <path d="M 255 24 A 35 35 0 0 1 220 59" fill="none" stroke="#e05555" stroke-width="1.8" stroke-dasharray="4" marker-end="url(#geo-ar)"/>
+    </g>
+    <!-- 旋轉提示 -->
+    <g id="geo2-rotate" style="opacity:0">
+      <text x="220" y="210" text-anchor="middle" fill="#e05555" font-size="12" font-weight="700">反力全指向 O 點 → 對 O 取矩 ≠ 0 → 繞 O 旋轉！</text>
+    </g>
+    <g id="geo2-x" style="opacity:0">
+      <circle cx="410" cy="208" r="10" fill="rgba(224,85,85,.15)" stroke="#e05555" stroke-width="2"/>
+      <text x="410" y="213" text-anchor="middle" fill="#e05555" font-size="14" font-weight="700">✗</text>
+    </g>
+  </svg>
+  <div class="anim-label" style="color:var(--red)">外部幾何不穩定 — 反力共點（三鏈桿指向同一點）</div>
+</div>
+</div>
+
+<!-- ③ 三鉸共線 -->
+<div class="card" style="border-color:rgba(224,85,85,.2)">
+<div class="card-title" style="color:var(--red)">③ 三鉸共線 <span class="en">Three Collinear Hinges</span></div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:10px">三個鉸（含支承鉸和內鉸）在同一直線上 → 結構可繞該直線微轉 → 初始幾何不穩定。</p>
+<div class="anim-box" id="anim-geo4" onclick="playGeo4()">
+  <div class="replay-hint">▶ 點擊播放</div>
+  <svg width="100%" height="200" viewBox="0 0 440 200">
+    <!-- 地面 -->
+    <line x1="20" y1="140" x2="420" y2="140" stroke="#5c4a3a" stroke-width="1.5"/>
+    <!-- 共線虛線 -->
+    <line id="geo4-colline" x1="30" y1="90" x2="410" y2="90" stroke="#e05555" stroke-width="1.5" stroke-dasharray="5" opacity="0"/>
+    <!-- 支承 -->
+    <g id="geo4-supports">
+      <!-- 左鉸支承 -->
+      <polygon points="80,88 62,120 98,120" fill="none" stroke="#a855f7" stroke-width="2"/>
+      <circle cx="80" cy="88" r="4.5" fill="#a855f7"/>
+      <line x1="56" y1="124" x2="104" y2="124" stroke="#5c4a3a" stroke-width="1.5"/>
+      <!-- 右鉸支承 -->
+      <polygon points="360,88 342,120 378,120" fill="none" stroke="#a855f7" stroke-width="2"/>
+      <circle cx="360" cy="88" r="4.5" fill="#a855f7"/>
+      <line x1="336" y1="124" x2="384" y2="124" stroke="#5c4a3a" stroke-width="1.5"/>
+    </g>
+    <!-- 梁段 -->
+    <g id="geo4-beam">
+      <rect x="60" y="78" width="160" height="10" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+      <rect x="225" y="78" width="155" height="10" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+    </g>
+    <!-- 內鉸 -->
+    <circle cx="220" cy="83" r="5.5" fill="#1a1814" stroke="#a855f7" stroke-width="2.5"/>
+    <text id="geo4-hingelabel" x="220" y="72" text-anchor="middle" fill="#a855f7" font-size="10">內鉸</text>
+    <!-- 標記三鉸 -->
+    <g id="geo4-labels" style="opacity:0">
+      <text x="80" y="72" text-anchor="middle" fill="#e05555" font-size="10" font-weight="700">鉸①</text>
+      <text x="220" y="62" text-anchor="middle" fill="#e05555" font-size="10" font-weight="700">鉸②</text>
+      <text x="360" y="72" text-anchor="middle" fill="#e05555" font-size="10" font-weight="700">鉸③</text>
+    </g>
+    <!-- 外力 -->
+    <g id="geo4-force" style="opacity:0">
+      <line x1="160" y1="74" x2="160" y2="40" stroke="#e05555" stroke-width="2.5" marker-end="url(#geo-ar)"/>
+      <text x="170" y="54" fill="#e05555" font-size="13" font-weight="700" font-family="serif">P</text>
+    </g>
+    <!-- 變形後的虛影 -->
+    <g id="geo4-deformed" style="opacity:0">
+      <rect x="60" y="82" width="160" height="10" fill="#e05555" opacity="0.2" rx="2" transform="rotate(4,80,87)"/>
+      <rect x="225" y="82" width="155" height="10" fill="#e05555" opacity="0.2" rx="2" transform="rotate(-3,360,87)"/>
+    </g>
+    <!-- 提示 -->
+    <g id="geo4-msg" style="opacity:0">
+      <text x="220" y="175" text-anchor="middle" fill="#e05555" font-size="12" font-weight="700">三鉸共線 → 可繞該線微轉 → 初始幾何不穩定！</text>
+    </g>
+    <g id="geo4-x" style="opacity:0">
+      <circle cx="410" cy="175" r="10" fill="rgba(224,85,85,.15)" stroke="#e05555" stroke-width="2"/>
+      <text x="410" y="180" text-anchor="middle" fill="#e05555" font-size="14" font-weight="700">✗</text>
+    </g>
+  </svg>
+  <div class="anim-label" style="color:var(--red)">內部幾何不穩定 — 三鉸共線</div>
+</div>
+</div>
+
+<!-- ④ 平行四邊形變形（內部不穩定） -->
+<div class="card" style="border-color:rgba(224,85,85,.2)">
+<div class="card-title" style="color:var(--red)">④ 平行四邊形變形 <span class="en">Parallelogram Mechanism</span></div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:10px">方格桁架缺少對角桿 → 可像平行四邊形一樣歪斜 → 形成機構，即使 n≥0 仍不穩定。</p>
+<div class="anim-box" id="anim-geo5" onclick="playGeo5()">
+  <div class="replay-hint">▶ 點擊播放</div>
+  <svg width="100%" height="200" viewBox="0 0 440 200">
+    <!-- 地面 -->
+    <line x1="20" y1="170" x2="420" y2="170" stroke="#5c4a3a" stroke-width="1.5"/>
+    <!-- 支承 -->
+    <polygon points="100,140 82,170 118,170" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="100" cy="140" r="3.5" fill="#a855f7"/>
+    <circle cx="340" cy="162" r="6" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <polygon points="340,140 322,158 358,158" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <line x1="76" y1="174" x2="124" y2="174" stroke="#5c4a3a" stroke-width="1.5"/>
+    <line x1="316" y1="172" x2="364" y2="172" stroke="#5c4a3a" stroke-width="1.5"/>
+    <!-- 原始方格（初始狀態） -->
+    <g id="geo5-original">
+      <!-- 下弦 -->
+      <line x1="100" y1="140" x2="220" y2="140" stroke="#c8c0b0" stroke-width="2.5"/>
+      <line x1="220" y1="140" x2="340" y2="140" stroke="#c8c0b0" stroke-width="2.5"/>
+      <!-- 上弦 -->
+      <line x1="100" y1="60" x2="220" y2="60" stroke="#c8c0b0" stroke-width="2.5"/>
+      <line x1="220" y1="60" x2="340" y2="60" stroke="#c8c0b0" stroke-width="2.5"/>
+      <!-- 垂直桿 -->
+      <line x1="100" y1="60" x2="100" y2="140" stroke="#c8c0b0" stroke-width="2.5"/>
+      <line x1="220" y1="60" x2="220" y2="140" stroke="#c8c0b0" stroke-width="2.5"/>
+      <line x1="340" y1="60" x2="340" y2="140" stroke="#c8c0b0" stroke-width="2.5"/>
+      <!-- 右格對角桿 -->
+      <line x1="220" y1="60" x2="340" y2="140" stroke="#3ba55d" stroke-width="2"/>
+      <!-- 節點 -->
+      <circle cx="100" cy="60" r="4" fill="#2d7d9a"/>
+      <circle cx="220" cy="60" r="4" fill="#2d7d9a"/>
+      <circle cx="340" cy="60" r="4" fill="#2d7d9a"/>
+      <circle cx="100" cy="140" r="4" fill="#2d7d9a"/>
+      <circle cx="220" cy="140" r="4" fill="#2d7d9a"/>
+      <circle cx="340" cy="140" r="4" fill="#2d7d9a"/>
+    </g>
+    <!-- 缺少對角桿的標記 -->
+    <g id="geo5-missing" style="opacity:0">
+      <line x1="100" y1="60" x2="220" y2="140" stroke="#e05555" stroke-width="1.5" stroke-dasharray="6" opacity="0.5"/>
+      <text x="140" y="108" fill="#e05555" font-size="10" font-weight="700" transform="rotate(34,140,108)">缺少！</text>
+    </g>
+    <!-- 變形後的虛影 -->
+    <g id="geo5-deformed" style="opacity:0">
+      <!-- 左格平行四邊形變形 -->
+      <line x1="100" y1="140" x2="235" y2="140" stroke="#e05555" stroke-width="2" opacity="0.5"/>
+      <line x1="115" y1="60" x2="235" y2="60" stroke="#e05555" stroke-width="2" opacity="0.5"/>
+      <line x1="115" y1="60" x2="100" y2="140" stroke="#e05555" stroke-width="2" opacity="0.5"/>
+      <line x1="235" y1="60" x2="235" y2="140" stroke="#e05555" stroke-width="2" opacity="0.5"/>
+    </g>
+    <!-- 外力 -->
+    <g id="geo5-force" style="opacity:0">
+      <line x1="100" y1="56" x2="130" y2="56" stroke="#e05555" stroke-width="2.5" marker-end="url(#geo-ar)"/>
+      <text x="118" y="48" fill="#e05555" font-size="13" font-weight="700" font-family="serif">P</text>
+    </g>
+    <!-- 提示 -->
+    <g id="geo5-msg" style="opacity:0">
+      <text x="220" y="192" text-anchor="middle" fill="#e05555" font-size="12" font-weight="700">左方格無對角桿 → 平行四邊形變形 → 內部幾何不穩定！</text>
+    </g>
+  </svg>
+  <div class="anim-label" style="color:var(--red)">內部幾何不穩定 — 平行四邊形機構（缺對角桿）</div>
+</div>
+</div>
+
+<!-- ⑤ 機構形成 -->
+<div class="card" style="border-color:rgba(224,85,85,.2)">
+<div class="card-title" style="color:var(--red)">⑤ 機構形成 <span class="en">Mechanism Formation</span></div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:10px">構件連結方式使結構可像連桿機構般運動，即使約束數足夠，結構仍有自由度。</p>
+<div class="anim-box" id="anim-geo6" onclick="playGeo6()">
+  <div class="replay-hint">▶ 點擊播放</div>
+  <svg width="100%" height="200" viewBox="0 0 440 200">
+    <!-- 地面 -->
+    <line x1="20" y1="170" x2="420" y2="170" stroke="#5c4a3a" stroke-width="1.5"/>
+    <!-- 左固定支承 -->
+    <rect x="58" y="110" width="12" height="60" fill="#5c4a3a"/>
+    <!-- 右固定支承 -->
+    <rect x="370" y="110" width="12" height="60" fill="#5c4a3a"/>
+    <!-- 四連桿機構 -->
+    <g id="geo6-mech">
+      <!-- 左桿 (固定於左端) -->
+      <line id="geo6-L" x1="70" y1="110" x2="150" y2="60" stroke="#d4a574" stroke-width="3" stroke-linecap="round"/>
+      <!-- 上桿 (連桿) -->
+      <line id="geo6-T" x1="150" y1="60" x2="290" y2="60" stroke="#d4a574" stroke-width="3" stroke-linecap="round"/>
+      <!-- 右桿 (固定於右端) -->
+      <line id="geo6-R" x1="290" y1="60" x2="370" y2="110" stroke="#d4a574" stroke-width="3" stroke-linecap="round"/>
+      <!-- 鉸接點 -->
+      <circle cx="70" cy="110" r="5" fill="#1a1814" stroke="#a855f7" stroke-width="2.5"/>
+      <circle id="geo6-h1" cx="150" cy="60" r="5" fill="#1a1814" stroke="#a855f7" stroke-width="2.5"/>
+      <circle id="geo6-h2" cx="290" cy="60" r="5" fill="#1a1814" stroke="#a855f7" stroke-width="2.5"/>
+      <circle cx="370" cy="110" r="5" fill="#1a1814" stroke="#a855f7" stroke-width="2.5"/>
+    </g>
+    <!-- 外力 -->
+    <g id="geo6-force" style="opacity:0">
+      <line x1="220" y1="56" x2="220" y2="24" stroke="#e05555" stroke-width="2.5" marker-end="url(#geo-ar)"/>
+      <text x="230" y="38" fill="#e05555" font-size="13" font-weight="700" font-family="serif">P</text>
+    </g>
+    <!-- 變形虛影 -->
+    <g id="geo6-deformed" style="opacity:0">
+      <line x1="70" y1="110" x2="145" y2="55" stroke="#e05555" stroke-width="2" opacity="0.4"/>
+      <line x1="145" y1="55" x2="295" y2="68" stroke="#e05555" stroke-width="2" opacity="0.4"/>
+      <line x1="295" y1="68" x2="370" y2="110" stroke="#e05555" stroke-width="2" opacity="0.4"/>
+      <circle cx="145" cy="55" r="4" fill="none" stroke="#e05555" stroke-width="1.5" opacity="0.5"/>
+      <circle cx="295" cy="68" r="4" fill="none" stroke="#e05555" stroke-width="1.5" opacity="0.5"/>
+    </g>
+    <!-- 運動軌跡弧線 -->
+    <g id="geo6-arc" style="opacity:0">
+      <path d="M 150 60 Q 147 50 145 55" fill="none" stroke="#e05555" stroke-width="1.5" stroke-dasharray="3"/>
+      <path d="M 290 60 Q 293 65 295 68" fill="none" stroke="#e05555" stroke-width="1.5" stroke-dasharray="3"/>
+    </g>
+    <!-- 提示 -->
+    <g id="geo6-msg" style="opacity:0">
+      <text x="220" y="192" text-anchor="middle" fill="#e05555" font-size="12" font-weight="700">四連桿機構 → 可自由運動 → 幾何不穩定！</text>
+    </g>
+  </svg>
+  <div class="anim-label" style="color:var(--red)">內部幾何不穩定 — 連桿機構</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ===== S05 基本穩定結構 ===== -->
+<div class="section" id="s05">
+<div class="section-tag">UNIT 05</div>
+<div class="section-title">基本穩定結構</div>
+<div class="section-sub">Fundamental Stable Structures</div>
+
+<div class="card">
+<div class="card-title">剛體穩定的基本要求 <span class="en">Rigid Body Requirements</span></div>
+<div class="thm-box">
+  <div class="label">定理</div>
+  <p>一個 2D 剛體需要 <strong style="color:var(--gold)">3 個不全平行、不共點</strong>的約束才能穩定。</p>
+</div>
+<div class="grid-3" style="margin-top:14px">
+  <div class="type-card">
+    <div class="name">簡支梁</div><div class="en">Pin + Roller</div>
+    <svg width="160" height="70" viewBox="0 0 160 70" class="diagram">
+      <line x1="20" y1="25" x2="140" y2="25" stroke="#c8c0b0" stroke-width="3"/>
+      <polygon points="20,25 10,45 30,45" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <circle cx="140" cy="36" r="7" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <line x1="5" y1="48" x2="35" y2="48" stroke="#5c4a3a" stroke-width="1.5"/>
+      <line x1="125" y1="47" x2="155" y2="47" stroke="#5c4a3a" stroke-width="1.5"/>
+    </svg>
+    <p style="font-size:12px;color:var(--text3)">r=3, c=0 → n=0 <span class="tag-d">靜定</span></p>
+  </div>
+  <div class="type-card">
+    <div class="name">懸臂梁</div><div class="en">Fixed End</div>
+    <svg width="160" height="70" viewBox="0 0 160 70" class="diagram">
+      <rect x="5" y="10" width="10" height="50" fill="#5c4a3a"/>
+      <line x1="15" y1="35" x2="150" y2="35" stroke="#c8c0b0" stroke-width="3"/>
+    </svg>
+    <p style="font-size:12px;color:var(--text3)">r=3, c=0 → n=0 <span class="tag-d">靜定</span></p>
+  </div>
+  <div class="type-card">
+    <div class="name">三角桁架</div><div class="en">Triangle</div>
+    <svg width="160" height="70" viewBox="0 0 160 70" class="diagram">
+      <polygon points="20,55 140,55 80,15" fill="none" stroke="#c8c0b0" stroke-width="2"/>
+      <circle cx="20" cy="55" r="3" fill="#2d7d9a"/><circle cx="140" cy="55" r="3" fill="#2d7d9a"/><circle cx="80" cy="15" r="3" fill="#2d7d9a"/>
+    </svg>
+    <p style="font-size:12px;color:var(--text3)">最小穩定單元 <span class="tag-s">穩定</span></p>
+  </div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">剛體間的穩定連結 <span class="en">Stable Connections Between Rigid Bodies</span></div>
+<div class="prop-box">
+  <div class="label">連結兩個穩定剛體的方式</div>
+  <p>兩個已知穩定的剛體要穩定地連結在一起，需滿足以下任一條件：</p>
+</div>
+<div class="grid-3" style="margin-top:10px">
+  <div class="type-card">
+    <div class="name" style="color:var(--teal);font-size:14px">二固三桿</div>
+    <p style="font-size:12px;color:var(--text3)">3 根桿連結兩固定體<br><strong>桿不全平行、不共點</strong></p>
+  </div>
+  <div class="type-card">
+    <div class="name" style="color:var(--teal);font-size:14px">二固一鉸一桿</div>
+    <p style="font-size:12px;color:var(--text3)">1 鉸 + 1 桿連結<br><strong>桿不指向鉸</strong></p>
+  </div>
+  <div class="type-card">
+    <div class="name" style="color:var(--teal);font-size:14px">三固三鉸</div>
+    <p style="font-size:12px;color:var(--text3)">3 固定體以 3 鉸兩兩連結<br><strong>三鉸不共線</strong></p>
+  </div>
+</div>
+<div class="note-box" style="margin-top:10px">
+  <div class="label">關鍵</div>
+  <p>地面就是一個「固定體」。簡支梁 = 地面 + 梁 以「一鉸一桿」(pin + roller) 相連，屬於「二固一鉸一桿」。</p>
+</div>
+</div>
+</div>
+
+<!-- ===== S06 梁 n=r-c-3 ===== -->
+<div class="section" id="s06">
+<div class="section-tag">UNIT 06</div>
+<div class="section-title">梁的判定</div>
+<div class="section-sub">Beams — n = r − c − 3</div>
+
+<div class="card">
+<div class="card-title">梁的靜不定度公式 <span class="en">Beam Formula</span></div>
+<div class="thm-box">
+  <div class="label">核心公式</div>
+  <div class="formula-block" style="font-size:18px">$$\boxed{n = r - c - 3}$$</div>
+  <ul>
+    <li>\(r\) = 外部反力總數</li>
+    <li>\(c\) = 條件方程式數（內鉸 c=1、滾接 c=2 …）</li>
+    <li>\(3\) = 2D 平衡方程式數（\(\sum F_x, \sum F_y, \sum M\)）</li>
+    <li>\(n\) = 靜不定度</li>
+  </ul>
+</div>
+<div class="grid-3" style="margin-top:14px">
+  <div class="type-card"><div class="name" style="color:var(--red)">n &lt; 0</div><span class="tag-u">不穩定</span><p style="font-size:11px;color:var(--text3);margin-top:4px">必然不穩定</p></div>
+  <div class="type-card"><div class="name" style="color:var(--green)">n = 0</div><span class="tag-d">靜定</span><p style="font-size:11px;color:var(--text3);margin-top:4px">穩定且可解（需檢查幾何）</p></div>
+  <div class="type-card"><div class="name" style="color:var(--purple)">n &gt; 0</div><span class="tag-i">靜不定</span><p style="font-size:11px;color:var(--text3);margin-top:4px">n 度靜不定（需檢查幾何）</p></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">梁的範例 <span class="en">Beam Examples</span></div>
+<div class="ex-box">
+  <div class="label">範例 1 — 簡支梁</div>
+  <svg width="400" height="75" viewBox="0 0 400 75" class="diagram">
+    <line x1="40" y1="30" x2="360" y2="30" stroke="#c8c0b0" stroke-width="3"/>
+    <polygon points="40,30 28,52 52,52" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <circle cx="360" cy="42" r="8" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <line x1="22" y1="56" x2="58" y2="56" stroke="#5c4a3a" stroke-width="1.5"/>
+    <line x1="340" y1="54" x2="380" y2="54" stroke="#5c4a3a" stroke-width="1.5"/>
+  </svg>
+  <p>\(r = 3\)（Pin 2 + Roller 1），\(c = 0\) → \(n = 3 - 0 - 3 = 0\) → <span class="tag-d">靜定</span> <span class="tag-s">穩定</span></p>
+</div>
+<div class="ex-box">
+  <div class="label">範例 2 — 固定梁（兩端固定）</div>
+  <svg width="400" height="75" viewBox="0 0 400 75" class="diagram">
+    <rect x="10" y="10" width="12" height="55" fill="#5c4a3a"/>
+    <rect x="378" y="10" width="12" height="55" fill="#5c4a3a"/>
+    <line x1="22" y1="38" x2="378" y2="38" stroke="#c8c0b0" stroke-width="3"/>
+  </svg>
+  <p>\(r = 6\)（Fixed ×2），\(c = 0\) → \(n = 6 - 0 - 3 = 3\) → <span class="tag-i">3 度靜不定</span></p>
+</div>
+<div class="ex-box">
+  <div class="label">範例 3 — Gerber 梁（含 1 內鉸）</div>
+  <svg width="460" height="80" viewBox="0 0 460 80" class="diagram">
+    <line x1="30" y1="32" x2="195" y2="32" stroke="#c8c0b0" stroke-width="3"/>
+    <line x1="205" y1="32" x2="430" y2="32" stroke="#c8c0b0" stroke-width="3"/>
+    <circle cx="200" cy="32" r="5" fill="#1a1814" stroke="#a855f7" stroke-width="2"/>
+    <polygon points="30,32 18,52 42,52" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <polygon points="280,32 268,52 292,52" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <circle cx="430" cy="44" r="7" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <line x1="12" y1="56" x2="48" y2="56" stroke="#5c4a3a" stroke-width="1.2"/>
+    <line x1="262" y1="56" x2="298" y2="56" stroke="#5c4a3a" stroke-width="1.2"/>
+    <line x1="412" y1="55" x2="448" y2="55" stroke="#5c4a3a" stroke-width="1.2"/>
+    <text x="200" y="22" text-anchor="middle" fill="#a855f7" font-size="10">內鉸</text>
+  </svg>
+  <p>\(r = 5\)（Pin×2 + Roller×1），\(c = 1\) → \(n = 5 - 1 - 3 = 1\) → <span class="tag-i">1 度靜不定</span></p>
+</div>
+<div class="ex-box">
+  <div class="label">範例 4 — 三鉸共線（幾何不穩定！）</div>
+  <svg width="460" height="85" viewBox="0 0 460 85" class="diagram">
+    <line x1="30" y1="35" x2="150" y2="35" stroke="#c8c0b0" stroke-width="3"/>
+    <line x1="160" y1="35" x2="300" y2="35" stroke="#c8c0b0" stroke-width="3"/>
+    <line x1="310" y1="35" x2="430" y2="35" stroke="#c8c0b0" stroke-width="3"/>
+    <circle cx="155" cy="35" r="5" fill="#1a1814" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="305" cy="35" r="5" fill="#1a1814" stroke="#a855f7" stroke-width="2"/>
+    <polygon points="30,35 18,55 42,55" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <polygon points="430,35 418,55 442,55" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <line x1="12" y1="59" x2="48" y2="59" stroke="#5c4a3a" stroke-width="1.2"/>
+    <line x1="412" y1="59" x2="448" y2="59" stroke="#5c4a3a" stroke-width="1.2"/>
+    <line x1="20" y1="35" x2="440" y2="35" stroke="#e05555" stroke-width="1" stroke-dasharray="4"/>
+    <text x="230" y="80" text-anchor="middle" fill="#e05555" font-size="11">兩支承鉸 + 兩內鉸 = 四鉸共線 → 幾何不穩定！</text>
+  </svg>
+  <p>\(r = 4,\; c = 2\) → \(n = 4 - 2 - 3 = -1\) → <span class="tag-u">不穩定</span></p>
+  <p style="color:var(--red);margin-top:4px">即使 n = 0，三鉸共線仍然不穩定（幾何不穩定）！</p>
+</div>
+</div>
+</div>
+
+<!-- ===== S07 桁架 ===== -->
+<div class="section" id="s07">
+<div class="section-tag">UNIT 07</div>
+<div class="section-title">桁架的判定</div>
+<div class="section-sub">Trusses — n = b + r − 2j</div>
+
+<div class="card">
+<div class="card-title">桁架公式 <span class="en">Truss Formula</span></div>
+<div class="thm-box">
+  <div class="label">核心公式</div>
+  <div class="formula-block" style="font-size:18px">$$\boxed{n = b + r - 2j}$$</div>
+  <p style="margin-top:8px">\(b\) = 桿件數，\(r\) = 外部反力數，\(j\) = 節點數</p>
+</div>
+<div class="note-box">
+  <div class="label">推導</div>
+  <p>桁架每個節點列 2 方程式（\(\sum F_x=0,\;\sum F_y=0\)），共 \(2j\) 個。未知數 = \(b\) 桿件力 + \(r\) 外反力。</p>
+</div>
+<div class="grid-3" style="margin-top:14px">
+  <div class="type-card"><div class="name" style="color:var(--red)">n &lt; 0</div><span class="tag-u">不穩定</span></div>
+  <div class="type-card"><div class="name" style="color:var(--green)">n = 0</div><span class="tag-d">靜定</span></div>
+  <div class="type-card"><div class="name" style="color:var(--purple)">n &gt; 0</div><span class="tag-i">靜不定</span></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">桁架範例 <span class="en">Truss Examples</span></div>
+<div class="ex-box">
+  <div class="label">簡單三角桁架</div>
+  <svg width="420" height="140" viewBox="0 0 420 140" class="diagram">
+    <!-- 地面 -->
+    <line x1="15" y1="120" x2="85" y2="120" stroke="#6b5e50" stroke-width="1.5"/>
+    <line x1="295" y1="120" x2="365" y2="120" stroke="#6b5e50" stroke-width="1.5"/>
+    <!-- Pin 支承 -->
+    <polygon points="50,95 35,118 65,118" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="50" cy="95" r="3.5" fill="#a855f7"/>
+    <!-- Roller 支承 -->
+    <polygon points="330,95 315,115 345,115" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <circle cx="330" cy="118" r="5" fill="none" stroke="#2d7d9a" stroke-width="1.8"/>
+    <!-- 桿件 (b=5) -->
+    <!-- 下弦 -->
+    <line x1="50" y1="95" x2="190" y2="95" stroke="#c8c0b0" stroke-width="2.5"/>
+    <line x1="190" y1="95" x2="330" y2="95" stroke="#c8c0b0" stroke-width="2.5"/>
+    <!-- 左斜桿 -->
+    <line x1="50" y1="95" x2="190" y2="25" stroke="#c8c0b0" stroke-width="2.5"/>
+    <!-- 右斜桿 -->
+    <line x1="330" y1="95" x2="190" y2="25" stroke="#c8c0b0" stroke-width="2.5"/>
+    <!-- 上弦中間桿（無，因為只有一個頂點） -->
+    <!-- 垂直桿 -->
+    <line x1="190" y1="95" x2="190" y2="25" stroke="#c8c0b0" stroke-width="2.5"/>
+    <!-- 節點 (j=4) -->
+    <circle cx="50" cy="95" r="4" fill="#2d7d9a"/>
+    <circle cx="190" cy="95" r="4" fill="#2d7d9a"/>
+    <circle cx="330" cy="95" r="4" fill="#2d7d9a"/>
+    <circle cx="190" cy="25" r="4" fill="#2d7d9a"/>
+    <!-- 標記 -->
+    <text x="40" y="135" fill="#8a8070" font-size="9">Pin</text>
+    <text x="318" y="135" fill="#8a8070" font-size="9">Roller</text>
+    <text x="115" y="108" text-anchor="middle" fill="#d4a574" font-size="9">b₁</text>
+    <text x="265" y="108" text-anchor="middle" fill="#d4a574" font-size="9">b₂</text>
+    <text x="105" y="52" text-anchor="middle" fill="#d4a574" font-size="9">b₃</text>
+    <text x="275" y="52" text-anchor="middle" fill="#d4a574" font-size="9">b₄</text>
+    <text x="198" y="65" fill="#d4a574" font-size="9">b₅</text>
+  </svg>
+  <p>\(b=5, r=3, j=4\) → \(n = 5+3-8 = 0\) → <span class="tag-d">靜定</span></p>
+</div>
+<div class="ex-box">
+  <div class="label">內部不穩定範例（方格桁架無對角桿）</div>
+  <svg width="420" height="170" viewBox="0 0 420 170" class="diagram">
+    <!-- 地面 -->
+    <line x1="15" y1="155" x2="85" y2="155" stroke="#6b5e50" stroke-width="1.5"/>
+    <line x1="295" y1="155" x2="365" y2="155" stroke="#6b5e50" stroke-width="1.5"/>
+    <!-- Pin 支承 -->
+    <polygon points="50,125 35,153 65,153" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="50" cy="125" r="3.5" fill="#a855f7"/>
+    <!-- Roller 支承 -->
+    <polygon points="330,125 315,150 345,150" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <circle cx="330" cy="153" r="5" fill="none" stroke="#2d7d9a" stroke-width="1.8"/>
+    <!-- 桿件 (b=9) -->
+    <!-- 下弦 (2桿) -->
+    <line x1="50" y1="125" x2="190" y2="125" stroke="#c8c0b0" stroke-width="2.5"/>
+    <line x1="190" y1="125" x2="330" y2="125" stroke="#c8c0b0" stroke-width="2.5"/>
+    <!-- 上弦 (2桿) -->
+    <line x1="50" y1="45" x2="190" y2="45" stroke="#c8c0b0" stroke-width="2.5"/>
+    <line x1="190" y1="45" x2="330" y2="45" stroke="#c8c0b0" stroke-width="2.5"/>
+    <!-- 垂直桿 (3桿) -->
+    <line x1="50" y1="45" x2="50" y2="125" stroke="#c8c0b0" stroke-width="2.5"/>
+    <line x1="190" y1="45" x2="190" y2="125" stroke="#c8c0b0" stroke-width="2.5"/>
+    <line x1="330" y1="45" x2="330" y2="125" stroke="#c8c0b0" stroke-width="2.5"/>
+    <!-- 右格對角桿 (1桿, 綠色) -->
+    <line x1="190" y1="45" x2="330" y2="125" stroke="#3ba55d" stroke-width="2"/>
+    <!-- 左格缺少對角桿 (紅色虛線) -->
+    <line x1="50" y1="45" x2="190" y2="125" stroke="#e05555" stroke-width="1.5" stroke-dasharray="6"/>
+    <text x="100" y="93" fill="#e05555" font-size="10" font-weight="700" transform="rotate(30,100,93)">缺少！</text>
+    <!-- 節點 (j=6) -->
+    <circle cx="50" cy="45" r="4" fill="#2d7d9a"/>
+    <circle cx="190" cy="45" r="4" fill="#2d7d9a"/>
+    <circle cx="330" cy="45" r="4" fill="#2d7d9a"/>
+    <circle cx="50" cy="125" r="4" fill="#2d7d9a"/>
+    <circle cx="190" cy="125" r="4" fill="#2d7d9a"/>
+    <circle cx="330" cy="125" r="4" fill="#2d7d9a"/>
+    <!-- 標記 -->
+    <text x="40" y="168" fill="#8a8070" font-size="9">Pin</text>
+    <text x="318" y="168" fill="#8a8070" font-size="9">Roller</text>
+  </svg>
+  <p>\(b=9, r=3, j=6\) → \(n = 9+3-12 = 0\)（數字上 n=0）</p>
+  <p style="color:var(--red);margin-top:4px">但左方格無對角桿 → 可產生平行四邊形變形 → <span class="tag-u">內部幾何不穩定</span></p>
+  <p style="color:var(--tan);margin-top:4px">此例說明 n≥0 只是必要條件，必須額外檢查幾何穩定性。</p>
+</div>
+</div>
+</div>
+
+<!-- ===== S08 剛架 ===== -->
+<div class="section" id="s08">
+<div class="section-tag">UNIT 08</div>
+<div class="section-title">剛架與組合結構</div>
+<div class="section-sub">Frames — Two Methods</div>
+
+<div class="card">
+<div class="card-title">方法一：節點法 <span class="en">Joint Method</span></div>
+<div class="thm-box">
+  <div class="label">公式 ①</div>
+  <div class="formula-block" style="font-size:18px">$$\boxed{n = 3b + r - 3j - c}$$</div>
+  <p style="margin-top:8px">\(b\) = 桿件數，\(r\) = 外部反力數，\(j\) = 節點數（含支承），\(c\) = 條件方程式數</p>
+</div>
+<div class="note-box">
+  <div class="label">推導</div>
+  <p>每根桿件 3 個未知內力（N, V, M）→ \(3b\) 個。加上 \(r\) 個外反力 = \(3b + r\) 個未知數。</p>
+  <p>每個節點 3 個方程式 → \(3j\) 個。加上 \(c\) 個條件方程式 → 總方程式 \(3j + c\)。</p>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">方法二：封閉迴路法 <span class="en">Closed-Loop Method</span></div>
+<div class="thm-box">
+  <div class="label">公式 ②</div>
+  <div class="formula-block" style="font-size:18px">$$\boxed{n = 3T - C - S}$$</div>
+  <ul>
+    <li>\(T\) = 封閉迴路數（closed loops）</li>
+    <li>\(C\) = 條件方程式總數</li>
+    <li>\(S\) = 支承反力回補數</li>
+  </ul>
+  <div class="note-box" style="margin-top:10px">
+    <div class="label">S 的定義 — 支承反力回補數</div>
+    <p>封閉迴路法以<strong style="color:var(--gold)">所有支承皆為固定端</strong>為基礎。實際支承若不是固定端，需要「回補」才能回到固定端的約束等級：</p>
+    <ul style="margin-top:6px">
+      <li><strong>固定端</strong>（3 個反力）→ 已是基準，回補 \(0\)</li>
+      <li><strong>鉸支承</strong>（2 個反力）→ 少 1 個反力，回補 \(1\)</li>
+      <li><strong>滾支承</strong>（1 個反力）→ 少 2 個反力，回補 \(2\)</li>
+    </ul>
+    <div class="formula-block" style="margin-top:8px">$$S = \sum (\text{每個支承需回補的反力數})$$</div>
+    <p style="margin-top:6px;font-size:12.5px;color:var(--text3)">例：2 個固定端 → \(S = 0+0 = 0\)；1 鉸 + 1 滾 → \(S = 1+2 = 3\)；3 個鉸 + 1 滾 → \(S = 3(1)+1(2) = 5\)</p>
+  </div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">剛架範例 <span class="en">Frame Examples</span></div>
+<div class="ex-box">
+  <div class="label">門型剛架（雙固定端）</div>
+  <svg width="260" height="120" viewBox="0 0 260 120" class="diagram">
+    <polyline points="40,100 40,30 220,30 220,100" fill="none" stroke="#c8c0b0" stroke-width="3" stroke-linejoin="miter"/>
+    <rect x="30" y="100" width="20" height="10" fill="#5c4a3a"/>
+    <rect x="210" y="100" width="20" height="10" fill="#5c4a3a"/>
+  </svg>
+  <p><strong>節點法</strong>：\(b=3, r=6, j=4, c=0\) → \(n = 9+6-12-0 = 3\) → <span class="tag-i">3 度靜不定</span></p>
+  <p><strong>迴路法</strong>：\(T=1\)，\(C=0\)，兩端皆固定端 → \(S = 0+0 = 0\) → \(n = 3(1)-0-0 = 3\) ✓</p>
+</div>
+<div class="ex-box">
+  <div class="label">三鉸門型剛架</div>
+  <svg width="300" height="150" viewBox="0 0 300 150" class="diagram">
+    <!-- 地面 -->
+    <line x1="15" y1="135" x2="95" y2="135" stroke="#6b5e50" stroke-width="1.5"/>
+    <line x1="205" y1="135" x2="285" y2="135" stroke="#6b5e50" stroke-width="1.5"/>
+    <!-- 左側 L 型連續直角（柱+梁一體） -->
+    <polyline points="55,103 55,30 150,30" fill="none" stroke="#c8c0b0" stroke-width="3.5" stroke-linejoin="miter"/>
+    <!-- 右側 L 型連續直角（梁+柱一體） -->
+    <polyline points="150,30 245,30 245,103" fill="none" stroke="#c8c0b0" stroke-width="3.5" stroke-linejoin="miter"/>
+    <!-- 左鉸支承（三角形尖端接觸柱底） -->
+    <polygon points="55,107 40,135 70,135" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="55" cy="103" r="4" fill="#a855f7"/>
+    <!-- 右鉸支承（三角形尖端接觸柱底） -->
+    <polygon points="245,107 230,135 260,135" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="245" cy="103" r="4" fill="#a855f7"/>
+    <!-- 頂部內鉸 -->
+    <circle cx="150" cy="30" r="5.5" fill="#1a1814" stroke="#e8b339" stroke-width="2.5"/>
+    <text x="150" y="18" text-anchor="middle" fill="#e8b339" font-size="9" font-weight="700">內鉸</text>
+    <!-- 桿件標記 -->
+    <text x="40" y="70" fill="#d4a574" font-size="9" font-weight="600">b₁</text>
+    <text x="95" y="24" fill="#d4a574" font-size="9" font-weight="600">b₂</text>
+    <text x="190" y="24" fill="#d4a574" font-size="9" font-weight="600">b₃</text>
+    <text x="252" y="70" fill="#d4a574" font-size="9" font-weight="600">b₄</text>
+  </svg>
+  <p><strong>節點法</strong>：\(b=4, r=4\)（Pin×2），\(j=5, c=1\)（頂部內鉸） → \(n = 12+4-15-1 = 0\) → <span class="tag-d">靜定</span></p>
+  <p><strong>迴路法</strong>：\(T=1\)，\(C=1\)，兩端鉸支承 → \(S = 1+1 = 2\) → \(n = 3(1)-1-2 = 0\) ✓</p>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">兩方法比較 <span class="en">Comparison</span></div>
+<table class="tbl">
+<thead><tr><th>方法</th><th>公式</th><th>優點</th><th>注意</th></tr></thead>
+<tbody>
+<tr><td style="color:var(--teal);font-weight:600">節點法</td><td>3b+r−3j−c</td><td>系統化、不易出錯</td><td>需準確數 b, j, r, c</td></tr>
+<tr><td style="color:var(--purple);font-weight:600">迴路法</td><td>3T−C−S</td><td>快速直觀</td><td>S = 支承反力回補數</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ===== S09 計算器 ===== -->
+<div class="section" id="s09">
+<div class="section-tag">UNIT 09</div>
+<div class="section-title">判別計算器</div>
+<div class="section-sub">Interactive Calculators</div>
+
+<div class="card">
+<div class="card-title">梁判別器 <span class="en">n = r − c − 3</span></div>
+<div class="interactive-box">
+  <h4>輸入梁的參數</h4>
+  <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin-bottom:10px">
+    <div><label style="color:var(--text3);font-size:12px">反力數 r</label><br><input class="input-num" id="bm-r" value="3"></div>
+    <div><label style="color:var(--text3);font-size:12px">條件數 c</label><br><input class="input-num" id="bm-c" value="0"></div>
+    <button class="btn btn-teal" onclick="calcBeam()">判別</button>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+    <button class="btn btn-sm btn-gold" onclick="preB(3,0)">簡支梁</button>
+    <button class="btn btn-sm btn-gold" onclick="preB(3,0)">懸臂梁</button>
+    <button class="btn btn-sm btn-gold" onclick="preB(4,0)">Propped</button>
+    <button class="btn btn-sm btn-gold" onclick="preB(6,0)">固定梁</button>
+    <button class="btn btn-sm btn-gold" onclick="preB(5,1)">Gerber梁</button>
+    <button class="btn btn-sm btn-gold" onclick="preB(5,2)">雙內鉸</button>
+  </div>
+  <div class="result-box" id="bm-res">按「判別」或選擇預設</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">桁架判別器 <span class="en">n = b + r − 2j</span></div>
+<div class="interactive-box">
+  <h4>輸入桁架參數</h4>
+  <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin-bottom:10px">
+    <div><label style="color:var(--text3);font-size:12px">桿件數 b</label><br><input class="input-num" id="tr-b" value="7"></div>
+    <div><label style="color:var(--text3);font-size:12px">反力數 r</label><br><input class="input-num" id="tr-r" value="3"></div>
+    <div><label style="color:var(--text3);font-size:12px">節點數 j</label><br><input class="input-num" id="tr-j" value="5"></div>
+    <button class="btn btn-purple" onclick="calcTruss()">判別</button>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+    <button class="btn btn-sm btn-gold" onclick="preT(3,3,3)">三角桁架</button>
+    <button class="btn btn-sm btn-gold" onclick="preT(7,3,5)">Pratt</button>
+    <button class="btn btn-sm btn-gold" onclick="preT(11,3,7)">Warren</button>
+    <button class="btn btn-sm btn-gold" onclick="preT(13,4,8)">靜不定</button>
+  </div>
+  <div class="result-box" id="tr-res">按「判別」或選擇預設</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">剛架判別器 <span class="en">n = 3b + r − 3j − c</span></div>
+<div class="interactive-box">
+  <h4>輸入剛架參數</h4>
+  <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin-bottom:10px">
+    <div><label style="color:var(--text3);font-size:12px">桿件 b</label><br><input class="input-num" id="fr-b" value="3"></div>
+    <div><label style="color:var(--text3);font-size:12px">反力 r</label><br><input class="input-num" id="fr-r" value="6"></div>
+    <div><label style="color:var(--text3);font-size:12px">節點 j</label><br><input class="input-num" id="fr-j" value="4"></div>
+    <div><label style="color:var(--text3);font-size:12px">條件 c</label><br><input class="input-num" id="fr-c" value="0"></div>
+    <button class="btn btn-green" onclick="calcFrame()">判別</button>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+    <button class="btn btn-sm btn-gold" onclick="preF(3,6,4,0)">門架(雙固)</button>
+    <button class="btn btn-sm btn-gold" onclick="preF(3,4,4,0)">門架(雙鉸)</button>
+    <button class="btn btn-sm btn-gold" onclick="preF(4,4,5,1)">三鉸拱</button>
+    <button class="btn btn-sm btn-gold" onclick="preF(6,6,6,0)">兩跨剛架</button>
+  </div>
+  <div class="result-box" id="fr-res">按「判別」或選擇預設</div>
+</div>
+</div>
+</div>
+
+<!-- ===== S10 範例演練 ===== -->
+<div class="section" id="s10">
+<div class="section-tag">UNIT 10</div>
+<div class="section-title">範例演練</div>
+<div class="section-sub">Step-by-Step Examples — 點擊「逐步解題」觀看動畫</div>
+
+<!-- ═══ 範例 A：多跨連續梁 ═══ -->
+<div class="card">
+<div class="card-title">範例 A：多跨連續梁 <span class="en">Multi-span Beam</span></div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:10px">四跨連續梁，含 3 個鉸支承 + 1 個滾支承 + 2 個內鉸。</p>
+
+<!-- 結構圖 -->
+<div class="anim-box" id="exA-box">
+  <svg width="100%" height="160" viewBox="0 0 560 160" id="exA-svg">
+    <!-- 地面 -->
+    <line x1="10" y1="120" x2="90" y2="120" stroke="#6b5e50" stroke-width="1.5"/>
+    <line x1="160" y1="120" x2="240" y2="120" stroke="#6b5e50" stroke-width="1.5"/>
+    <line x1="300" y1="120" x2="380" y2="120" stroke="#6b5e50" stroke-width="1.5"/>
+    <line x1="440" y1="120" x2="530" y2="120" stroke="#6b5e50" stroke-width="1.5"/>
+    <!-- 鉸支承 A (Pin) x=50 -->
+    <polygon points="50,82 35,116 65,116" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="50" cy="82" r="4" fill="#a855f7"/>
+    <!-- 鉸支承 B (Pin) x=200 -->
+    <polygon points="200,82 185,116 215,116" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="200" cy="82" r="4" fill="#a855f7"/>
+    <!-- 鉸支承 C (Pin) x=340 -->
+    <polygon points="340,82 325,116 355,116" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="340" cy="82" r="4" fill="#a855f7"/>
+    <!-- 滾支承 D (Roller) x=480 -->
+    <polygon points="480,82 465,108 495,108" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <circle cx="480" cy="112" r="5" fill="none" stroke="#2d7d9a" stroke-width="1.8"/>
+    <!-- 梁段：只在內鉸處斷開（H1=130, H2=420） -->
+    <!-- 段1: A(50) → H1(130) -->
+    <rect x="30" y="72" width="100" height="10" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+    <!-- 段2: H1(135) → H2(415)，連續通過 B(200) 和 C(340) -->
+    <rect x="135" y="72" width="280" height="10" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+    <!-- 段3: H2(425) → D(480) → 端點 -->
+    <rect x="425" y="72" width="85" height="10" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+    <!-- 內鉸 H1 x=132 -->
+    <circle cx="132" cy="77" r="5" fill="#1a1814" stroke="#e8b339" stroke-width="2.5"/>
+    <!-- 內鉸 H2 x=420 -->
+    <circle cx="420" cy="77" r="5" fill="#1a1814" stroke="#e8b339" stroke-width="2.5"/>
+
+    <!-- ── 動畫疊加層 ── -->
+    <!-- Step1: 支承標記 -->
+    <g id="exA-s1" style="opacity:0">
+      <text x="50" y="138" text-anchor="middle" fill="#a855f7" font-size="10" font-weight="700">Pin</text>
+      <text x="200" y="138" text-anchor="middle" fill="#a855f7" font-size="10" font-weight="700">Pin</text>
+      <text x="340" y="138" text-anchor="middle" fill="#a855f7" font-size="10" font-weight="700">Pin</text>
+      <text x="480" y="138" text-anchor="middle" fill="#2d7d9a" font-size="10" font-weight="700">Roller</text>
+      <text x="280" y="155" text-anchor="middle" fill="#a855f7" font-size="12" font-weight="700" font-family="monospace">r = 3×2 + 1×1 = 7</text>
+    </g>
+    <!-- Step2: 條件標記 -->
+    <g id="exA-s2" style="opacity:0">
+      <text x="132" y="64" text-anchor="middle" fill="#e8b339" font-size="10" font-weight="700">內鉸 c=1</text>
+      <text x="420" y="64" text-anchor="middle" fill="#e8b339" font-size="10" font-weight="700">內鉸 c=1</text>
+      <text x="280" y="155" text-anchor="middle" fill="#e8b339" font-size="12" font-weight="700" font-family="monospace">c = 1 + 1 = 2</text>
+    </g>
+    <!-- Step3: 公式結果 -->
+    <g id="exA-s3" style="opacity:0">
+      <rect x="140" y="142" width="280" height="22" rx="6" fill="rgba(168,85,247,.12)" stroke="rgba(168,85,247,.3)" stroke-width="1.5"/>
+      <text x="280" y="158" text-anchor="middle" fill="#a855f7" font-size="13" font-weight="700" font-family="monospace">n = 7 − 2 − 3 = 2 → 2度靜不定</text>
+    </g>
+    <!-- Step4: 穩定檢查 -->
+    <g id="exA-s4" style="opacity:0">
+      <circle cx="540" cy="77" r="14" fill="rgba(59,165,93,.12)" stroke="#3ba55d" stroke-width="2"/>
+      <text x="540" y="82" text-anchor="middle" fill="#3ba55d" font-size="16" font-weight="700">✓</text>
+      <text x="540" y="102" text-anchor="middle" fill="#3ba55d" font-size="9">穩定</text>
+    </g>
+  </svg>
+</div>
+<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+  <button class="btn btn-teal btn-sm" onclick="playExA()">▶ 逐步解題</button>
+  <button class="btn btn-sm" style="background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)" onclick="resetExA()">↻ 重置</button>
+</div>
+<div id="exA-steps" style="margin-top:12px">
+  <div class="ex-box">
+    <div class="label">解題步驟</div>
+    <ol class="step-list">
+      <li id="exA-t1">辨識支承：3 個鉸支承(r=2×3) + 1 個滾支承(r=1) → \(r = 7\)</li>
+      <li id="exA-t2">辨識條件：2 個內鉸(各 c=1) → \(c = 2\)</li>
+      <li id="exA-t3">代入公式：\(n = r - c - 3 = 7 - 2 - 3 = 2\) → <span class="tag-i">2 度靜不定</span></li>
+      <li id="exA-t4">檢查幾何：鉸不共線、反力不全平行不共點 → <span class="tag-s">穩定</span></li>
+    </ol>
+  </div>
+</div>
+</div>
+
+<!-- ═══ 範例 B：簡單桁架 ═══ -->
+<div class="card">
+<div class="card-title">範例 B：簡單桁架 <span class="en">Simple Warren Truss</span></div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:10px">Warren 桁架（3 格），Pin + Roller 支承。</p>
+
+<div class="anim-box" id="exB-box">
+  <svg width="100%" height="190" viewBox="0 0 500 190" id="exB-svg">
+    <!-- 地面 -->
+    <line x1="15" y1="155" x2="95" y2="155" stroke="#6b5e50" stroke-width="1.5"/>
+    <line x1="385" y1="155" x2="465" y2="155" stroke="#6b5e50" stroke-width="1.5"/>
+    <!-- Pin支承 -->
+    <polygon points="55,126 40,153 70,153" fill="none" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="55" cy="126" r="4" fill="#a855f7"/>
+    <!-- Roller支承 -->
+    <polygon points="425,126 410,150 440,150" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+    <circle cx="425" cy="153" r="5" fill="none" stroke="#2d7d9a" stroke-width="1.8"/>
+
+    <!-- 下弦 (3 桿) -->
+    <line x1="55" y1="126" x2="178" y2="126" stroke="#c8c0b0" stroke-width="2.5"/>
+    <line x1="178" y1="126" x2="302" y2="126" stroke="#c8c0b0" stroke-width="2.5"/>
+    <line x1="302" y1="126" x2="425" y2="126" stroke="#c8c0b0" stroke-width="2.5"/>
+    <!-- 上弦 (2 桿) -->
+    <line x1="117" y1="50" x2="240" y2="50" stroke="#c8c0b0" stroke-width="2.5"/>
+    <line x1="240" y1="50" x2="363" y2="50" stroke="#c8c0b0" stroke-width="2.5"/>
+    <!-- 斜桿 (6 桿): Warren 型 -->
+    <line x1="55" y1="126" x2="117" y2="50" stroke="#c8c0b0" stroke-width="2"/>
+    <line x1="117" y1="50" x2="178" y2="126" stroke="#c8c0b0" stroke-width="2"/>
+    <line x1="178" y1="126" x2="240" y2="50" stroke="#c8c0b0" stroke-width="2"/>
+    <line x1="240" y1="50" x2="302" y2="126" stroke="#c8c0b0" stroke-width="2"/>
+    <line x1="302" y1="126" x2="363" y2="50" stroke="#c8c0b0" stroke-width="2"/>
+    <line x1="363" y1="50" x2="425" y2="126" stroke="#c8c0b0" stroke-width="2"/>
+
+    <!-- 節點 (7個) -->
+    <!-- 下弦 4 -->
+    <circle cx="55" cy="126" r="4" fill="#2d7d9a"/>
+    <circle cx="178" cy="126" r="4" fill="#2d7d9a"/>
+    <circle cx="302" cy="126" r="4" fill="#2d7d9a"/>
+    <circle cx="425" cy="126" r="4" fill="#2d7d9a"/>
+    <!-- 上弦 3 -->
+    <circle cx="117" cy="50" r="4" fill="#2d7d9a"/>
+    <circle cx="240" cy="50" r="4" fill="#2d7d9a"/>
+    <circle cx="363" cy="50" r="4" fill="#2d7d9a"/>
+
+    <!-- 動畫層 -->
+    <!-- Step1: 數桿件 -->
+    <g id="exB-s1" style="opacity:0">
+      <text x="240" y="178" text-anchor="middle" fill="#d4a574" font-size="12" font-weight="700" font-family="monospace">b = 11（下弦3 + 上弦2 + 斜桿6）</text>
+    </g>
+    <!-- Step2: 數反力 -->
+    <g id="exB-s2" style="opacity:0">
+      <text x="55" y="172" text-anchor="middle" fill="#a855f7" font-size="9" font-weight="700">Pin(2)</text>
+      <text x="425" y="172" text-anchor="middle" fill="#2d7d9a" font-size="9" font-weight="700">Roller(1)</text>
+      <text x="240" y="178" text-anchor="middle" fill="#a855f7" font-size="12" font-weight="700" font-family="monospace">r = 2 + 1 = 3</text>
+    </g>
+    <!-- Step3: 數節點 -->
+    <g id="exB-s3" style="opacity:0">
+      <text x="55" y="118" fill="#2d7d9a" font-size="8" font-weight="700" text-anchor="middle">①</text>
+      <text x="178" y="118" fill="#2d7d9a" font-size="8" font-weight="700" text-anchor="middle">②</text>
+      <text x="302" y="118" fill="#2d7d9a" font-size="8" font-weight="700" text-anchor="middle">③</text>
+      <text x="425" y="118" fill="#2d7d9a" font-size="8" font-weight="700" text-anchor="middle">④</text>
+      <text x="117" y="44" fill="#2d7d9a" font-size="8" font-weight="700" text-anchor="middle">⑤</text>
+      <text x="240" y="44" fill="#2d7d9a" font-size="8" font-weight="700" text-anchor="middle">⑥</text>
+      <text x="363" y="44" fill="#2d7d9a" font-size="8" font-weight="700" text-anchor="middle">⑦</text>
+      <text x="240" y="178" text-anchor="middle" fill="#2d7d9a" font-size="12" font-weight="700" font-family="monospace">j = 7 個節點</text>
+    </g>
+    <!-- Step4: 公式 -->
+    <g id="exB-s4" style="opacity:0">
+      <rect x="100" y="170" width="290" height="22" rx="6" fill="rgba(59,165,93,.12)" stroke="rgba(59,165,93,.3)" stroke-width="1.5"/>
+      <text x="245" y="186" text-anchor="middle" fill="#3ba55d" font-size="13" font-weight="700" font-family="monospace">n = 11+3−2(7) = 14−14 = 0</text>
+    </g>
+    <!-- Step5: 結果 -->
+    <g id="exB-s5" style="opacity:0">
+      <circle cx="470" cy="90" r="14" fill="rgba(59,165,93,.12)" stroke="#3ba55d" stroke-width="2"/>
+      <text x="470" y="95" text-anchor="middle" fill="#3ba55d" font-size="16" font-weight="700">✓</text>
+      <text x="470" y="115" text-anchor="middle" fill="#3ba55d" font-size="9">穩定+靜定</text>
+    </g>
+  </svg>
+</div>
+<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+  <button class="btn btn-teal btn-sm" onclick="playExB()">▶ 逐步解題</button>
+  <button class="btn btn-sm" style="background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)" onclick="resetExB()">↻ 重置</button>
+</div>
+<div id="exB-steps" style="margin-top:12px">
+  <div class="ex-box">
+    <div class="label">解題步驟</div>
+    <ol class="step-list">
+      <li id="exB-t1">數桿件：下弦 3 + 上弦 2 + 斜桿 6 → \(b = 11\)</li>
+      <li id="exB-t2">數反力：Pin(2) + Roller(1) → \(r = 3\)</li>
+      <li id="exB-t3">數節點：下弦 4 + 上弦 3 → \(j = 7\)</li>
+      <li id="exB-t4">代入公式：\(n = b + r - 2j = 11 + 3 - 14 = 0\) → <span class="tag-d">靜定</span></li>
+      <li id="exB-t5">檢查幾何：全部由三角形組成、逐步擴展 → <span class="tag-s">穩定</span></li>
+    </ol>
+  </div>
+</div>
+</div>
+
+<!-- ═══ 範例 C：兩跨剛架 ═══ -->
+<div class="card">
+<div class="card-title">範例 C：兩跨剛架（含內鉸）<span class="en">Two-bay Frame with Hinge</span></div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:10px">兩跨門型剛架，3 個固定支承 + 梁中間 1 個內鉸。</p>
+
+<div class="anim-box" id="exC-box">
+  <svg width="100%" height="220" viewBox="0 0 480 220" id="exC-svg">
+    <!-- 固定端 A (左) -->
+    <rect x="38" y="170" width="14" height="36" fill="#5c4a3a"/>
+    <!-- 固定端 B (中) -->
+    <rect x="218" y="170" width="14" height="36" fill="#5c4a3a"/>
+    <!-- 固定端 C (右) -->
+    <rect x="398" y="170" width="14" height="36" fill="#5c4a3a"/>
+    <!-- 地面 -->
+    <line x1="20" y1="206" x2="460" y2="206" stroke="#6b5e50" stroke-width="1.5"/>
+
+    <!-- 左 L 型（柱+梁連續直角） -->
+    <polyline points="45,170 45,60 225,60" fill="none" stroke="#c8c0b0" stroke-width="3.5" stroke-linejoin="miter"/>
+    <!-- 中柱 b2 -->
+    <line x1="225" y1="60" x2="225" y2="170" stroke="#c8c0b0" stroke-width="3.5"/>
+    <!-- 右 L 型（梁+柱連續直角） -->
+    <polyline points="225,60 405,60 405,170" fill="none" stroke="#c8c0b0" stroke-width="3.5" stroke-linejoin="miter"/>
+
+    <!-- 內鉸（在右梁中間） -->
+    <circle cx="315" cy="60" r="6" fill="#1a1814" stroke="#e8b339" stroke-width="2.5"/>
+
+    <!-- 動畫層 -->
+    <!-- Step1: 桿件標記 -->
+    <g id="exC-s1" style="opacity:0">
+      <text x="28" y="120" fill="#d4a574" font-size="10" font-weight="700" transform="rotate(-90,28,120)">b₁ 左柱</text>
+      <text x="210" y="120" fill="#d4a574" font-size="10" font-weight="700" transform="rotate(-90,210,120)">b₂ 中柱</text>
+      <text x="420" y="120" fill="#d4a574" font-size="10" font-weight="700" transform="rotate(-90,420,120)">b₃ 右柱</text>
+      <text x="130" y="52" text-anchor="middle" fill="#d4a574" font-size="10" font-weight="700">b₄ 左梁</text>
+      <text x="355" y="52" text-anchor="middle" fill="#d4a574" font-size="10" font-weight="700">b₅ 右梁</text>
+      <text x="240" y="218" fill="#d4a574" font-size="12" font-weight="700" font-family="monospace" text-anchor="middle">b = 5 根桿件</text>
+    </g>
+    <!-- Step2: 反力標記 -->
+    <g id="exC-s2" style="opacity:0">
+      <text x="45" y="196" text-anchor="middle" fill="#a855f7" font-size="9" font-weight="700">Fixed(3)</text>
+      <text x="225" y="196" text-anchor="middle" fill="#a855f7" font-size="9" font-weight="700">Fixed(3)</text>
+      <text x="405" y="196" text-anchor="middle" fill="#a855f7" font-size="9" font-weight="700">Fixed(3)</text>
+      <text x="240" y="218" fill="#a855f7" font-size="12" font-weight="700" font-family="monospace" text-anchor="middle">r = 3 × 3 = 9</text>
+    </g>
+    <!-- Step3: 節點標記 -->
+    <g id="exC-s3" style="opacity:0">
+      <circle cx="45" cy="170" r="5" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <circle cx="225" cy="170" r="5" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <circle cx="405" cy="170" r="5" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <circle cx="45" cy="60" r="5" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <circle cx="225" cy="60" r="5" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <circle cx="405" cy="60" r="5" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+      <text x="240" y="218" fill="#2d7d9a" font-size="12" font-weight="700" font-family="monospace" text-anchor="middle">j = 6（含底部3 + 頂部3）</text>
+    </g>
+    <!-- Step4: 條件標記 -->
+    <g id="exC-s4" style="opacity:0">
+      <text x="315" y="46" text-anchor="middle" fill="#e8b339" font-size="10" font-weight="700">內鉸 c=1</text>
+      <text x="240" y="218" fill="#e8b339" font-size="12" font-weight="700" font-family="monospace" text-anchor="middle">c = 1</text>
+    </g>
+    <!-- Step5: 公式 -->
+    <g id="exC-s5" style="opacity:0">
+      <rect x="70" y="210" width="340" height="22" rx="6" fill="rgba(168,85,247,.12)" stroke="rgba(168,85,247,.3)" stroke-width="1.5"/>
+      <text x="240" y="226" text-anchor="middle" fill="#a855f7" font-size="12" font-weight="700" font-family="monospace">n = 3(5)+9−3(6)−1 = 15+9−18−1 = 5</text>
+    </g>
+    <!-- Step6: 結果 -->
+    <g id="exC-s6" style="opacity:0">
+      <circle cx="455" cy="30" r="14" fill="rgba(168,85,247,.12)" stroke="#a855f7" stroke-width="2"/>
+      <text x="455" y="35" text-anchor="middle" fill="#a855f7" font-size="11" font-weight="700">5°</text>
+      <text x="455" y="50" text-anchor="middle" fill="#a855f7" font-size="8">靜不定</text>
+    </g>
+  </svg>
+</div>
+<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+  <button class="btn btn-teal btn-sm" onclick="playExC()">▶ 逐步解題</button>
+  <button class="btn btn-sm" style="background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)" onclick="resetExC()">↻ 重置</button>
+</div>
+<div id="exC-steps" style="margin-top:12px">
+  <div class="ex-box">
+    <div class="label">節點法</div>
+    <ol class="step-list">
+      <li id="exC-t1">桿件數：\(b = 5\)（左柱、中柱、右柱、左梁、右梁）</li>
+      <li id="exC-t2">反力數：3 個固定端 → \(r = 3 \times 3 = 9\)</li>
+      <li id="exC-t3">節點數：\(j = 6\)（底部 3 + 頂部 3）</li>
+      <li id="exC-t4">條件數：1 個內鉸 → \(c = 1\)</li>
+      <li id="exC-t5">代入公式：\(n = 3b+r-3j-c = 15+9-18-1 = 5\) → <span class="tag-i">5 度靜不定</span></li>
+      <li id="exC-t6">檢查幾何：三角形配置無共線問題 → <span class="tag-s">穩定</span></li>
+    </ol>
+  </div>
+</div>
+</div>
+
+</div>
+
+<!-- ===== S11 隨堂測驗 ===== -->
+<div class="section" id="s11">
+<div class="section-tag">UNIT 11</div>
+<div class="section-title">隨堂測驗</div>
+<div class="section-sub">Quiz — 測試你的理解</div>
+
+<div class="card">
+  <div class="card-title">結構穩定判別測驗 <span class="en" id="qcnt">1/12</span></div>
+  <div id="qa"></div>
+  <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
+    <button class="btn btn-teal" onclick="nxtQ()">下一題</button>
+    <button class="btn btn-gold" onclick="rstQ()">重新開始</button>
+    <span id="qsc" style="color:var(--text3);font-size:13px;margin-left:auto"></span>
+  </div>
+</div>
+</div>
+
+<div class="footer">穩定性與靜定性 — 結構學 I 互動教學 · 基於課堂筆記</div>
+</div>
+</div>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <marker id="ah-r" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0,0 8,3 0,6" fill="#e05555"/></marker>
+  <marker id="ah-t" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0,0 8,3 0,6" fill="#2d7d9a"/></marker>
+  <marker id="ah-g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0,0 8,3 0,6" fill="#e8b339"/></marker>
+  <marker id="ah-p" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0,0 8,3 0,6" fill="#a855f7"/></marker>
+  <marker id="ah-gn" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0,0 8,3 0,6" fill="#3ba55d"/></marker>
+</defs></svg>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+function go(el,id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+  document.querySelector('.sidebar').classList.remove('open');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ─── Arrow marker defs (shared) ─── */
+const ARROW_DEFS = `<defs>
+  <marker id="aR" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#e05555"/></marker>
+  <marker id="aG" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#3ba55d"/></marker>
+  <marker id="aB" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#5b9bd5"/></marker>
+</defs>`;
+function ground(x1,x2,y){
+  let s=`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#6b5e50" stroke-width="2"/>`;
+  for(let i=0;i<Math.floor((x2-x1)/10);i++) s+=`<line x1="${x1+i*10+5}" y1="${y}" x2="${x1+i*10-2}" y2="${y+8}" stroke="#6b5e50" stroke-width="1.2"/>`;
+  return s;
+}
+function beam(x1,y,w){return `<rect x="${x1}" y="${y}" width="${w}" height="10" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>`;}
+
+/* ─── Support SVGs ─── */
+const supportSVGs = {
+  roller: `<svg width="220" height="150" viewBox="0 0 220 150">${ARROW_DEFS}${ground(40,180,125)}
+    <circle cx="90" cy="117" r="6" fill="none" stroke="#2d7d9a" stroke-width="2.2"/>
+    <circle cx="130" cy="117" r="6" fill="none" stroke="#2d7d9a" stroke-width="2.2"/>
+    <polygon points="110,92 82,111 138,111" fill="none" stroke="#2d7d9a" stroke-width="2.5"/>
+    ${beam(40,82,140)}
+    <line x1="110" y1="78" x2="110" y2="40" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="118" y="52" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">y</tspan></text>
+    <line x1="38" y1="87" x2="16" y2="87" stroke="#3ba55d" stroke-width="2" marker-end="url(#aG)"/>
+    <text x="8" y="82" fill="#3ba55d" font-size="11" font-family="monospace">Δx</text>
+    <text x="180" y="58" fill="#3ba55d" font-size="11" font-family="monospace">Δθ</text>
+    <path d="M 180 64 A 20 20 0 0 1 200 84" stroke="#3ba55d" stroke-width="2" fill="none" marker-end="url(#aG)"/>
+  </svg>`,
+  hinge: `<svg width="220" height="150" viewBox="0 0 220 150">${ARROW_DEFS}${ground(40,180,125)}
+    <polygon points="110,90 80,125 140,125" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+    <circle cx="110" cy="90" r="4.5" fill="#a855f7" stroke="#7c3aed" stroke-width="1.5"/>
+    ${beam(40,80,140)}
+    <line x1="110" y1="76" x2="110" y2="38" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="118" y="50" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">y</tspan></text>
+    <line x1="38" y1="85" x2="12" y2="85" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="4" y="78" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">x</tspan></text>
+    <text x="186" y="60" fill="#3ba55d" font-size="11" font-family="monospace">Δθ</text>
+    <path d="M 186 66 A 20 20 0 0 1 206 86" stroke="#3ba55d" stroke-width="2" fill="none" marker-end="url(#aG)"/>
+  </svg>`,
+  fixed: `<svg width="220" height="150" viewBox="0 0 220 150">${ARROW_DEFS}
+    <rect x="30" y="35" width="16" height="85" fill="#bfb5a8" stroke="#6b5e50" stroke-width="2"/>
+    ${[40,50,60,70,80,90,100,110].map(y=>`<line x1="30" y1="${y}" x2="22" y2="${y+7}" stroke="#6b5e50" stroke-width="1.2"/>`).join('')}
+    ${beam(46,72,130)}
+    <line x1="70" y1="68" x2="70" y2="36" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="76" y="46" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">y</tspan></text>
+    <line x1="50" y1="95" x2="50" y2="120" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="54" y="122" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">x</tspan></text>
+    <path d="M 130 58 A 18 18 0 1 1 112 42" stroke="#e05555" stroke-width="2.2" fill="none" marker-end="url(#aR)"/>
+    <text x="114" y="38" fill="#e05555" font-size="14" font-weight="700" font-family="serif">M</text>
+    <text x="140" y="68" fill="#888" font-size="11" font-family="monospace">Δ=0</text>
+  </svg>`,
+  slider: `<svg width="220" height="150" viewBox="0 0 220 150">${ARROW_DEFS}
+    <rect x="30" y="30" width="16" height="90" fill="#bfb5a8" stroke="#6b5e50" stroke-width="2"/>
+    ${[35,45,55,65,75,85,95,105,115].map(y=>`<line x1="30" y1="${y}" x2="22" y2="${y+7}" stroke="#6b5e50" stroke-width="1.2"/>`).join('')}
+    <rect x="46" y="42" width="26" height="66" fill="none" stroke="#d97706" stroke-width="2.5" rx="2"/>
+    <circle cx="59" cy="54" r="5" fill="rgba(217,119,6,0.15)" stroke="#d97706" stroke-width="2"/>
+    <circle cx="59" cy="75" r="5" fill="rgba(217,119,6,0.15)" stroke="#d97706" stroke-width="2"/>
+    <circle cx="59" cy="96" r="5" fill="rgba(217,119,6,0.15)" stroke="#d97706" stroke-width="2"/>
+    ${beam(60,70,120)}
+    <line x1="82" y1="65" x2="82" y2="40" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="86" y="44" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">x</tspan></text>
+    <path d="M 145 58 A 16 16 0 1 1 132 48" stroke="#e05555" stroke-width="2.2" fill="none" marker-end="url(#aR)"/>
+    <text x="132" y="44" fill="#e05555" font-size="14" font-weight="700" font-family="serif">M</text>
+    <line x1="59" y1="112" x2="59" y2="138" stroke="#3ba55d" stroke-width="2" marker-end="url(#aG)"/>
+    <text x="64" y="135" fill="#3ba55d" font-size="11" font-family="monospace">Δy</text>
+    <line x1="59" y1="38" x2="59" y2="18" stroke="#3ba55d" stroke-width="2" marker-end="url(#aG)"/>
+    <text x="64" y="24" fill="#3ba55d" font-size="11" font-family="monospace">Δy</text>
+  </svg>`,
+  linearSpring: `<svg width="220" height="150" viewBox="0 0 220 150">${ARROW_DEFS}
+    <line x1="30" y1="132" x2="92" y2="132" stroke="#6b5e50" stroke-width="2"/>
+    ${[35,45,55,65,75,85].map(x=>`<line x1="${x}" y1="132" x2="${x-6}" y2="140" stroke="#6b5e50" stroke-width="1.2"/>`).join('')}
+    <line x1="128" y1="132" x2="190" y2="132" stroke="#6b5e50" stroke-width="2"/>
+    ${[133,143,153,163,173,183].map(x=>`<line x1="${x}" y1="132" x2="${x-6}" y2="140" stroke="#6b5e50" stroke-width="1.2"/>`).join('')}
+    <polyline points="110,132 99,124 121,116 99,108 121,100 99,92 121,84 110,76" fill="none" stroke="#e8b339" stroke-width="3" stroke-linejoin="round"/>
+    ${beam(35,64,150)}
+    <line x1="110" y1="62" x2="110" y2="28" stroke="#e05555" stroke-width="2.8" marker-end="url(#aR)"/>
+    <text x="116" y="40" fill="#e05555" font-size="15" font-weight="800" font-family="serif">R<tspan dy="3" font-size="10">y</tspan></text>
+    <line x1="175" y1="58" x2="175" y2="76" stroke="#5b9bd5" stroke-width="2"/>
+    <line x1="170" y1="58" x2="180" y2="58" stroke="#5b9bd5" stroke-width="1.8"/>
+    <line x1="170" y1="76" x2="180" y2="76" stroke="#5b9bd5" stroke-width="1.8"/>
+    <text x="184" y="71" fill="#5b9bd5" font-size="14" font-weight="700" font-family="serif">Δy</text>
+    <text x="55" y="148" fill="#e8b339" font-size="12" font-weight="700" font-family="monospace">Ry = k · Δy</text>
+  </svg>`,
+  rotSpring: `<svg width="240" height="150" viewBox="0 0 240 150">${ARROW_DEFS}
+    <rect x="20" y="35" width="16" height="85" fill="#bfb5a8" stroke="#6b5e50" stroke-width="2"/>
+    ${[40,50,60,70,80,90,100,110].map(y=>`<line x1="20" y1="${y}" x2="12" y2="${y+7}" stroke="#6b5e50" stroke-width="1.2"/>`).join('')}
+    <circle cx="50" cy="77" r="13" fill="none" stroke="#e879a0" stroke-width="2.5"/>
+    <circle cx="50" cy="77" r="7" fill="none" stroke="#e879a0" stroke-width="2"/>
+    <circle cx="50" cy="77" r="3" fill="#e879a0"/>
+    ${beam(62,72,130)}
+    <path d="M 150 56 A 16 16 0 1 1 136 46" stroke="#e05555" stroke-width="2.2" fill="none" marker-end="url(#aR)"/>
+    <text x="138" y="42" fill="#e05555" font-size="14" font-weight="700" font-family="serif">M</text>
+    <line x1="80" y1="68" x2="80" y2="42" stroke="#3ba55d" stroke-width="2" marker-end="url(#aG)"/>
+    <text x="84" y="46" fill="#3ba55d" font-size="11" font-family="monospace">Δx</text>
+    <line x1="120" y1="86" x2="120" y2="112" stroke="#3ba55d" stroke-width="2" marker-end="url(#aG)"/>
+    <text x="126" y="108" fill="#3ba55d" font-size="10" font-family="monospace">Δy</text>
+    <text x="190" y="52" fill="#3ba55d" font-size="11" font-family="monospace">Δθ</text>
+    <path d="M 190 58 A 20 20 0 0 1 210 78" stroke="#3ba55d" stroke-width="2" fill="none" marker-end="url(#aG)"/>
+    <text x="70" y="132" fill="#e879a0" font-size="11" font-family="monospace">M = kθ · Δθ</text>
+  </svg>`
+};
+
+/* ─── Connection SVGs ─── */
+const connectionSVGs = {
+  rigid: `<svg width="240" height="110" viewBox="0 0 240 110">
+    <rect x="20" y="30" width="70" height="24" fill="#c4956a" stroke="#8b6914" stroke-width="1.5"/>
+    ${[25,33,41,49,57,65,73,81].map(x=>`<line x1="${x}" y1="30" x2="${x+6}" y2="54" stroke="#8b6914" stroke-width="1" opacity="0.5"/>`).join('')}
+    <text x="20" y="25" fill="#c8c0b0" font-size="13" font-weight="600" font-family="serif">A</text>
+    <rect x="90" y="26" width="6" height="32" fill="#e05555" rx="1"/>
+    <rect x="96" y="30" width="120" height="24" fill="#d4a574" stroke="#8b6914" stroke-width="1.5"/>
+    <text x="210" y="25" fill="#c8c0b0" font-size="13" font-weight="600" font-family="serif">B</text>
+    <text x="20" y="80" fill="#e05555" font-size="12" font-weight="700" font-family="monospace">內力: N, V, M</text>
+    <text x="20" y="96" fill="#888" font-size="11" font-family="monospace">c = 0</text>
+  </svg>`,
+  hingeConn: `<svg width="240" height="110" viewBox="0 0 240 110">
+    <rect x="20" y="42" width="90" height="12" fill="#c4956a" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <rect x="130" y="42" width="90" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <circle cx="120" cy="48" r="9" fill="rgba(168,85,247,0.12)" stroke="#a855f7" stroke-width="2.8"/>
+    <circle cx="120" cy="48" r="2" fill="#a855f7"/>
+    <text x="20" y="82" fill="#a855f7" font-size="12" font-weight="700" font-family="monospace">內力: N, V</text>
+    <text x="20" y="98" fill="#888" font-size="11" font-family="monospace">c = 1 (M = 0)</text>
+  </svg>`,
+  rollerConn: `<svg width="240" height="90" viewBox="0 0 240 90">
+    <rect x="30" y="52" width="60" height="6" fill="#c4956a" stroke="#8b6914" stroke-width="1.2" rx="1"/>
+    <circle cx="90" cy="44" r="8" fill="none" stroke="#2d7d9a" stroke-width="2.5"/>
+    <rect x="82" y="33" width="100" height="6" fill="#d4a574" stroke="#8b6914" stroke-width="1.2" rx="1"/>
+    <text x="30" y="78" fill="#2d7d9a" font-size="12" font-weight="700" font-family="monospace">內力: V</text>
+    <text x="120" y="78" fill="#888" font-size="11" font-family="monospace">c = 2 (N=0, M=0)</text>
+  </svg>`,
+  directional: `<svg width="240" height="110" viewBox="0 0 240 110">
+    <rect x="20" y="40" width="80" height="12" fill="#c4956a" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <rect x="140" y="40" width="80" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <line x1="106" y1="22" x2="106" y2="70" stroke="#d97706" stroke-width="2.5"/>
+    <circle cx="120" cy="30" r="8" fill="rgba(217,119,6,0.1)" stroke="#d97706" stroke-width="2"/>
+    <line x1="115" y1="25" x2="125" y2="35" stroke="#d97706" stroke-width="1.5"/><line x1="125" y1="25" x2="115" y2="35" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="120" cy="46" r="8" fill="rgba(217,119,6,0.1)" stroke="#d97706" stroke-width="2"/>
+    <line x1="115" y1="41" x2="125" y2="51" stroke="#d97706" stroke-width="1.5"/><line x1="125" y1="41" x2="115" y2="51" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="120" cy="62" r="8" fill="rgba(217,119,6,0.1)" stroke="#d97706" stroke-width="2"/>
+    <line x1="115" y1="57" x2="125" y2="67" stroke="#d97706" stroke-width="1.5"/><line x1="125" y1="57" x2="115" y2="67" stroke="#d97706" stroke-width="1.5"/>
+    <line x1="134" y1="22" x2="134" y2="70" stroke="#d97706" stroke-width="2.5"/>
+    <text x="20" y="88" fill="#d97706" font-size="12" font-weight="700" font-family="monospace">內力: N, M</text>
+    <text x="20" y="104" fill="#888" font-size="11" font-family="monospace">c = 1 (V = 0)</text>
+  </svg>`,
+  linearSpringConn: `<svg width="240" height="110" viewBox="0 0 240 110">
+    <rect x="20" y="20" width="80" height="12" fill="#c4956a" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <line x1="90" y1="32" x2="90" y2="38" stroke="#3ba55d" stroke-width="2"/>
+    <polyline points="90,38 82,43 98,48 82,53 98,58 82,63 98,68 90,73" fill="none" stroke="#3ba55d" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="90" y1="73" x2="90" y2="78" stroke="#3ba55d" stroke-width="2"/>
+    <rect x="80" y="78" width="80" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <text x="130" y="40" fill="#3ba55d" font-size="12" font-weight="700" font-family="monospace">內力: V</text>
+    <text x="130" y="56" fill="#888" font-size="11" font-family="monospace">c = 2</text>
+    <text x="130" y="72" fill="#888" font-size="11" font-family="monospace">(N=0, M=0)</text>
+  </svg>`,
+  hingeSpringConn: `<svg width="240" height="110" viewBox="0 0 240 110">
+    <rect x="20" y="40" width="78" height="14" fill="#c4956a" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <rect x="142" y="40" width="78" height="14" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <circle cx="120" cy="47" r="22" fill="none" stroke="#3ba55d" stroke-width="2.2"/>
+    <circle cx="120" cy="47" r="15" fill="none" stroke="#3ba55d" stroke-width="2"/>
+    <circle cx="120" cy="47" r="9" fill="none" stroke="#3ba55d" stroke-width="1.8"/>
+    <circle cx="120" cy="47" r="4" fill="rgba(168,85,247,0.3)" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="120" cy="47" r="1.5" fill="#a855f7"/>
+    <text x="20" y="88" fill="#e879a0" font-size="12" font-weight="700" font-family="monospace">內力: N, V, M</text>
+    <text x="20" y="104" fill="#888" font-size="11" font-family="monospace">c = 0</text>
+  </svg>`
+};
+
+/* ─── Data ─── */
+const supportData = [
+  {id:"roller",name:"輥支承",en:"Roller",reactions:1,reactionList:["Ry"],dof:2,dofList:["x 方向平移","角度 θ 旋轉"],disp:["Δx","Δθ"],color:"#2d7d9a",desc:"僅能抵抗垂直方向的力，結構可以水平滑動和旋轉。常見於橋樑一端，允許因溫度變化的伸縮。",real:"橋樑可動端、鋼結構滑動接頭"},
+  {id:"hinge",name:"鉸支承",en:"Hinge (Pin)",reactions:2,reactionList:["Rx","Ry"],dof:1,dofList:["角度 θ 旋轉"],disp:["Δθ"],color:"#a855f7",desc:"可以抵抗水平和垂直方向的力，但無法抵抗彎矩，結構可以自由旋轉。",real:"門的鉸鏈、橋樑固定端"},
+  {id:"fixed",name:"固定端",en:"Fixed End",reactions:3,reactionList:["Rx","Ry","M"],dof:0,dofList:[],disp:[],color:"#d97706",desc:"完全固定，可以抵抗所有方向的力和彎矩。結構在此處 Δx = Δy = Δθ = 0，無任何位移或旋轉。",real:"懸臂梁的牆壁端、電線桿基座"},
+  {id:"slider",name:"定向支承",en:"Slider (Guided)",reactions:2,reactionList:["Rx","M"],dof:1,dofList:["y 方向平移"],disp:["Δy"],color:"#d97706",desc:"又稱導向支承。可抵抗水平力和彎矩，但允許垂直方向位移。結構被導軌約束只能沿 y 方向滑動。",real:"導軌滑塊、活塞運動機構"},
+  {id:"linearSpring",name:"直線彈簧支承",en:"Linear Spring (k)",reactions:1,reactionList:["Ry"],dof:3,dofList:["x 方向","y 方向","角度 θ"],disp:["Δx","Δy","Δθ"],color:"#3ba55d",desc:"透過彈簧提供垂直反力，反力大小與變形量成正比：Ry = k·Δy。三個方向皆可位移。",real:"彈性地基、避震器"},
+  {id:"rotSpring",name:"抗彎彈簧支承",en:"Rotational Spring (kθ)",reactions:1,reactionList:["M"],dof:3,dofList:["x 方向","y 方向","角度 θ"],disp:["Δx","Δy","Δθ"],color:"#e879a0",desc:"透過旋轉彈簧提供抵抗彎矩的反力，彎矩大小與旋轉角成正比：M = kθ·Δθ。三個方向皆可位移。",real:"半剛性接頭、旋轉阻尼器"},
+];
+const connectionData = [
+  {id:"rigid",name:"剛性接續",en:"Rigid",forces:3,forceList:["N (軸力)","V (剪力)","M (彎矩)"],c:0,cDetail:null,color:"#e05555",desc:"傳遞所有內力（N、V、M），節點處各桿件角度保持不變，無條件方程式。"},
+  {id:"hingeConn",name:"鉸接續",en:"Hinge",forces:2,forceList:["N (軸力)","V (剪力)"],c:1,cDetail:"M = 0",color:"#a855f7",desc:"傳遞軸力和剪力，但彎矩為零（M = 0）。節點處可以相對旋轉。"},
+  {id:"rollerConn",name:"輥接續",en:"Roller",forces:1,forceList:["V (剪力)"],c:2,cDetail:"N = 0、M = 0",color:"#2d7d9a",desc:"僅傳遞剪力。軸力和彎矩皆為零，節點可以相對滑動和旋轉。"},
+  {id:"directional",name:"定向接續",en:"Directional",forces:2,forceList:["N (軸力)","M (彎矩)"],c:1,cDetail:"V = 0",color:"#d97706",desc:"傳遞軸力和彎矩，但不傳遞剪力（V = 0）。節點處角度保持不變但可垂直相對位移。"},
+  {id:"linearSpringConn",name:"直線彈簧接續",en:"Linear Spring",forces:1,forceList:["V (剪力)"],c:2,cDetail:"N = 0、M = 0",color:"#3ba55d",desc:"透過彈簧連接，僅傳遞剪力。類似輥接續但有彈性變形。"},
+  {id:"hingeSpringConn",name:"鉸接+旋轉彈簧",en:"Hinge + Rot. Spring",forces:3,forceList:["N (軸力)","V (剪力)","M (彎矩)"],c:0,cDetail:null,color:"#e879a0",desc:"鉸接加上旋轉彈簧，恢復彎矩傳遞能力。等效於剛性接續（c = 0）。"},
+];
+
+/* ─── Support/Connection State ─── */
+let selSupport = 0;
+let expandConn = null;
+let showSupportTable = false;
+let showConnTable = false;
+
+function stag(text,color,mono){return `<span class="stag ${mono?'mono':''}" style="background:${color}18;color:${color}">${text}</span>`;}
+function badge(val,label,color){return `<div class="badge"><div class="badge-val" style="background:${color}18;color:${color}">${val}</div><div class="badge-label">${label}</div></div>`;}
+
+/* ─── Render Supports ─── */
+function renderSupports(){
+  const s=supportData[selSupport];
+  let html=`<div class="support-grid">`;
+  supportData.forEach((d,i)=>{
+    html+=`<div class="support-card ${i===selSupport?'active':''}" onclick="selSupport=${i};renderSupports()" style="${i===selSupport?`background:linear-gradient(135deg,${d.color}15,${d.color}05);border-color:${d.color};transform:scale(1.02)`:''}">
+      <div class="sname" style="color:${d.color}">${d.name}</div>
+      <div class="en">${d.en}</div>
+      <div class="badge-row">${badge(d.reactions,'反力',d.color)}${badge(d.dof,'自由度',d.color)}${badge(d.disp.length,'變位',d.color)}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<div class="detail-panel" style="border:1px solid ${s.color}30">
+    <div class="detail-flex">
+      <div class="svg-box">${supportSVGs[s.id]}</div>
+      <div class="detail-info">
+        <h3 style="color:${s.color}">${s.name}<span>${s.en}</span></h3>
+        <p>${s.desc}</p>
+        <div class="info-row"><span class="ilabel">支承反力：</span><div class="tag-row">${s.reactionList.map(r=>stag(r,'#e05555',true)).join('')}</div></div>
+        <div class="info-row"><span class="ilabel">自由度（可變位）：</span><div class="tag-row">${s.dofList.length>0?s.dofList.map(d=>stag(d,'#3ba55d')).join(''):'<span style="color:#8a8070;font-size:12px">無（完全固定）</span>'}</div></div>
+        ${s.disp.length>0?`<div class="info-row"><span class="ilabel">變位：</span><div class="tag-row">${s.disp.map(d=>stag(d,'#5b9bd5',true)).join('')}</div></div>`:''}
+        <div class="real-box">${s.real}</div>
+      </div>
+    </div>
+  </div>`;
+
+  html+=`<button class="toggle-btn" onclick="showSupportTable=!showSupportTable;renderSupports()">${showSupportTable?'隱藏':'顯示'}比較總表</button>`;
+  if(showSupportTable){
+    html+=`<div style="overflow-x:auto;margin-top:12px"><table class="st-table"><thead><tr>${['名稱','反力數','反力','自由度','變位'].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+    supportData.forEach((d,i)=>{
+      html+=`<tr style="background:${i%2===0?'rgba(255,255,255,0.02)':'transparent'}">
+        <td style="color:${d.color};font-weight:700">${d.name}</td><td class="mono">${d.reactions}</td><td class="mono">${d.reactionList.join(', ')}</td><td class="mono">${d.dof}</td><td class="mono">${d.disp.join(', ')||'無'}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }
+
+  html+=`<div class="tip-box" style="background:rgba(232,179,57,0.06);border:1px solid rgba(232,179,57,0.15)">
+    <div class="tip-title" style="color:#e8b339">記憶口訣</div>
+    <p>基本三型（輥、鉸、固定端）：反力數 + 自由度 = 3<br/>輥 1+2=3 ｜ 鉸 2+1=3 ｜ 固定端 3+0=3<br/>定向支承 2+1=3 也滿足。彈簧支承因彈性變形，自由度較高（= 3）。</p>
+  </div>`;
+
+  document.getElementById('supports-container').innerHTML=html;
+}
+
+/* ─── Render Connections ─── */
+function renderConnections(){
+  let html=`<div style="display:grid;gap:10px;margin-bottom:20px">`;
+  connectionData.forEach((d,i)=>{
+    const open=expandConn===i;
+    html+=`<div class="conn-card" onclick="expandConn=${open?'null':i};renderConnections()" style="${open?`background:linear-gradient(135deg,${d.color}10,${d.color}05);border-color:${d.color}`:''}">
+      <div class="conn-header">
+        <div><span style="font-size:17px;font-weight:700;color:${d.color};font-family:'Playfair Display',serif">${d.name}</span>
+        <span style="font-size:11px;color:#8a8070;margin-left:10px;font-family:'JetBrains Mono',monospace">${d.en}</span></div>
+        <div class="conn-badges">
+          <div class="conn-badge"><div class="val" style="color:${d.color}">${d.forces}</div><div class="lbl">內力數</div></div>
+          <div class="conn-badge"><div class="val" style="color:#e8b339">${d.c}</div><div class="lbl">c</div></div>
+          <span class="arrow" style="transform:rotate(${open?180:0}deg)">▼</span>
+        </div>
+      </div>`;
+    if(open){
+      html+=`<div class="conn-expand">
+        <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:8px;display:inline-block;margin-bottom:12px">${connectionSVGs[d.id]}</div>
+        <p style="font-size:13px;color:#c8c0b0;margin:0 0 12px;line-height:1.7">${d.desc}</p>
+        <div style="display:flex;gap:20px;flex-wrap:wrap">
+          <div><div style="font-size:11px;color:#8a8070;margin-bottom:4px">傳遞的內力</div><div class="tag-row">${d.forceList.map(f=>stag(f,d.color)).join('')}</div></div>
+          ${d.cDetail?`<div><div style="font-size:11px;color:#8a8070;margin-bottom:4px">條件方程式</div>${stag(d.cDetail,'#e8b339',true)}</div>`:''}
+        </div>
+      </div>`;
+    }
+    html+=`</div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<button class="toggle-btn" onclick="showConnTable=!showConnTable;renderConnections()">${showConnTable?'隱藏':'顯示'}比較總表</button>`;
+  if(showConnTable){
+    html+=`<div style="overflow-x:auto;margin-top:12px"><table class="st-table"><thead><tr>${['名稱','內力數','傳遞內力','c','條件'].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+    connectionData.forEach((d,i)=>{
+      html+=`<tr style="background:${i%2===0?'rgba(255,255,255,0.02)':'transparent'}">
+        <td style="color:${d.color};font-weight:700">${d.name}</td><td class="mono">${d.forces}</td><td>${d.forceList.map(f=>f.split(' ')[0]).join(', ')}</td><td class="mono" style="color:#e8b339;font-weight:700">${d.c}</td><td class="mono">${d.cDetail||'—'}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }
+
+  html+=`<div class="tip-box" style="background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.15)">
+    <div class="tip-title" style="color:#a855f7">關鍵概念</div>
+    <p>內力數 + 條件方程式 c = 3<br/>c 越多 → 提供越多方程式 → 結構越「鬆」<br/>鉸接+旋轉彈簧 → 恢復 M 傳遞 → c 回到 0 ≡ 剛性接續</p>
+  </div>`;
+
+  document.getElementById('connections-container').innerHTML=html;
+}
+
+/* Calculators */
+function calcBeam(){
+  const r=+document.getElementById('bm-r').value||0,c=+document.getElementById('bm-c').value||0,n=r-c-3;
+  let h=`r = ${r},  c = ${c}\nn = r − c − 3 = ${r} − ${c} − 3 = ${n}\n\n`;
+  if(n<0)h+=`<span style="color:var(--red);font-weight:700">n < 0 → 不穩定 (Unstable)</span>\n反力不足，結構必然不穩定。`;
+  else if(n===0)h+=`<span style="color:var(--green);font-weight:700">n = 0 → 靜定 (Statically Determinate)</span>\n反力剛好（仍需檢查幾何穩定性）。`;
+  else h+=`<span style="color:var(--purple);font-weight:700">n = ${n} → ${n} 度靜不定 (${n}° Indeterminate)</span>\n需額外 ${n} 個相容方程式。`;
+  document.getElementById('bm-res').innerHTML=h;
+}
+function preB(r,c){document.getElementById('bm-r').value=r;document.getElementById('bm-c').value=c;calcBeam();}
+
+function calcTruss(){
+  const b=+document.getElementById('tr-b').value||0,r=+document.getElementById('tr-r').value||0,j=+document.getElementById('tr-j').value||0,n=b+r-2*j;
+  let h=`b = ${b},  r = ${r},  j = ${j}\nn = b + r − 2j = ${b} + ${r} − ${2*j} = ${n}\n\n`;
+  if(n<0)h+=`<span style="color:var(--red);font-weight:700">n < 0 → 不穩定</span>`;
+  else if(n===0)h+=`<span style="color:var(--green);font-weight:700">n = 0 → 靜定</span>\n（仍需檢查幾何穩定性）`;
+  else h+=`<span style="color:var(--purple);font-weight:700">n = ${n} → ${n} 度靜不定</span>`;
+  document.getElementById('tr-res').innerHTML=h;
+}
+function preT(b,r,j){document.getElementById('tr-b').value=b;document.getElementById('tr-r').value=r;document.getElementById('tr-j').value=j;calcTruss();}
+
+function calcFrame(){
+  const b=+document.getElementById('fr-b').value||0,r=+document.getElementById('fr-r').value||0,j=+document.getElementById('fr-j').value||0,c=+document.getElementById('fr-c').value||0;
+  const n=3*b+r-3*j-c;
+  let h=`b = ${b},  r = ${r},  j = ${j},  c = ${c}\nn = 3b+r−3j−c = 3(${b})+${r}−3(${j})−${c} = ${n}\n\n`;
+  if(n<0)h+=`<span style="color:var(--red);font-weight:700">n < 0 → 不穩定</span>`;
+  else if(n===0)h+=`<span style="color:var(--green);font-weight:700">n = 0 → 靜定</span>\n（仍需檢查幾何穩定性）`;
+  else h+=`<span style="color:var(--purple);font-weight:700">n = ${n} → ${n} 度靜不定</span>`;
+  document.getElementById('fr-res').innerHTML=h;
+}
+function preF(b,r,j,c){document.getElementById('fr-b').value=b;document.getElementById('fr-r').value=r;document.getElementById('fr-j').value=j;document.getElementById('fr-c').value=c;calcFrame();}
+
+/* Quiz */
+const QZ=[
+  {q:'梁的靜不定度公式為？',o:['n = r − c − 3','n = r − 3n','n = b + r − 2j','n = 3b + r − 3j'],a:0},
+  {q:'鉸支承 (Pin) 提供幾個反力？',o:['1','2','3','0'],a:1},
+  {q:'固定端 (Fixed) 提供幾個反力？',o:['1','2','3','4'],a:2},
+  {q:'定向支承 (Slider) 提供幾個反力？',o:['1','2','3','0'],a:1},
+  {q:'一個內鉸的條件方程式數 c = ?',o:['0','1','2','3'],a:1},
+  {q:'一個滾接的條件方程式數 c = ?',o:['0','1','2','3'],a:2},
+  {q:'鉸接 + 抗彎彈簧的條件數 c = ?',o:['0（等效剛接）','1','2','3'],a:0},
+  {q:'n ≥ 0 是穩定的什麼條件？',o:['充分條件','必要條件','充要條件','都不是'],a:1},
+  {q:'三鉸共線會造成什麼？',o:['靜定','靜不定','幾何不穩定','約束不足'],a:2},
+  {q:'桁架公式中每個節點貢獻幾個方程式？',o:['1','2','3','6'],a:1},
+  {q:'兩端固定梁 (r=6, c=0)，n = ?',o:['0','1','2','3'],a:3},
+  {q:'3根桿件匯聚於支承上的內鉸，c = ?',o:['1','2','3','4'],a:1}
+];
+let qi=0,qk=0,qd=false;
+function shQ(){
+  if(qi>=QZ.length){document.getElementById('qa').innerHTML=`<div class="ex-box"><div class="label">完成！</div><p style="font-size:16px">得分 <strong style="color:var(--gold)">${qk}/${QZ.length}</strong> ${qk===QZ.length?'🎉 滿分！':qk>=9?'👍 很好！':'💪 再加油！'}</p></div>`;return;}
+  const d=QZ[qi];
+  document.getElementById('qcnt').textContent=`${qi+1}/${QZ.length}`;
+  let h=`<p style="color:var(--text);font-weight:600;margin-bottom:10px">${d.q}</p>`;
+  d.o.forEach((o,i)=>{h+=`<button class="quiz-option" onclick="ckQ(${i})" id="qo${i}">${'ABCD'[i]}. ${o}</button>`;});
+  document.getElementById('qa').innerHTML=h;qd=false;uSc();
+}
+function ckQ(i){if(qd)return;qd=true;const d=QZ[qi];if(i===d.a){document.getElementById('qo'+i).classList.add('correct');qk++;}else{document.getElementById('qo'+i).classList.add('wrong');document.getElementById('qo'+d.a).classList.add('correct');}uSc();}
+function nxtQ(){if(!qd&&qi<QZ.length)return;qi++;shQ();}
+function rstQ(){qi=0;qk=0;shQ();}
+function uSc(){document.getElementById('qsc').textContent=`得分：${qk}/${QZ.length}`;}
+
+/* ─── S03 Animations ─── */
+function playStable(){
+  const force=document.getElementById('stable-force');
+  const beam=document.getElementById('stable-beam');
+  const ok=document.getElementById('stable-ok');
+  // Reset
+  force.style.opacity='0';ok.style.opacity='0';
+  beam.style.animation='none';
+  void beam.offsetWidth;
+  // Play
+  setTimeout(()=>{force.style.transition='opacity .5s';force.style.opacity='1';},200);
+  setTimeout(()=>{beam.style.animation='stableShake .4s ease';},600);
+  setTimeout(()=>{beam.style.animation='none';ok.style.transition='opacity .4s';ok.style.opacity='1';},1100);
+}
+
+function playUnstable(){
+  const force=document.getElementById('unstable-force');
+  const beam=document.getElementById('unstable-beam');
+  const slide=document.getElementById('unstable-slide');
+  const x=document.getElementById('unstable-x');
+  // Reset
+  force.style.opacity='0';slide.style.opacity='0';x.style.opacity='0';
+  beam.style.animation='none';beam.style.transform='';
+  void beam.offsetWidth;
+  // Play
+  setTimeout(()=>{force.style.transition='opacity .5s';force.style.opacity='1';},200);
+  setTimeout(()=>{beam.style.transition='transform 1.2s ease-in';beam.style.transform='translateX(35px)';},600);
+  setTimeout(()=>{slide.style.transition='opacity .4s';slide.style.opacity='1';},900);
+  setTimeout(()=>{x.style.transition='opacity .4s';x.style.opacity='1';},1400);
+}
+
+function showOutcome(type){
+  const box=document.getElementById('outcome-demo');
+  const configs={
+    unstable:{
+      label:'不穩定 — 僅一個滾支承 (r=1)',color:'#e05555',
+      svg:`<svg width="100%" height="120" viewBox="0 0 400 120">
+        <line x1="10" y1="90" x2="120" y2="90" stroke="#6b5e50" stroke-width="2"/>
+        <circle cx="60" cy="82" r="6" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+        <polygon points="60,58 42,78 78,78" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+        <g class="outcome-beam" style="transform-origin:60px 52px">
+          <rect x="20" y="46" width="300" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+        </g>
+        <text x="200" y="105" text-anchor="middle" fill="#e05555" font-size="13" font-weight="700" font-family="monospace">r=1 &lt; 3 → 不穩定，結構無法使用</text>
+      </svg>`,
+      anim:'collapseUnstable 1.5s ease-in forwards .5s'
+    },
+    determinate:{
+      label:'靜定 — 鉸+滾 (r=3, c=0, n=0)',color:'#3ba55d',
+      svg:`<svg width="100%" height="120" viewBox="0 0 400 120">
+        <line x1="10" y1="100" x2="100" y2="100" stroke="#6b5e50" stroke-width="2"/>
+        <line x1="280" y1="100" x2="390" y2="100" stroke="#6b5e50" stroke-width="2"/>
+        <polygon points="60,68 42,98 78,98" fill="none" stroke="#a855f7" stroke-width="2"/>
+        <circle cx="60" cy="68" r="3.5" fill="#a855f7"/>
+        <circle cx="340" cy="92" r="6" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+        <polygon points="340,68 322,88 358,88" fill="none" stroke="#2d7d9a" stroke-width="2"/>
+        <rect x="40" y="56" width="320" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+        <text x="200" y="45" text-anchor="middle" fill="#3ba55d" font-size="13" font-weight="700" font-family="monospace">n = 3−0−3 = 0 → 穩定 + 靜定 ✓</text>
+      </svg>`,
+      anim:null
+    },
+    indeterminate1:{
+      label:'1度靜不定 — 鉸+鉸 (r=4, c=0, n=1)',color:'#a855f7',
+      svg:`<svg width="100%" height="120" viewBox="0 0 400 120">
+        <line x1="10" y1="100" x2="100" y2="100" stroke="#6b5e50" stroke-width="2"/>
+        <line x1="280" y1="100" x2="390" y2="100" stroke="#6b5e50" stroke-width="2"/>
+        <polygon points="60,68 42,98 78,98" fill="none" stroke="#a855f7" stroke-width="2"/>
+        <circle cx="60" cy="68" r="3.5" fill="#a855f7"/>
+        <polygon points="340,68 322,98 358,98" fill="none" stroke="#a855f7" stroke-width="2"/>
+        <circle cx="340" cy="68" r="3.5" fill="#a855f7"/>
+        <rect x="40" y="56" width="320" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+        <text x="200" y="45" text-anchor="middle" fill="#a855f7" font-size="13" font-weight="700" font-family="monospace">n = 4−0−3 = 1 → 穩定 + 1度靜不定</text>
+      </svg>`,
+      anim:null
+    },
+    indeterminate3:{
+      label:'3度靜不定 — 兩端固定 (r=6, c=0, n=3)',color:'#2d7d9a',
+      svg:`<svg width="100%" height="120" viewBox="0 0 400 120">
+        <rect x="15" y="30" width="14" height="70" fill="#5c4a3a"/>
+        <rect x="371" y="30" width="14" height="70" fill="#5c4a3a"/>
+        <rect x="29" y="56" width="342" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>
+        <text x="200" y="45" text-anchor="middle" fill="#2d7d9a" font-size="13" font-weight="700" font-family="monospace">n = 6−0−3 = 3 → 穩定 + 3度靜不定</text>
+        <text x="200" y="105" text-anchor="middle" fill="#8a8070" font-size="11" font-family="monospace">需 3 個額外相容方程式</text>
+      </svg>`,
+      anim:null
+    }
+  };
+  const c=configs[type];
+  box.innerHTML=`<div class="anim-box" style="border:1px solid ${c.color}40">
+    <div style="font-size:13px;font-weight:700;color:${c.color};margin-bottom:8px;font-family:'Playfair Display',serif">${c.label}</div>
+    ${c.svg}
+  </div>`;
+  if(c.anim){
+    setTimeout(()=>{
+      const b=box.querySelector('.outcome-beam');
+      if(b)b.style.animation=c.anim;
+    },100);
+  }
+}
+
+/* ─── S10 範例演練動畫 ─── */
+function _stepAnim(prefix, count, delay){
+  // Reset all steps
+  for(let i=1;i<=count;i++){
+    const el=document.getElementById(prefix+'-s'+i);
+    if(el){el.style.opacity='0';el.style.transition='';}
+    const t=document.getElementById(prefix+'-t'+i);
+    if(t) t.style.background='';
+  }
+  // Play sequentially
+  for(let i=1;i<=count;i++){
+    setTimeout(()=>{
+      // Hide previous step's SVG overlay (keep accumulating for some)
+      const el=document.getElementById(prefix+'-s'+i);
+      if(el){el.style.transition='opacity .5s';el.style.opacity='1';}
+      // Highlight text step
+      const t=document.getElementById(prefix+'-t'+i);
+      if(t){
+        t.style.transition='background .3s';
+        t.style.background='rgba(45,125,154,.1)';
+      }
+      // Dim previous text
+      if(i>1){
+        const pt=document.getElementById(prefix+'-t'+(i-1));
+        if(pt) pt.style.background='';
+      }
+      // For overlapping labels: hide previous step's SVG after showing next
+      if(i>1 && i<=4){
+        const prev=document.getElementById(prefix+'-s'+(i-1));
+        // For exA: keep s1 visible briefly then hide when s2 appears (they share bottom text area)
+        if(prev && prefix!=='exC'){
+          // For steps that share the bottom text, hide prev
+          if(i<=3) setTimeout(()=>{prev.style.transition='opacity .3s';prev.style.opacity='0.3';},200);
+        }
+      }
+    }, (i-1)*delay);
+  }
+}
+
+function playExA(){ _stepAnim('exA',4,1200); }
+function resetExA(){
+  for(let i=1;i<=4;i++){
+    const el=document.getElementById('exA-s'+i);
+    if(el){el.style.transition='opacity .3s';el.style.opacity='0';}
+    const t=document.getElementById('exA-t'+i);
+    if(t) t.style.background='';
+  }
+}
+
+function playExB(){
+  // Reset
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('exB-s'+i);
+    if(el){el.style.opacity='0';el.style.transition='';}
+    const t=document.getElementById('exB-t'+i);
+    if(t) t.style.background='';
+  }
+  const delay=1200;
+  for(let i=1;i<=5;i++){
+    setTimeout(()=>{
+      const el=document.getElementById('exB-s'+i);
+      if(el){el.style.transition='opacity .5s';el.style.opacity='1';}
+      const t=document.getElementById('exB-t'+i);
+      if(t){t.style.transition='background .3s';t.style.background='rgba(45,125,154,.1)';}
+      if(i>1){
+        const pt=document.getElementById('exB-t'+(i-1));
+        if(pt) pt.style.background='';
+        if(i<=4){
+          const ps=document.getElementById('exB-s'+(i-1));
+          if(ps) setTimeout(()=>{ps.style.transition='opacity .3s';ps.style.opacity='0.3';},200);
+        }
+      }
+    },(i-1)*delay);
+  }
+}
+function resetExB(){
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('exB-s'+i);
+    if(el){el.style.transition='opacity .3s';el.style.opacity='0';}
+    const t=document.getElementById('exB-t'+i);
+    if(t) t.style.background='';
+  }
+}
+
+function playExC(){
+  const count=6;
+  for(let i=1;i<=count;i++){
+    const el=document.getElementById('exC-s'+i);
+    if(el){el.style.opacity='0';el.style.transition='';}
+    const t=document.getElementById('exC-t'+i);
+    if(t) t.style.background='';
+  }
+  const delay=1200;
+  for(let i=1;i<=count;i++){
+    setTimeout(()=>{
+      const el=document.getElementById('exC-s'+i);
+      if(el){el.style.transition='opacity .5s';el.style.opacity='1';}
+      const t=document.getElementById('exC-t'+i);
+      if(t){t.style.transition='background .3s';t.style.background='rgba(45,125,154,.1)';}
+      if(i>1){
+        const pt=document.getElementById('exC-t'+(i-1));
+        if(pt) pt.style.background='';
+        if(i<=5){
+          const ps=document.getElementById('exC-s'+(i-1));
+          if(ps) setTimeout(()=>{ps.style.transition='opacity .3s';ps.style.opacity='0.25';},200);
+        }
+      }
+    },(i-1)*delay);
+  }
+}
+function resetExC(){
+  for(let i=1;i<=6;i++){
+    const el=document.getElementById('exC-s'+i);
+    if(el){el.style.transition='opacity .3s';el.style.opacity='0';}
+    const t=document.getElementById('exC-t'+i);
+    if(t) t.style.background='';
+  }
+}
+
+/* ─── S04 幾何不穩定動畫 ─── */
+function playGeo1(){
+  // 反力全平行：水平力 → 梁水平滑動
+  const els=['geo1-reactions','geo1-force','geo1-slide','geo1-x'].map(id=>document.getElementById(id));
+  const beam=document.getElementById('geo1-beam');
+  els.forEach(e=>{e.style.opacity='0';e.style.transition='';});
+  beam.style.transition='';beam.style.transform='';
+  void beam.offsetWidth;
+  setTimeout(()=>{els[0].style.transition='opacity .5s';els[0].style.opacity='1';},200);
+  setTimeout(()=>{els[1].style.transition='opacity .5s';els[1].style.opacity='1';},700);
+  setTimeout(()=>{beam.style.transition='transform 1.4s ease-in';beam.style.transform='translateX(50px)';},1000);
+  setTimeout(()=>{els[2].style.transition='opacity .4s';els[2].style.opacity='1';},1400);
+  setTimeout(()=>{els[3].style.transition='opacity .4s';els[3].style.opacity='1';},1800);
+}
+
+function playGeo2(){
+  // 反力共點：顯示反力方向 → 施力 → 梁繞交點旋轉
+  const ids=['geo2-reactions','geo2-force','geo2-arc','geo2-rotate','geo2-x'];
+  const els=ids.map(id=>document.getElementById(id));
+  const beam=document.getElementById('geo2-beam');
+  els.forEach(e=>{e.style.opacity='0';e.style.transition='';});
+  beam.style.transition='';beam.style.transform='';
+  void beam.offsetWidth;
+  // 先顯示反力方向
+  setTimeout(()=>{els[0].style.transition='opacity .6s';els[0].style.opacity='1';},200);
+  // 施加外力
+  setTimeout(()=>{els[1].style.transition='opacity .5s';els[1].style.opacity='1';},800);
+  // 梁繞 O 旋轉
+  setTimeout(()=>{beam.style.transition='transform 1.5s ease-in-out';beam.style.transformOrigin='220px 24px';beam.style.transform='rotate(8deg)';},1200);
+  // 旋轉弧線
+  setTimeout(()=>{els[2].style.transition='opacity .5s';els[2].style.opacity='0.7';},1500);
+  // 文字提示
+  setTimeout(()=>{els[3].style.transition='opacity .4s';els[3].style.opacity='1';},2000);
+  // ✗ 標記
+  setTimeout(()=>{els[4].style.transition='opacity .4s';els[4].style.opacity='1';},2400);
+}
+
+function playGeo4(){
+  // 三鉸共線：梁段微轉
+  const ids=['geo4-labels','geo4-force','geo4-deformed','geo4-msg','geo4-x'];
+  const els=ids.map(id=>document.getElementById(id));
+  const colline=document.getElementById('geo4-colline');
+  const beam=document.getElementById('geo4-beam');
+  els.forEach(e=>{e.style.opacity='0';e.style.transition='';});
+  colline.style.opacity='0';colline.style.transition='';
+  void beam.offsetWidth;
+  setTimeout(()=>{colline.style.transition='opacity .6s';colline.style.opacity='1';},200);
+  setTimeout(()=>{els[0].style.transition='opacity .5s';els[0].style.opacity='1';},500);
+  setTimeout(()=>{els[1].style.transition='opacity .5s';els[1].style.opacity='1';},900);
+  setTimeout(()=>{els[2].style.transition='opacity .8s';els[2].style.opacity='0.7';},1300);
+  setTimeout(()=>{els[3].style.transition='opacity .4s';els[3].style.opacity='1';},1800);
+  setTimeout(()=>{els[4].style.transition='opacity .4s';els[4].style.opacity='1';},2200);
+}
+
+function playGeo5(){
+  // 平行四邊形變形
+  const ids=['geo5-missing','geo5-force','geo5-deformed','geo5-msg'];
+  const els=ids.map(id=>document.getElementById(id));
+  const orig=document.getElementById('geo5-original');
+  els.forEach(e=>{e.style.opacity='0';e.style.transition='';});
+  void orig.offsetWidth;
+  setTimeout(()=>{els[0].style.transition='opacity .6s';els[0].style.opacity='1';},300);
+  setTimeout(()=>{els[1].style.transition='opacity .5s';els[1].style.opacity='1';},800);
+  setTimeout(()=>{els[2].style.transition='opacity 1s';els[2].style.opacity='0.8';},1200);
+  setTimeout(()=>{els[3].style.transition='opacity .4s';els[3].style.opacity='1';},2000);
+}
+
+function playGeo6(){
+  // 四連桿機構
+  const ids=['geo6-force','geo6-deformed','geo6-arc','geo6-msg'];
+  const els=ids.map(id=>document.getElementById(id));
+  els.forEach(e=>{e.style.opacity='0';e.style.transition='';});
+  // Animate the mechanism movement
+  const L=document.getElementById('geo6-L');
+  const T=document.getElementById('geo6-T');
+  const R=document.getElementById('geo6-R');
+  const h1=document.getElementById('geo6-h1');
+  const h2=document.getElementById('geo6-h2');
+  // Reset positions
+  L.setAttribute('x2','150');L.setAttribute('y2','60');
+  T.setAttribute('x1','150');T.setAttribute('y1','60');T.setAttribute('x2','290');T.setAttribute('y2','60');
+  R.setAttribute('x1','290');R.setAttribute('y1','60');
+  h1.setAttribute('cx','150');h1.setAttribute('cy','60');
+  h2.setAttribute('cx','290');h2.setAttribute('cy','60');
+  void L.offsetWidth;
+  setTimeout(()=>{els[0].style.transition='opacity .5s';els[0].style.opacity='1';},300);
+  // Animate linkage
+  let frame=0;const totalFrames=40;
+  setTimeout(()=>{
+    const anim=setInterval(()=>{
+      frame++;
+      const t=frame/totalFrames;
+      const angle=t*12*Math.PI/180;
+      // Left crank rotates
+      const lx=70+80*Math.cos(-0.6435+angle);
+      const ly=110-80*Math.sin(-0.6435+angle);
+      // Right crank
+      const rx=370-80*Math.cos(-0.6435-angle*0.8);
+      const ry=110-80*Math.sin(-0.6435-angle*0.8);
+      L.setAttribute('x2',lx);L.setAttribute('y2',ly);
+      T.setAttribute('x1',lx);T.setAttribute('y1',ly);T.setAttribute('x2',rx);T.setAttribute('y2',ry);
+      R.setAttribute('x1',rx);R.setAttribute('y1',ry);
+      h1.setAttribute('cx',lx);h1.setAttribute('cy',ly);
+      h2.setAttribute('cx',rx);h2.setAttribute('cy',ry);
+      if(frame>=totalFrames)clearInterval(anim);
+    },30);
+  },800);
+  setTimeout(()=>{els[1].style.transition='opacity .6s';els[1].style.opacity='0.5';},1800);
+  setTimeout(()=>{els[2].style.transition='opacity .5s';els[2].style.opacity='0.7';},2000);
+  setTimeout(()=>{els[3].style.transition='opacity .4s';els[3].style.opacity='1';},2400);
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],throwOnError:false});
+  renderSupports();
+  renderConnections();
+  showOutcome('determinate');
+  shQ();
+});
+</script>
+</body>
+</html>

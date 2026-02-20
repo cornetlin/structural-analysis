@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>結構學 I — 互動教學網站</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:#1a1814;color:#f0ead6;font-family:'Noto Sans TC',sans-serif}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.hero{text-align:center;padding:60px 20px 40px;position:relative}
+.hero::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:120px;height:2px;background:linear-gradient(90deg,transparent,#d4a574,transparent)}
+.hero-tag{display:inline-block;padding:5px 16px;border-radius:20px;background:rgba(45,125,154,0.15);color:#2d7d9a;font-size:11px;font-weight:700;letter-spacing:3px;margin-bottom:14px;font-family:'JetBrains Mono',monospace}
+.hero h1{font-size:clamp(28px,5vw,42px);font-weight:900;font-family:'Playfair Display',serif;background:linear-gradient(135deg,#f0ead6,#d4a574);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+.hero p{color:#8a8070;font-size:14px;max-width:500px;margin:0 auto;line-height:1.8}
+
+.container{max-width:900px;margin:0 auto;padding:30px 20px 60px}
+
+/* Category Section */
+.category{margin-bottom:40px;animation:slideUp 0.5s ease}
+.category-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.category-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.category-title{font-size:18px;font-weight:700}
+.category-count{font-size:11px;color:#8a8070;font-family:'JetBrains Mono',monospace;margin-left:auto;padding:3px 10px;background:rgba(255,255,255,0.04);border-radius:12px}
+
+/* Cards */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:22px;cursor:pointer;transition:all 0.3s ease;text-decoration:none;color:inherit;display:block;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;transition:opacity 0.3s}
+.card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.04)}
+.card:hover::before{opacity:1}
+.card-number{font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a8070;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card-number::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.06)}
+.card h3{font-size:17px;font-weight:800;font-family:'Playfair Display',serif;margin-bottom:4px}
+.card .subtitle{font-size:12px;color:#8a8070;font-family:'JetBrains Mono',monospace;margin-bottom:10px}
+.card p{font-size:13px;color:#a09888;line-height:1.7}
+.card .tags{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.card .tag{padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(255,255,255,0.04);color:#8a8070}
+
+/* Color themes for categories */
+.cat-fundamentals .category-icon{background:rgba(45,125,154,0.15);color:#2d7d9a}
+.cat-fundamentals .card::before{background:linear-gradient(90deg,#2d7d9a,transparent);opacity:0}
+.cat-fundamentals .card:hover{border-color:rgba(45,125,154,0.3)}
+
+.cat-truss .category-icon{background:rgba(212,165,116,0.15);color:#d4a574}
+.cat-truss .card::before{background:linear-gradient(90deg,#d4a574,transparent);opacity:0}
+.cat-truss .card:hover{border-color:rgba(212,165,116,0.3)}
+
+.cat-frame .category-icon{background:rgba(139,92,246,0.15);color:#8b5cf6}
+.cat-frame .card::before{background:linear-gradient(90deg,#8b5cf6,transparent);opacity:0}
+.cat-frame .card:hover{border-color:rgba(139,92,246,0.3)}
+
+.cat-deformation .category-icon{background:rgba(52,211,153,0.15);color:#34d399}
+.cat-deformation .card::before{background:linear-gradient(90deg,#34d399,transparent);opacity:0}
+.cat-deformation .card:hover{border-color:rgba(52,211,153,0.3)}
+
+/* Footer */
+.footer{text-align:center;padding:30px 20px;border-top:1px solid rgba(255,255,255,0.06);color:#6a6050;font-size:12px}
+.footer a{color:#8a8070;text-decoration:none}
+
+/* Responsive */
+@media(max-width:600px){
+  .cards-grid{grid-template-columns:1fr}
+  .hero{padding:40px 16px 30px}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-tag">STRUCTURAL ANALYSIS I</div>
+  <h1>結構學 I — 互動教學</h1>
+  <p>透過互動式視覺化工具，深入理解結構分析的核心概念</p>
+</div>
+
+<div class="container">
+
+  <!-- 1. 基礎概念 -->
+  <div class="category cat-fundamentals" style="animation-delay:0.1s">
+    <div class="category-header">
+      <div class="category-icon">📐</div>
+      <div class="category-title">基礎概念</div>
+      <div class="category-count">2 modules</div>
+    </div>
+    <div class="cards-grid">
+      <a href="structural-teaching.html" class="card">
+        <div class="card-number">Ch 1</div>
+        <h3>結構與載重類型</h3>
+        <div class="subtitle">Types of Structures & Loads</div>
+        <p>認識各類結構系統、支承型式、載重分類與結構的基本行為</p>
+        <div class="tags"><span class="tag">支承</span><span class="tag">載重</span><span class="tag">穩定性</span></div>
+      </a>
+      <a href="stability-determination.html" class="card">
+        <div class="card-number">Ch 2</div>
+        <h3>穩定性與靜定性</h3>
+        <div class="subtitle">Stability & Determinacy</div>
+        <p>判斷結構的穩定性、靜定或靜不定程度，理解反力與構件數的關係</p>
+        <div class="tags"><span class="tag">靜定</span><span class="tag">靜不定</span><span class="tag">自由度</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 2. 桁架分析 -->
+  <div class="category cat-truss" style="animation-delay:0.2s">
+    <div class="category-header">
+      <div class="category-icon">🔺</div>
+      <div class="category-title">桁架分析</div>
+      <div class="category-count">3 modules</div>
+    </div>
+    <div class="cards-grid">
+      <a href="truss-analysis-full.html" class="card">
+        <div class="card-number">Ch 3</div>
+        <h3>靜定桁架分析</h3>
+        <div class="subtitle">Statically Determinate Truss</div>
+        <p>完整桁架分析流程：反力求解、節點法與截面法的互動演示</p>
+        <div class="tags"><span class="tag">節點法</span><span class="tag">截面法</span><span class="tag">零力桿</span></div>
+      </a>
+      <a href="warren-truss-method-of-joints.html" class="card">
+        <div class="card-number">Ex</div>
+        <h3>Warren Truss — 節點法</h3>
+        <div class="subtitle">Method of Joints</div>
+        <p>以 Warren 桁架為範例，逐步演示節點法求解桿件內力</p>
+        <div class="tags"><span class="tag">Warren</span><span class="tag">節點法</span></div>
+      </a>
+      <a href="warren-truss-method-of-sections.html" class="card">
+        <div class="card-number">Ex</div>
+        <h3>Warren Truss — 截面法</h3>
+        <div class="subtitle">Method of Sections</div>
+        <p>以 Warren 桁架為範例，演示截面法求解特定桿件內力</p>
+        <div class="tags"><span class="tag">Warren</span><span class="tag">截面法</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 3. 剛架分析 -->
+  <div class="category cat-frame" style="animation-delay:0.3s">
+    <div class="category-header">
+      <div class="category-icon">🏗</div>
+      <div class="category-title">剛架分析</div>
+      <div class="category-count">1 module</div>
+    </div>
+    <div class="cards-grid">
+      <a href="frame-analysis-NVM-diagrams.html" class="card">
+        <div class="card-number">Ch 4</div>
+        <h3>靜定剛架 — 內力圖</h3>
+        <div class="subtitle">Frame N/V/M Diagrams</div>
+        <p>剛架桿件拆解、軸力圖、剪力圖、彎矩圖的互動繪製與分析</p>
+        <div class="tags"><span class="tag">NVM 圖</span><span class="tag">桿件拆解</span><span class="tag">自由體圖</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 4. 變形分析 -->
+  <div class="category cat-deformation" style="animation-delay:0.4s">
+    <div class="category-header">
+      <div class="category-icon">📏</div>
+      <div class="category-title">變形分析</div>
+      <div class="category-count">1 module</div>
+    </div>
+    <div class="cards-grid">
+      <a href="unit-load-method.html" class="card">
+        <div class="card-number">Ch 5</div>
+        <h3>單位力法</h3>
+        <div class="subtitle">Unit Load Method</div>
+        <p>利用虛功原理與單位力法，計算靜定結構在指定點的撓度與轉角</p>
+        <div class="tags"><span class="tag">虛功</span><span class="tag">撓度</span><span class="tag">彈性變形</span></div>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>結構學 I 互動教學網站 · 2026</p>
+</div>
+
+</body>
+</html>

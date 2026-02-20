@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>結構學 I ─ 結構和載重類型</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:#1a1814;color:#f0ead6;font-family:'Noto Sans TC',sans-serif}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+button{font-family:inherit;cursor:pointer}
+.wrap{max-width:740px;margin:0 auto;padding:28px 18px}
+.header{text-align:center;margin-bottom:32px}
+.chapter-tag{display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(45,125,154,0.15);color:#2d7d9a;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+h1{font-size:30px;font-weight:900;font-family:'Playfair Display',serif;background:linear-gradient(135deg,#f0ead6,#d4a574);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{margin:6px 0 0;color:#8a8070;font-size:13px}
+.tabs{display:flex;justify-content:center;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:24px}
+.tab-btn{padding:11px 24px;border:none;border-bottom:3px solid transparent;background:transparent;color:#8a8070;font-size:14px;font-weight:500;letter-spacing:1px;transition:all 0.2s}
+.tab-btn.active{border-bottom-color:var(--tc);background:rgba(255,255,255,0.06);color:#f0ead6;font-weight:700}
+.tab-content{animation:fadeIn 0.3s ease}
+.support-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
+.support-card{background:rgba(255,255,255,0.025);border:2px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all 0.3s}
+.support-card.active{transform:scale(1.02)}
+.support-card .name{font-size:17px;font-weight:800;font-family:'Playfair Display',serif}
+.support-card .en{font-size:11px;color:#8a8070;font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+.badge-row{display:flex;gap:14px}
+.badge{text-align:center}
+.badge-val{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.badge-label{font-size:11px;color:#8a8070}
+.detail-panel{background:rgba(255,255,255,0.035);border-radius:16px;padding:22px;animation:fadeIn 0.35s ease}
+.detail-flex{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.svg-box{flex:0 0 auto;background:rgba(0,0,0,0.25);border-radius:12px;padding:8px;display:flex;align-items:center;justify-content:center}
+.detail-info{flex:1;min-width:220px}
+.detail-info h3{margin:0 0 6px;font-size:20px;font-weight:800;font-family:'Playfair Display',serif}
+.detail-info h3 span{font-size:13px;color:#8a8070;margin-left:10px;font-family:'JetBrains Mono',monospace}
+.detail-info p{color:#c8c0b0;font-size:13px;line-height:1.8;margin:0 0 12px}
+.info-row{margin-bottom:10px}
+.info-row .label{font-size:11px;color:#8a8070}
+.tag-row{display:flex;gap:6px;margin-top:3px;flex-wrap:wrap}
+.tag{padding:3px 11px;border-radius:18px;font-size:12px;font-weight:600;display:inline-block;margin:2px}
+.tag.mono{font-family:'JetBrains Mono',monospace}
+.real-box{background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 14px;border:1px dashed rgba(255,255,255,0.1);font-size:13px;color:#c8c0b0}
+.toggle-btn{margin-top:16px;width:100%;padding:10px 20px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#c8c0b0;border-radius:10px;font-size:13px}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+th{padding:9px 12px;text-align:left;border-bottom:2px solid rgba(255,255,255,0.12);color:#8a8070;font-weight:600;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.05);color:#c8c0b0}
+td.mono{font-family:'JetBrains Mono',monospace}
+.tip-box{margin-top:16px;padding:14px 18px;border-radius:14px}
+.tip-box .tip-title{font-size:13px;font-weight:700;margin-bottom:6px}
+.tip-box p{margin:0;font-size:13px;color:#c8c0b0;line-height:1.8}
+.conn-card{background:rgba(255,255,255,0.025);border:2px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px 18px;cursor:pointer;transition:all 0.3s;margin-bottom:10px}
+.conn-header{display:flex;justify-content:space-between;align-items:center}
+.conn-badges{display:flex;gap:16px;align-items:center}
+.conn-badge{text-align:center}
+.conn-badge .val{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.conn-badge .lbl{font-size:10px;color:#8a8070}
+.conn-expand{margin-top:14px;animation:fadeIn 0.3s ease}
+.arrow{font-size:14px;transition:transform 0.3s;color:#8a8070}
+.quiz-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-bottom:20px}
+.quiz-fill{height:100%;background:linear-gradient(90deg,#2d7d9a,#a855f7);border-radius:2px;transition:width 0.4s}
+.quiz-q{background:rgba(255,255,255,0.04);border-radius:14px;padding:24px;border:1px solid rgba(255,255,255,0.08);margin-bottom:16px}
+.quiz-q h3{color:#f0ead6;font-size:17px;font-weight:700;line-height:1.6}
+.opt-btn{width:100%;background:rgba(255,255,255,0.03);border:2px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 16px;text-align:left;color:#c8c0b0;font-size:15px;transition:all 0.25s;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.opt-label{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;color:#8a8070;font-family:'JetBrains Mono',monospace}
+.feedback{margin-top:14px;padding:14px 18px;border-radius:12px;animation:fadeIn 0.3s}
+.feedback .title{font-size:14px;font-weight:700;margin-bottom:4px}
+.feedback p{margin:0;font-size:13px;color:#c8c0b0;line-height:1.7}
+.next-btn{margin-top:14px;width:100%;padding:13px;background:linear-gradient(135deg,#2d7d9a,#a855f7);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+.footer{text-align:center;margin-top:36px;padding:14px 0;border-top:1px solid rgba(255,255,255,0.06);color:#5c4a3a;font-size:11px;font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="chapter-tag">結構學 I ─ 第壹章</div>
+    <h1>結構和載重類型</h1>
+    <p class="subtitle">支承型式（6 種）· 接續與條件方程式（6 種）· 隨堂測驗</p>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" style="--tc:#2d7d9a" onclick="switchTab('supports')">支承型式</button>
+    <button class="tab-btn" style="--tc:#a855f7" onclick="switchTab('connections')">接續類型</button>
+    <button class="tab-btn" style="--tc:#e8b339" onclick="switchTab('quiz')">隨堂測驗</button>
+  </div>
+  <div id="tab-supports" class="tab-content"></div>
+  <div id="tab-connections" class="tab-content" style="display:none"></div>
+  <div id="tab-quiz" class="tab-content" style="display:none"></div>
+  <div class="footer">結構學 I 筆記 2025 ─ 互動教學（6 支承 · 6 接續 · 14 題測驗）</div>
+</div>
+
+<script>
+// ─── Arrow marker defs (shared) ───
+const ARROW_DEFS = `<defs>
+  <marker id="aR" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#e05555"/></marker>
+  <marker id="aG" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#3ba55d"/></marker>
+  <marker id="aB" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#5b9bd5"/></marker>
+</defs>`;
+
+function ground(x1,x2,y){
+  let s=`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#6b5e50" stroke-width="2"/>`;
+  for(let i=0;i<Math.floor((x2-x1)/10);i++) s+=`<line x1="${x1+i*10+5}" y1="${y}" x2="${x1+i*10-2}" y2="${y+8}" stroke="#6b5e50" stroke-width="1.2"/>`;
+  return s;
+}
+function beam(x1,y,w){return `<rect x="${x1}" y="${y}" width="${w}" height="10" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="2"/>`;}
+
+// ─── Support SVGs ───
+const supportSVGs = {
+  roller: `<svg width="220" height="150" viewBox="0 0 220 150">${ARROW_DEFS}${ground(40,180,125)}
+    <circle cx="90" cy="117" r="6" fill="none" stroke="#2d7d9a" stroke-width="2.2"/>
+    <circle cx="130" cy="117" r="6" fill="none" stroke="#2d7d9a" stroke-width="2.2"/>
+    <polygon points="110,95 82,111 138,111" fill="none" stroke="#2d7d9a" stroke-width="2.5"/>
+    ${beam(40,82,140)}
+    <line x1="110" y1="78" x2="110" y2="40" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="118" y="52" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">y</tspan></text>
+    <line x1="38" y1="87" x2="16" y2="87" stroke="#3ba55d" stroke-width="2" marker-end="url(#aG)"/>
+    <text x="8" y="82" fill="#3ba55d" font-size="11" font-family="monospace">Δx</text>
+    <text x="180" y="58" fill="#3ba55d" font-size="11" font-family="monospace">Δθ</text>
+    <path d="M 180 64 A 20 20 0 0 1 200 84" stroke="#3ba55d" stroke-width="2" fill="none" marker-end="url(#aG)"/>
+  </svg>`,
+
+  hinge: `<svg width="220" height="150" viewBox="0 0 220 150">${ARROW_DEFS}${ground(40,180,125)}
+    <polygon points="110,92 80,125 140,125" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+    <circle cx="110" cy="92" r="4.5" fill="#a855f7" stroke="#7c3aed" stroke-width="1.5"/>
+    ${beam(40,80,140)}
+    <line x1="110" y1="76" x2="110" y2="38" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="118" y="50" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">y</tspan></text>
+    <line x1="38" y1="85" x2="12" y2="85" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="4" y="78" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">x</tspan></text>
+    <text x="186" y="60" fill="#3ba55d" font-size="11" font-family="monospace">Δθ</text>
+    <path d="M 186 66 A 20 20 0 0 1 206 86" stroke="#3ba55d" stroke-width="2" fill="none" marker-end="url(#aG)"/>
+  </svg>`,
+
+  fixed: `<svg width="220" height="150" viewBox="0 0 220 150">${ARROW_DEFS}
+    <rect x="30" y="35" width="16" height="85" fill="#bfb5a8" stroke="#6b5e50" stroke-width="2"/>
+    ${[40,50,60,70,80,90,100,110].map(y=>`<line x1="30" y1="${y}" x2="22" y2="${y+7}" stroke="#6b5e50" stroke-width="1.2"/>`).join('')}
+    ${beam(46,72,130)}
+    <line x1="70" y1="68" x2="70" y2="36" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="76" y="46" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">y</tspan></text>
+    <line x1="50" y1="95" x2="50" y2="120" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="54" y="122" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">x</tspan></text>
+    <path d="M 130 58 A 18 18 0 1 1 112 42" stroke="#e05555" stroke-width="2.2" fill="none" marker-end="url(#aR)"/>
+    <text x="114" y="38" fill="#e05555" font-size="14" font-weight="700" font-family="serif">M</text>
+    <text x="140" y="68" fill="#888" font-size="11" font-family="monospace">Δ=0</text>
+  </svg>`,
+
+  slider: `<svg width="220" height="150" viewBox="0 0 220 150">${ARROW_DEFS}
+    <rect x="30" y="30" width="16" height="90" fill="#bfb5a8" stroke="#6b5e50" stroke-width="2"/>
+    ${[35,45,55,65,75,85,95,105,115].map(y=>`<line x1="30" y1="${y}" x2="22" y2="${y+7}" stroke="#6b5e50" stroke-width="1.2"/>`).join('')}
+    <rect x="46" y="42" width="26" height="66" fill="none" stroke="#d97706" stroke-width="2.5" rx="2"/>
+    <circle cx="59" cy="54" r="5" fill="rgba(217,119,6,0.15)" stroke="#d97706" stroke-width="2"/>
+    <circle cx="59" cy="75" r="5" fill="rgba(217,119,6,0.15)" stroke="#d97706" stroke-width="2"/>
+    <circle cx="59" cy="96" r="5" fill="rgba(217,119,6,0.15)" stroke="#d97706" stroke-width="2"/>
+    ${beam(60,70,120)}
+    <line x1="82" y1="65" x2="82" y2="40" stroke="#e05555" stroke-width="2.5" marker-end="url(#aR)"/>
+    <text x="86" y="44" fill="#e05555" font-size="14" font-weight="700" font-family="serif">R<tspan dy="3" font-size="10">x</tspan></text>
+    <path d="M 145 58 A 16 16 0 1 1 132 48" stroke="#e05555" stroke-width="2.2" fill="none" marker-end="url(#aR)"/>
+    <text x="132" y="44" fill="#e05555" font-size="14" font-weight="700" font-family="serif">M</text>
+    <line x1="59" y1="112" x2="59" y2="138" stroke="#3ba55d" stroke-width="2" marker-end="url(#aG)"/>
+    <text x="64" y="135" fill="#3ba55d" font-size="11" font-family="monospace">Δy</text>
+    <line x1="59" y1="38" x2="59" y2="18" stroke="#3ba55d" stroke-width="2" marker-end="url(#aG)"/>
+    <text x="64" y="24" fill="#3ba55d" font-size="11" font-family="monospace">Δy</text>
+  </svg>`,
+
+  linearSpring: `<svg width="220" height="150" viewBox="0 0 220 150">${ARROW_DEFS}
+    <line x1="30" y1="132" x2="92" y2="132" stroke="#6b5e50" stroke-width="2"/>
+    ${[35,45,55,65,75,85].map(x=>`<line x1="${x}" y1="132" x2="${x-6}" y2="140" stroke="#6b5e50" stroke-width="1.2"/>`).join('')}
+    <line x1="128" y1="132" x2="190" y2="132" stroke="#6b5e50" stroke-width="2"/>
+    ${[133,143,153,163,173,183].map(x=>`<line x1="${x}" y1="132" x2="${x-6}" y2="140" stroke="#6b5e50" stroke-width="1.2"/>`).join('')}
+    <polyline points="110,132 99,124 121,116 99,108 121,100 99,92 121,84 110,76" fill="none" stroke="#e8b339" stroke-width="3" stroke-linejoin="round"/>
+    ${beam(35,64,150)}
+    <line x1="110" y1="62" x2="110" y2="28" stroke="#e05555" stroke-width="2.8" marker-end="url(#aR)"/>
+    <text x="116" y="40" fill="#e05555" font-size="15" font-weight="800" font-family="serif">R<tspan dy="3" font-size="10">y</tspan></text>
+    <line x1="175" y1="58" x2="175" y2="76" stroke="#5b9bd5" stroke-width="2"/>
+    <line x1="170" y1="58" x2="180" y2="58" stroke="#5b9bd5" stroke-width="1.8"/>
+    <line x1="170" y1="76" x2="180" y2="76" stroke="#5b9bd5" stroke-width="1.8"/>
+    <text x="184" y="71" fill="#5b9bd5" font-size="14" font-weight="700" font-family="serif">Δy</text>
+    <text x="55" y="148" fill="#e8b339" font-size="12" font-weight="700" font-family="monospace">Ry = k · Δy</text>
+  </svg>`,
+
+  rotSpring: `<svg width="240" height="150" viewBox="0 0 240 150">${ARROW_DEFS}
+    <rect x="20" y="35" width="16" height="85" fill="#bfb5a8" stroke="#6b5e50" stroke-width="2"/>
+    ${[40,50,60,70,80,90,100,110].map(y=>`<line x1="20" y1="${y}" x2="12" y2="${y+7}" stroke="#6b5e50" stroke-width="1.2"/>`).join('')}
+    <circle cx="50" cy="77" r="13" fill="none" stroke="#e879a0" stroke-width="2.5"/>
+    <circle cx="50" cy="77" r="7" fill="none" stroke="#e879a0" stroke-width="2"/>
+    <circle cx="50" cy="77" r="3" fill="#e879a0"/>
+    ${beam(62,72,130)}
+    <path d="M 150 56 A 16 16 0 1 1 136 46" stroke="#e05555" stroke-width="2.2" fill="none" marker-end="url(#aR)"/>
+    <text x="138" y="42" fill="#e05555" font-size="14" font-weight="700" font-family="serif">M</text>
+    <line x1="80" y1="68" x2="80" y2="42" stroke="#3ba55d" stroke-width="2" marker-end="url(#aG)"/>
+    <text x="84" y="46" fill="#3ba55d" font-size="11" font-family="monospace">Δx</text>
+    <line x1="120" y1="86" x2="120" y2="112" stroke="#3ba55d" stroke-width="2" marker-end="url(#aG)"/>
+    <text x="126" y="108" fill="#3ba55d" font-size="10" font-family="monospace">Δy</text>
+    <text x="190" y="52" fill="#3ba55d" font-size="11" font-family="monospace">Δθ</text>
+    <path d="M 190 58 A 20 20 0 0 1 210 78" stroke="#3ba55d" stroke-width="2" fill="none" marker-end="url(#aG)"/>
+    <text x="70" y="132" fill="#e879a0" font-size="11" font-family="monospace">M = kθ · Δθ</text>
+  </svg>`
+};
+
+// ─── Connection SVGs ───
+const connectionSVGs = {
+  rigid: `<svg width="240" height="110" viewBox="0 0 240 110">
+    <rect x="20" y="30" width="70" height="24" fill="#c4956a" stroke="#8b6914" stroke-width="1.5"/>
+    ${[25,33,41,49,57,65,73,81].map(x=>`<line x1="${x}" y1="30" x2="${x+6}" y2="54" stroke="#8b6914" stroke-width="1" opacity="0.5"/>`).join('')}
+    <text x="20" y="25" fill="#c8c0b0" font-size="13" font-weight="600" font-family="serif">A</text>
+    <rect x="90" y="26" width="6" height="32" fill="#e05555" rx="1"/>
+    <rect x="96" y="30" width="120" height="24" fill="#d4a574" stroke="#8b6914" stroke-width="1.5"/>
+    <text x="210" y="25" fill="#c8c0b0" font-size="13" font-weight="600" font-family="serif">B</text>
+    <text x="20" y="80" fill="#e05555" font-size="12" font-weight="700" font-family="monospace">內力: N, V, M</text>
+    <text x="20" y="96" fill="#888" font-size="11" font-family="monospace">c = 0</text>
+  </svg>`,
+
+  hingeConn: `<svg width="240" height="110" viewBox="0 0 240 110">
+    <rect x="20" y="42" width="90" height="12" fill="#c4956a" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <rect x="130" y="42" width="90" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <circle cx="120" cy="48" r="9" fill="rgba(168,85,247,0.12)" stroke="#a855f7" stroke-width="2.8"/>
+    <circle cx="120" cy="48" r="2" fill="#a855f7"/>
+    <text x="20" y="82" fill="#a855f7" font-size="12" font-weight="700" font-family="monospace">內力: N, V</text>
+    <text x="20" y="98" fill="#888" font-size="11" font-family="monospace">c = 1 (M = 0)</text>
+  </svg>`,
+
+  rollerConn: `<svg width="240" height="90" viewBox="0 0 240 90">
+    <rect x="30" y="52" width="60" height="6" fill="#c4956a" stroke="#8b6914" stroke-width="1.2" rx="1"/>
+    <circle cx="90" cy="44" r="8" fill="none" stroke="#2d7d9a" stroke-width="2.5"/>
+    <rect x="82" y="33" width="100" height="6" fill="#d4a574" stroke="#8b6914" stroke-width="1.2" rx="1"/>
+    <text x="30" y="78" fill="#2d7d9a" font-size="12" font-weight="700" font-family="monospace">內力: V</text>
+    <text x="120" y="78" fill="#888" font-size="11" font-family="monospace">c = 2 (N=0, M=0)</text>
+  </svg>`,
+
+  directional: `<svg width="240" height="110" viewBox="0 0 240 110">
+    <rect x="20" y="40" width="80" height="12" fill="#c4956a" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <rect x="140" y="40" width="80" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <line x1="106" y1="22" x2="106" y2="70" stroke="#d97706" stroke-width="2.5"/>
+    <circle cx="120" cy="30" r="8" fill="rgba(217,119,6,0.1)" stroke="#d97706" stroke-width="2"/>
+    <line x1="115" y1="25" x2="125" y2="35" stroke="#d97706" stroke-width="1.5"/><line x1="125" y1="25" x2="115" y2="35" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="120" cy="46" r="8" fill="rgba(217,119,6,0.1)" stroke="#d97706" stroke-width="2"/>
+    <line x1="115" y1="41" x2="125" y2="51" stroke="#d97706" stroke-width="1.5"/><line x1="125" y1="41" x2="115" y2="51" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="120" cy="62" r="8" fill="rgba(217,119,6,0.1)" stroke="#d97706" stroke-width="2"/>
+    <line x1="115" y1="57" x2="125" y2="67" stroke="#d97706" stroke-width="1.5"/><line x1="125" y1="57" x2="115" y2="67" stroke="#d97706" stroke-width="1.5"/>
+    <line x1="134" y1="22" x2="134" y2="70" stroke="#d97706" stroke-width="2.5"/>
+    <text x="20" y="88" fill="#d97706" font-size="12" font-weight="700" font-family="monospace">內力: N, M</text>
+    <text x="20" y="104" fill="#888" font-size="11" font-family="monospace">c = 1 (V = 0)</text>
+  </svg>`,
+
+  linearSpringConn: `<svg width="240" height="110" viewBox="0 0 240 110">
+    <rect x="20" y="20" width="80" height="12" fill="#c4956a" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <line x1="90" y1="32" x2="90" y2="38" stroke="#3ba55d" stroke-width="2"/>
+    <polyline points="90,38 82,43 98,48 82,53 98,58 82,63 98,68 90,73" fill="none" stroke="#3ba55d" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="90" y1="73" x2="90" y2="78" stroke="#3ba55d" stroke-width="2"/>
+    <rect x="80" y="78" width="80" height="12" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <text x="130" y="40" fill="#3ba55d" font-size="12" font-weight="700" font-family="monospace">內力: V</text>
+    <text x="130" y="56" fill="#888" font-size="11" font-family="monospace">c = 2</text>
+    <text x="130" y="72" fill="#888" font-size="11" font-family="monospace">(N=0, M=0)</text>
+  </svg>`,
+
+  hingeSpringConn: `<svg width="240" height="110" viewBox="0 0 240 110">
+    <rect x="20" y="40" width="78" height="14" fill="#c4956a" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <rect x="142" y="40" width="78" height="14" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" rx="1"/>
+    <circle cx="120" cy="47" r="22" fill="none" stroke="#3ba55d" stroke-width="2.2"/>
+    <circle cx="120" cy="47" r="15" fill="none" stroke="#3ba55d" stroke-width="2"/>
+    <circle cx="120" cy="47" r="9" fill="none" stroke="#3ba55d" stroke-width="1.8"/>
+    <circle cx="120" cy="47" r="4" fill="rgba(168,85,247,0.3)" stroke="#a855f7" stroke-width="2"/>
+    <circle cx="120" cy="47" r="1.5" fill="#a855f7"/>
+    <text x="20" y="88" fill="#e879a0" font-size="12" font-weight="700" font-family="monospace">內力: N, V, M</text>
+    <text x="20" y="104" fill="#888" font-size="11" font-family="monospace">c = 0</text>
+  </svg>`
+};
+
+// ─── Data ───
+const supportData = [
+  {id:"roller",name:"輥支承",en:"Roller",reactions:1,reactionList:["Ry"],dof:2,dofList:["x 方向平移","角度 θ 旋轉"],disp:["Δx","Δθ"],color:"#2d7d9a",desc:"僅能抵抗垂直方向的力，結構可以水平滑動和旋轉。常見於橋樑一端，允許因溫度變化的伸縮。",real:"🌉 橋樑可動端、鋼結構滑動接頭"},
+  {id:"hinge",name:"鉸支承",en:"Hinge (Pin)",reactions:2,reactionList:["Rx","Ry"],dof:1,dofList:["角度 θ 旋轉"],disp:["Δθ"],color:"#a855f7",desc:"可以抵抗水平和垂直方向的力，但無法抵抗彎矩，結構可以自由旋轉。",real:"🚪 門的鉸鏈、橋樑固定端"},
+  {id:"fixed",name:"固定端",en:"Fixed End",reactions:3,reactionList:["Rx","Ry","M"],dof:0,dofList:[],disp:[],color:"#d97706",desc:"完全固定，可以抵抗所有方向的力和彎矩。結構在此處 Δx = Δy = Δθ = 0，無任何位移或旋轉。",real:"🏗️ 懸臂梁的牆壁端、電線桿基座"},
+  {id:"slider",name:"定向支承",en:"Slider (Guided)",reactions:2,reactionList:["Rx","M"],dof:1,dofList:["y 方向平移"],disp:["Δy"],color:"#d97706",desc:"又稱導向支承。可抵抗水平力和彎矩，但允許垂直方向位移。結構被導軌約束只能沿 y 方向滑動。",real:"🛤️ 導軌滑塊、活塞運動機構"},
+  {id:"linearSpring",name:"直線彈簧支承",en:"Linear Spring (k)",reactions:1,reactionList:["Ry"],dof:3,dofList:["x 方向","y 方向","角度 θ"],disp:["Δx","Δy","Δθ"],color:"#3ba55d",desc:"透過彈簧提供垂直反力，反力大小與變形量成正比：Ry = k·Δy。三個方向皆可位移。",real:"🔧 彈性地基、避震器"},
+  {id:"rotSpring",name:"抗彎彈簧支承",en:"Rotational Spring (kθ)",reactions:1,reactionList:["M"],dof:3,dofList:["x 方向","y 方向","角度 θ"],disp:["Δx","Δy","Δθ"],color:"#e879a0",desc:"透過旋轉彈簧提供抵抗彎矩的反力，彎矩大小與旋轉角成正比：M = kθ·Δθ。三個方向皆可位移。",real:"⚙️ 半剛性接頭、旋轉阻尼器"},
+];
+const connectionData = [
+  {id:"rigid",name:"剛性接續",en:"Rigid",forces:3,forceList:["N (軸力)","V (剪力)","M (彎矩)"],c:0,cDetail:null,color:"#e05555",desc:"傳遞所有內力（N、V、M），節點處各桿件角度保持不變，無條件方程式。"},
+  {id:"hingeConn",name:"鉸接續",en:"Hinge",forces:2,forceList:["N (軸力)","V (剪力)"],c:1,cDetail:"M = 0",color:"#a855f7",desc:"傳遞軸力和剪力，但彎矩為零（M = 0）。節點處可以相對旋轉。"},
+  {id:"rollerConn",name:"輥接續",en:"Roller",forces:1,forceList:["V (剪力)"],c:2,cDetail:"N = 0、M = 0",color:"#2d7d9a",desc:"僅傳遞剪力。軸力和彎矩皆為零，節點可以相對滑動和旋轉。"},
+  {id:"directional",name:"定向接續",en:"Directional",forces:2,forceList:["N (軸力)","M (彎矩)"],c:1,cDetail:"V = 0",color:"#d97706",desc:"傳遞軸力和彎矩，但不傳遞剪力（V = 0）。節點處角度保持不變但可垂直相對位移。"},
+  {id:"linearSpringConn",name:"直線彈簧接續",en:"Linear Spring",forces:1,forceList:["V (剪力)"],c:2,cDetail:"N = 0、M = 0",color:"#3ba55d",desc:"透過彈簧連接，僅傳遞剪力。類似輥接續但有彈性變形。"},
+  {id:"hingeSpringConn",name:"鉸接+旋轉彈簧",en:"Hinge + Rot. Spring",forces:3,forceList:["N (軸力)","V (剪力)","M (彎矩)"],c:0,cDetail:null,color:"#e879a0",desc:"鉸接加上旋轉彈簧，恢復彎矩傳遞能力。等效於剛性接續（c = 0）。"},
+];
+const quizQuestions = [
+  {q:"輥支承（Roller）有幾個支承反力？",opts:["0","1","2","3"],ans:1,exp:"輥支承只有 1 個反力 Ry，可水平滑動和旋轉，自由度為 2。"},
+  {q:"鉸支承（Hinge）的自由度是多少？",opts:["0","1","2","3"],ans:1,exp:"鉸支承有 2 個反力（Rx、Ry）約束了位移，剩下 1 個自由度（θ 旋轉）。"},
+  {q:"固定端（Fixed End）可以產生哪些反力？",opts:["Ry","Rx, Ry","Rx, Ry, M","Rx, M"],ans:2,exp:"固定端有 3 個反力：Rx、Ry、M，完全約束所有位移和旋轉。"},
+  {q:"定向支承（Slider）的反力有哪些？",opts:["Ry","Rx, M","Rx, Ry","Ry, M"],ans:1,exp:"定向支承有 2 個反力：Rx 和 M，允許 y 方向平移（Δy），自由度為 1。"},
+  {q:"直線彈簧支承的自由度是多少？",opts:["0","1","2","3"],ans:3,exp:"直線彈簧支承僅有 1 個反力 Ry = kΔy，三個方向（x、y、θ）皆可位移，自由度為 3。"},
+  {q:"抗彎彈簧支承產生的反力是？",opts:["Ry","Rx","M","N"],ans:2,exp:"抗彎彈簧支承僅產生彎矩反力 M = kθ·Δθ，自由度為 3。"},
+  {q:"鉸接續的條件方程式 c 是多少？",opts:["0","1","2","3"],ans:1,exp:"鉸接續 c = 1，條件為 M = 0（彎矩為零）。"},
+  {q:"哪種接續可以傳遞所有三種內力（N, V, M）？",opts:["鉸接續","輥接續","剛性接續","定向接續"],ans:2,exp:"剛性接續傳遞所有內力（N、V、M），條件方程式 c = 0。"},
+  {q:"定向接續不傳遞哪種內力？",opts:["軸力 N","剪力 V","彎矩 M","都傳遞"],ans:1,exp:"定向接續不傳遞剪力（V = 0），但傳遞軸力和彎矩，c = 1。"},
+  {q:"輥接續的條件方程式有哪些？",opts:["M = 0","V = 0","N = 0, M = 0","N = 0, V = 0"],ans:2,exp:"輥接續 c = 2，條件為 N = 0 和 M = 0，只傳遞剪力 V。"},
+  {q:"鉸接+旋轉彈簧接續的 c 值是？",opts:["0","1","2","3"],ans:0,exp:"鉸接加旋轉彈簧恢復彎矩傳遞，c = 0，等效剛性接續。"},
+  {q:"以下哪個支承的自由度為 0？",opts:["輥支承","鉸支承","固定端","定向支承"],ans:2,exp:"固定端自由度為 0，Δx = Δy = Δθ = 0。"},
+  {q:"反力數 + 自由度 = ？（二維）",opts:["2","3","4","不一定"],ans:1,exp:"對基本支承（輥、鉸、固定端）：反力數 + 自由度 = 3。彈簧支承較特殊。"},
+  {q:"直線彈簧接續 c = ？",opts:["0","1","2","3"],ans:2,exp:"直線彈簧接續 c = 2（N = 0、M = 0），僅傳遞剪力，和輥接續相同。"},
+];
+
+// ─── State ───
+let currentTab = 'supports';
+let selSupport = 0;
+let expandConn = null;
+let showSupportTable = false;
+let showConnTable = false;
+let qs = [...quizQuestions].sort(()=>Math.random()-0.5);
+let qIdx=0, picked=null, revealed=false, score=0, done=0;
+
+// ─── Helpers ───
+function tag(text,color,mono=false){return `<span class="tag ${mono?'mono':''}" style="background:${color}18;color:${color}">${text}</span>`;}
+function badge(val,label,color){return `<div class="badge"><div class="badge-val" style="background:${color}18;color:${color}">${val}</div><div class="badge-label">${label}</div></div>`;}
+
+// ─── Tab Switching ───
+function switchTab(t){
+  currentTab=t;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',['supports','connections','quiz'][i]===t);});
+  document.querySelectorAll('.tab-content').forEach(el=>el.style.display='none');
+  document.getElementById('tab-'+t).style.display='block';
+  if(t==='supports')renderSupports();
+  if(t==='connections')renderConnections();
+  if(t==='quiz')renderQuiz();
+}
+
+// ─── Render Supports ───
+function renderSupports(){
+  const s=supportData[selSupport];
+  let html=`<div class="support-grid">`;
+  supportData.forEach((d,i)=>{
+    html+=`<div class="support-card ${i===selSupport?'active':''}" onclick="selSupport=${i};renderSupports()" style="${i===selSupport?`background:linear-gradient(135deg,${d.color}15,${d.color}05);border-color:${d.color};transform:scale(1.02)`:''}">
+      <div class="name" style="color:${d.color}">${d.name}</div>
+      <div class="en">${d.en}</div>
+      <div class="badge-row">${badge(d.reactions,'反力',d.color)}${badge(d.dof,'自由度',d.color)}${badge(d.disp.length,'變位',d.color)}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<div class="detail-panel" style="border:1px solid ${s.color}30">
+    <div class="detail-flex">
+      <div class="svg-box">${supportSVGs[s.id]}</div>
+      <div class="detail-info">
+        <h3 style="color:${s.color}">${s.name}<span>${s.en}</span></h3>
+        <p>${s.desc}</p>
+        <div class="info-row"><span class="label">支承反力：</span><div class="tag-row">${s.reactionList.map(r=>tag(r,'#e05555',true)).join('')}</div></div>
+        <div class="info-row"><span class="label">自由度（可變位）：</span><div class="tag-row">${s.dofList.length>0?s.dofList.map(d=>tag(d,'#3ba55d')).join(''):'<span style="color:#8a8070;font-size:12px">無（完全固定）</span>'}</div></div>
+        ${s.disp.length>0?`<div class="info-row"><span class="label">變位：</span><div class="tag-row">${s.disp.map(d=>tag(d,'#5b9bd5',true)).join('')}</div></div>`:''}
+        <div class="real-box">${s.real}</div>
+      </div>
+    </div>
+  </div>`;
+
+  html+=`<button class="toggle-btn" onclick="showSupportTable=!showSupportTable;renderSupports()">${showSupportTable?'隱藏':'顯示'}比較總表</button>`;
+  if(showSupportTable){
+    html+=`<div class="table-wrap"><table><thead><tr>${['名稱','反力數','反力','自由度','變位'].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+    supportData.forEach((d,i)=>{
+      html+=`<tr style="background:${i%2===0?'rgba(255,255,255,0.02)':'transparent'}">
+        <td style="color:${d.color};font-weight:700">${d.name}</td><td class="mono">${d.reactions}</td><td class="mono">${d.reactionList.join(', ')}</td><td class="mono">${d.dof}</td><td class="mono">${d.disp.join(', ')||'無'}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }
+
+  html+=`<div class="tip-box" style="background:rgba(232,179,57,0.06);border:1px solid rgba(232,179,57,0.15)">
+    <div class="tip-title" style="color:#e8b339">💡 記憶口訣</div>
+    <p>基本三型（輥、鉸、固定端）：反力數 + 自由度 = 3<br/>輥 1+2=3 ｜ 鉸 2+1=3 ｜ 固定端 3+0=3<br/>定向支承 2+1=3 也滿足。彈簧支承因彈性變形，自由度較高（= 3）。</p>
+  </div>`;
+
+  document.getElementById('tab-supports').innerHTML=html;
+}
+
+// ─── Render Connections ───
+function renderConnections(){
+  let html=`<div style="display:grid;gap:10px;margin-bottom:20px">`;
+  connectionData.forEach((d,i)=>{
+    const open=expandConn===i;
+    html+=`<div class="conn-card" onclick="expandConn=${open?'null':i};renderConnections()" style="${open?`background:linear-gradient(135deg,${d.color}10,${d.color}05);border-color:${d.color}`:''}">
+      <div class="conn-header">
+        <div><span style="font-size:17px;font-weight:700;color:${d.color};font-family:'Playfair Display',serif">${d.name}</span>
+        <span style="font-size:11px;color:#8a8070;margin-left:10px;font-family:'JetBrains Mono',monospace">${d.en}</span></div>
+        <div class="conn-badges">
+          <div class="conn-badge"><div class="val" style="color:${d.color}">${d.forces}</div><div class="lbl">內力數</div></div>
+          <div class="conn-badge"><div class="val" style="color:#e8b339">${d.c}</div><div class="lbl">c</div></div>
+          <span class="arrow" style="transform:rotate(${open?180:0}deg)">▼</span>
+        </div>
+      </div>`;
+    if(open){
+      html+=`<div class="conn-expand">
+        <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:8px;display:inline-block;margin-bottom:12px">${connectionSVGs[d.id]}</div>
+        <p style="font-size:13px;color:#c8c0b0;margin:0 0 12px;line-height:1.7">${d.desc}</p>
+        <div style="display:flex;gap:20px;flex-wrap:wrap">
+          <div><div style="font-size:11px;color:#8a8070;margin-bottom:4px">傳遞的內力</div><div class="tag-row">${d.forceList.map(f=>tag(f,d.color)).join('')}</div></div>
+          ${d.cDetail?`<div><div style="font-size:11px;color:#8a8070;margin-bottom:4px">條件方程式</div>${tag(d.cDetail,'#e8b339',true)}</div>`:''}
+        </div>
+      </div>`;
+    }
+    html+=`</div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<button class="toggle-btn" onclick="showConnTable=!showConnTable;renderConnections()">${showConnTable?'隱藏':'顯示'}比較總表</button>`;
+  if(showConnTable){
+    html+=`<div class="table-wrap"><table><thead><tr>${['名稱','內力數','傳遞內力','c','條件'].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+    connectionData.forEach((d,i)=>{
+      html+=`<tr style="background:${i%2===0?'rgba(255,255,255,0.02)':'transparent'}">
+        <td style="color:${d.color};font-weight:700">${d.name}</td><td class="mono">${d.forces}</td><td>${d.forceList.map(f=>f.split(' ')[0]).join(', ')}</td><td class="mono" style="color:#e8b339;font-weight:700">${d.c}</td><td class="mono">${d.cDetail||'—'}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }
+
+  html+=`<div class="tip-box" style="background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.15)">
+    <div class="tip-title" style="color:#a855f7">💡 關鍵概念</div>
+    <p>內力數 + 條件方程式 c = 3<br/>c 越多 → 提供越多方程式 → 結構越「鬆」<br/>鉸接+旋轉彈簧 → 恢復 M 傳遞 → c 回到 0 ≡ 剛性接續</p>
+  </div>`;
+
+  document.getElementById('tab-connections').innerHTML=html;
+}
+
+// ─── Render Quiz ───
+function renderQuiz(){
+  if(!qs.length)return;
+  const q=qs[qIdx];
+  let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <span style="font-size:13px;color:#8a8070">第 ${qIdx+1} / ${qs.length} 題</span>
+    <div style="display:flex;gap:14px;align-items:center">
+      <span style="font-size:13px;color:#3ba55d;font-weight:700;font-family:'JetBrains Mono',monospace">✓ ${score}</span>
+      <span style="font-size:13px;color:#e05555;font-weight:700;font-family:'JetBrains Mono',monospace">✗ ${done-score}</span>
+      <button onclick="resetQuiz()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#8a8070;border-radius:8px;padding:4px 12px;font-size:11px">重置</button>
+    </div>
+  </div>`;
+  html+=`<div class="quiz-bar"><div class="quiz-fill" style="width:${((qIdx+1)/qs.length)*100}%"></div></div>`;
+  html+=`<div class="quiz-q"><h3>${q.q}</h3></div>`;
+  html+=`<div>`;
+  q.opts.forEach((o,i)=>{
+    let bg='rgba(255,255,255,0.03)',bd='rgba(255,255,255,0.08)',tc='#c8c0b0',lblBg='rgba(255,255,255,0.06)',lblC='#8a8070';
+    if(revealed){
+      if(i===q.ans){bg='rgba(59,165,93,0.15)';bd='#3ba55d';tc='#3ba55d';lblBg='#3ba55d';lblC='#fff';}
+      else if(i===picked){bg='rgba(224,85,85,0.15)';bd='#e05555';tc='#e05555';}
+    }
+    html+=`<button class="opt-btn" onclick="pickAnswer(${i})" style="background:${bg};border-color:${bd};color:${tc};cursor:${revealed?'default':'pointer'}">
+      <span class="opt-label" style="background:${lblBg};color:${lblC}">${String.fromCharCode(65+i)}</span>${o}</button>`;
+  });
+  html+=`</div>`;
+  if(revealed){
+    const correct=picked===q.ans;
+    html+=`<div class="feedback" style="background:${correct?'rgba(59,165,93,0.08)':'rgba(224,85,85,0.08)'};border:1px solid ${correct?'rgba(59,165,93,0.2)':'rgba(224,85,85,0.2)'}">
+      <div class="title" style="color:${correct?'#3ba55d':'#e05555'}">${correct?'✓ 正確！':'✗ 錯誤'}</div><p>${q.exp}</p></div>`;
+    html+=`<button class="next-btn" onclick="nextQuestion()">下一題 →</button>`;
+  }
+  document.getElementById('tab-quiz').innerHTML=html;
+}
+function pickAnswer(i){if(revealed)return;picked=i;revealed=true;done++;if(i===qs[qIdx].ans)score++;renderQuiz();}
+function nextQuestion(){picked=null;revealed=false;qIdx=(qIdx+1)%qs.length;renderQuiz();}
+function resetQuiz(){qIdx=0;picked=null;revealed=false;score=0;done=0;qs=[...quizQuestions].sort(()=>Math.random()-0.5);renderQuiz();}
+
+// ─── Init ───
+renderSupports();
+</script>
+</body>
+</html>

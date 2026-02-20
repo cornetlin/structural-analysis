@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>單位力法解彈性變形 — 互動教學 | Unit Load Method</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:linear-gradient(160deg,#0f0a1a 0%,#1a1028 40%,#0f0a1a 100%);color:#e2e8f0;font-family:'Source Sans Pro','Noto Sans TC',sans-serif;padding:14px}
+.ctn{max-width:980px;margin:0 auto}
+h1{font-size:23px;font-weight:700;background:linear-gradient(135deg,#60a5fa,#818cf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:3px}
+.sub{color:#94a3b8;font-size:12px;font-weight:300;margin-bottom:14px}
+.tab-bar{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.tab{background:rgba(30,20,50,.7);border:1px solid #334;color:#94a3b8;padding:7px 13px;border-radius:7px;font-size:11.5px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .2s;white-space:nowrap}
+.tab:hover{border-color:#555;color:#cbd5e1}
+.tab.on{background:rgba(96,165,250,.12);border-color:#60a5fa;color:#60a5fa}
+.sp{background:rgba(15,10,26,.88);border:1px solid rgba(96,165,250,.14);border-radius:13px;padding:10px 4px;margin-bottom:10px;backdrop-filter:blur(10px)}
+.sp svg{display:block;width:100%}
+.nb-bar{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.nb{background:rgba(30,20,50,.7);border:1px solid #334;color:#94a3b8;padding:6px 11px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .2s;white-space:nowrap}
+.nb:hover{border-color:#555;color:#cbd5e1}
+.nb.on{background:rgba(96,165,250,.14);border-color:#60a5fa;color:#60a5fa}
+.nb.pl{font-weight:600;margin-left:auto}
+.nb.pl.ru{background:rgba(34,197,94,.12);border-color:#22c55e;color:#22c55e}
+.pnl{background:rgba(15,10,26,.88);border:1px solid rgba(96,165,250,.1);border-radius:13px;padding:18px;backdrop-filter:blur(10px);min-height:160px}
+.st{font-size:16px;font-weight:600;color:#818cf8;margin-bottom:2px}
+.ste{font-size:11px;color:#64748b;margin-bottom:10px}
+.sd{font-size:13px;color:#cbd5e1;line-height:1.75;margin-bottom:12px}
+.eq{background:rgba(30,20,50,.6);border-radius:9px;padding:12px;border:1px solid rgba(71,85,105,.3);margin-bottom:12px}
+.eq h3{font-size:11px;color:#818cf8;margin-bottom:7px;font-weight:600;letter-spacing:.04em}
+.el{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#e2e8f0;padding:3px 0;border-bottom:1px solid rgba(51,65,85,.22);line-height:1.6}
+.el:last-child{border-bottom:none}
+.el.t{color:#86efac}.el.c{color:#fca5a5}.el.r{color:#818cf8;font-weight:500}.el.chk{color:#22c55e}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:640px){.ig{grid-template-columns:1fr}}
+.ic{background:rgba(30,20,50,.5);border-radius:9px;padding:12px;border:1px solid rgba(71,85,105,.3)}
+.ic h3{font-size:12px;margin-bottom:6px;font-weight:600}
+.ic .rw{font-size:12.5px;color:#cbd5e1;line-height:1.8}
+.ht{background:rgba(96,165,250,.04);border-radius:8px;padding:9px 12px;border:1px solid rgba(96,165,250,.15);margin-bottom:10px}
+.ht p{font-size:12.5px;color:#93c5fd;line-height:1.7}
+.warn{background:rgba(245,158,11,.04);border-radius:8px;padding:9px 12px;border:1px solid rgba(245,158,11,.15);margin-bottom:10px}
+.warn p{font-size:12.5px;color:#fbbf24;line-height:1.7}
+.ok{background:rgba(34,197,94,.04);border-radius:8px;padding:9px 12px;border:1px solid rgba(34,197,94,.15);margin-bottom:10px}
+.ok p{font-size:12.5px;color:#86efac;line-height:1.7}
+.sn{display:flex;justify-content:space-between;margin-top:14px}
+.sn button{background:rgba(30,20,50,.7);border:1px solid #334;color:#94a3b8;padding:6px 16px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s}
+.sn button:hover:not(:disabled){border-color:#555;color:#cbd5e1}
+.sn .nx{background:rgba(96,165,250,.12);border-color:#60a5fa;color:#60a5fa;font-weight:600}
+.sn .nx:disabled{background:rgba(30,20,50,.3);border-color:#222;color:#475569;cursor:not-allowed}
+.leg{display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:10px;color:#64748b;flex-wrap:wrap}
+.ll{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px}
+</style>
+</head>
+<body>
+<div class="ctn">
+<h1>單位力法解彈性變形</h1>
+<p class="sub">Unit Load Method (Virtual Work) — 定義公式 → 梁位移 → 梁轉角 → 圖乘法 → 桁架 → 剛架</p>
+<div class="tab-bar" id="tabs"></div>
+<div class="sp"><svg id="svg" viewBox="0 0 780 400"></svg></div>
+<div class="nb-bar" id="nav"></div>
+<div class="pnl" id="pnl"></div>
+<div class="leg">
+<span><span class="ll" style="background:#e879f9"></span>外力</span>
+<span><span class="ll" style="background:#60a5fa"></span>單位力</span>
+<span><span class="ll" style="background:#f59e0b"></span>M圖</span>
+<span><span class="ll" style="background:#818cf8"></span>m圖</span>
+<span><span class="ll" style="background:#22c55e"></span>結果</span>
+</div>
+</div>
+<script>
+const NS="http://www.w3.org/2000/svg";
+function mk(t,a,p){const e=document.createElementNS(NS,t);if(a)Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));if(p)p.appendChild(e);return e}
+function ar(p,x1,y1,x2,y2,c,sz){sz=sz||7;const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy);if(!l)return;const ux=dx/l,uy=dy/l,px=-uy,py=ux;mk("line",{x1,y1,x2,y2,stroke:c,"stroke-width":2},p);mk("polygon",{points:`${x2},${y2} ${x2-ux*sz+px*sz*.35},${y2-uy*sz+py*sz*.35} ${x2-ux*sz-px*sz*.35},${y2-uy*sz-py*sz*.35}`,fill:c},p)}
+function tx(p,x,y,t,sz,c,o){o=o||{};const el=mk("text",{x,y,"text-anchor":o.a||"middle","font-size":sz||10,"font-family":"'JetBrains Mono','Noto Sans TC',monospace","font-weight":o.b?700:500,fill:c||"#e2e8f0"},p);el.textContent=t;return el}
+function mArc(p,cx,cy,r,c,cw){const sa=cw?Math.PI*.3:Math.PI*1.7,ea=cw?Math.PI*1.7:Math.PI*.3;const x1=cx+r*Math.cos(sa),y1=cy-r*Math.sin(sa),x2=cx+r*Math.cos(ea),y2=cy-r*Math.sin(ea);mk("path",{d:`M ${x1} ${y1} A ${r} ${r} 0 1 ${cw?1:0} ${x2} ${y2}`,fill:"none",stroke:c,"stroke-width":1.8},p);const ad=cw?ea+.25:ea-.25,ax=cx+r*Math.cos(ad),ay=cy-r*Math.sin(ad),ddx=x2-ax,ddy=y2-ay,dl=Math.hypot(ddx,ddy);if(dl>0){const ux=ddx/dl,uy=ddy/dl,px=-uy,py=ux;mk("polygon",{points:`${x2},${y2} ${x2-ux*5+px*2},${y2-uy*5+py*2} ${x2-ux*5-px*2},${y2-uy*5-py*2}`,fill:c},p)}}
+function fixSup(s,x,y){const g=mk("g",{},s);mk("line",{x1:x,y1:y-14,x2:x,y2:y+14,stroke:"#8ecae6","stroke-width":2.5},g);for(let i=-12;i<=12;i+=6)mk("line",{x1:x,y1:y+i,x2:x-8,y2:y+i+5,stroke:"#8ecae6","stroke-width":1.2},g)}
+function pinSup(s,x,y){const g=mk("g",{},s);mk("polygon",{points:`${x},${y} ${x-10},${y+14} ${x+10},${y+14}`,fill:"none",stroke:"#8ecae6","stroke-width":1.6},g);mk("line",{x1:x-13,y1:y+16,x2:x+13,y2:y+16,stroke:"#8ecae6","stroke-width":1.6},g);[-8,-2,4,10].forEach(d=>mk("line",{x1:x+d-2,y1:y+20,x2:x+d+2,y2:y+16,stroke:"#8ecae6","stroke-width":1.1},g))}
+function rolSup(s,x,y){const g=mk("g",{},s);mk("polygon",{points:`${x},${y} ${x-10},${y+13} ${x+10},${y+13}`,fill:"none",stroke:"#8ecae6","stroke-width":1.6},g);mk("circle",{cx:x-5,cy:y+17,r:3,fill:"none",stroke:"#8ecae6","stroke-width":1.2},g);mk("circle",{cx:x+5,cy:y+17,r:3,fill:"none",stroke:"#8ecae6","stroke-width":1.2},g);mk("line",{x1:x-13,y1:y+22,x2:x+13,y2:y+22,stroke:"#8ecae6","stroke-width":1.6},g)}
+function jDot(s,x,y,r){mk("circle",{cx:x,cy:y,r:r||4,fill:"#1a1028",stroke:"#fb923c","stroke-width":1.8},s)}
+function grid(s){mk("defs",{},s).innerHTML='<pattern id="gr" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(96,165,250,.02)" stroke-width=".5"/></pattern>';mk("rect",{width:780,height:400,fill:"url(#gr)"},s)}
+function dl(s,x1,y,x2,lab){mk("line",{x1,y1:y,x2,y2:y,stroke:"#475569","stroke-width":.8,"stroke-dasharray":"3 3"},s);[x1,x2].forEach(x=>mk("line",{x,y1:y-4,x2:x,y2:y+4,stroke:"#475569","stroke-width":.8},s));tx(s,(x1+x2)/2,y+14,lab,9,"#64748b")}
+function poly(s,pts,fc,sc){mk("polygon",{points:pts,fill:fc,stroke:sc,"stroke-width":1.5},s)}
+
+// ═══════════════════════════════════
+const TABS=[{id:"formula",label:"定義公式"},{id:"beam_d",label:"梁位移"},{id:"beam_r",label:"梁轉角"},{id:"graph",label:"圖乘法"},{id:"truss",label:"桁架變位"},{id:"frame",label:"剛架變位"}];
+let CT=0,CS=0,AT=null;
+
+// ═══════════════════════════════════
+// DATA: Each tab has steps [{label,draw,html}]
+// ═══════════════════════════════════
+
+// === TAB 0: 定義公式 ===
+function d00(s){grid(s);
+tx(s,390,35,"虛功原理 (Principle of Virtual Work)",15,"#818cf8",{b:1});
+mk("rect",{x:120,y:55,width:260,height:45,rx:10,fill:"rgba(96,165,250,.08)",stroke:"#60a5fa","stroke-width":1.5},s);tx(s,250,82,"虛補外功",13,"#60a5fa",{b:1});
+tx(s,410,82,"＝",18,"#e2e8f0",{b:1});
+mk("rect",{x:440,y:55,width:260,height:45,rx:10,fill:"rgba(129,140,248,.08)",stroke:"#818cf8","stroke-width":1.5},s);tx(s,570,82,"虛補內功",13,"#818cf8",{b:1});
+mk("rect",{x:130,y:115,width:520,height:45,rx:10,fill:"rgba(30,20,50,.6)",stroke:"rgba(71,85,105,.3)","stroke-width":1},s);
+tx(s,390,142,"1 · Δ = Σ∫(mM/EI)dx + Σ(nNℓ/EA) + ...",14,"#e2e8f0",{b:1});
+// Beam concept
+const by=230,bx=160,bL=440;
+mk("line",{x1:bx,y1:by,x2:bx+bL,y2:by,stroke:"#64748b","stroke-width":4},s);fixSup(s,bx,by);
+ar(s,bx+bL,by-55,bx+bL,by-5,"#e879f9",7);tx(s,bx+bL+8,by-40,"P (實力)",10,"#e879f9",{a:"start"});
+const pts=[];for(let i=0;i<=40;i++){const t=i/40;pts.push(`${bx+t*bL},${by+t*t*35}`);}
+mk("polyline",{points:pts.join(" "),fill:"none",stroke:"#22c55e","stroke-width":1.5,"stroke-dasharray":"4 3"},s);
+tx(s,bx+bL+8,by+35,"Δ (實變位)",10,"#22c55e",{a:"start"});
+ar(s,bx+bL,by+60,bx+bL,by+5,"#60a5fa",6);tx(s,bx+bL+8,by+65,"1 (虛力)",10,"#60a5fa",{a:"start"});
+tx(s,bx-5,by-8,"A",10,"#94a3b8",{a:"end"});tx(s,bx+bL+3,by-8,"B",10,"#94a3b8",{a:"start"})}
+function h00(){return `<div class="st">虛功原理 — 單位力法核心概念</div><div class="ste">Principle of Virtual Work — Unit Load Method</div>
+<div class="sd">單位力法又稱為<b>單位虛載重法</b>，是以虛功原理為基礎的變位計算方法。</div>
+<div class="ht"><p><b>虛力 × 實位移 = 虛內力 × 實內變形</b><br>在待求變位處施加「單位虛力」，利用虛補外功等於虛補內功求解。</p></div>
+<div class="sd"><b>解題步驟：</b><br>① 在待求點施加單位力（求位移）或單位力矩（求轉角）<br>② 分別求外力內力 M, N 與單位力內力 m, n<br>③ 代入虛功公式積分<br>④ 正值 → 變位方向與單位力假設方向一致</div>`}
+
+function d01(s){grid(s);
+tx(s,390,28,"完整虛功公式",15,"#818cf8",{b:1});
+mk("rect",{x:30,y:45,width:720,height:65,rx:10,fill:"rgba(30,20,50,.6)",stroke:"rgba(96,165,250,.2)","stroke-width":1.5},s);
+tx(s,390,72,"1·Δ = Σ∫(mM/EI)dx + Σ(nNℓ/EA) + Σ∫(kvV/GA)dx + Σ∫(tT/GJ)dx",11.5,"#e2e8f0",{b:1});
+tx(s,390,92,"+ Σnα(ΔT)ℓ + Σn(Δℓ)f + Σ∫mα(Tb−Tt)/h dx + Σ(fF/k) + Σ(ms·Ms/kθ)",11,"#cbd5e1");
+mk("rect",{x:80,y:120,width:620,height:35,rx:7,fill:"rgba(245,158,11,.04)",stroke:"rgba(245,158,11,.15)","stroke-width":1},s);
+tx(s,390,142,"支承沉陷時移項：− Σrx·Δx − Σry·Δy − Σmr·θr",11,"#fbbf24");
+const terms=[{x:130,y:185,t:"∫mM/EI dx",d:"梁/剛架",c:"#f59e0b"},{x:325,y:185,t:"Σ nNℓ/EA",d:"桁架",c:"#60a5fa"},{x:520,y:185,t:"∫kvV/GA dx",d:"剪力",c:"#a78bfa"},{x:130,y:240,t:"∫tT/GJ dx",d:"扭矩",c:"#f472b6"},{x:325,y:240,t:"Σnα(ΔT)ℓ",d:"溫差桁架",c:"#fb923c"},{x:520,y:240,t:"Σn(Δℓ)f",d:"製造誤差",c:"#34d399"},{x:130,y:295,t:"∫mα(Tb-Tt)/h",d:"溫差梁",c:"#f87171"},{x:325,y:295,t:"Σ fF/k",d:"彈簧",c:"#38bdf8"},{x:520,y:295,t:"Σ ms·Ms/kθ",d:"旋轉彈簧",c:"#c084fc"}];
+terms.forEach(t=>{mk("rect",{x:t.x-80,y:t.y-15,width:160,height:38,rx:7,fill:"rgba(30,20,50,.5)",stroke:"rgba(71,85,105,.3)","stroke-width":1},s);tx(s,t.x,t.y+4,t.t,11,t.c,{b:1});tx(s,t.x,t.y+18,t.d,9,"#64748b")});
+mk("rect",{x:150,y:345,width:480,height:38,rx:8,fill:"rgba(34,197,94,.05)",stroke:"rgba(34,197,94,.15)","stroke-width":1},s);
+tx(s,390,360,"常用：梁 Δ=Σ∫(mM/EI)dx　桁架 Δ=Σ(nNℓ/EA)",12,"#86efac",{b:1})}
+function h01(){return `<div class="st">完整虛功公式</div><div class="ste">Complete Virtual Work Formula</div>
+<div class="sd">大寫 M, N, V, T, F → 外力（實力）內力　小寫 m, n, v, t, f → 單位力（虛力）內力</div>
+<div class="eq"><h3>常用簡化</h3><div class="el r">梁/剛架（僅考慮彎矩）：Δ = Σ∫(mM/EI)dx</div><div class="el r">桁架（僅考慮軸力）：Δ = Σ(nNℓ/EA)</div></div>
+<div class="warn"><p><b>注意：</b>支承沉陷項在原始方程左邊，計算時須<b>移項</b>至右邊帶負號。</p></div>`}
+
+function d02(s){grid(s);
+tx(s,390,28,"梁/剛架 — ∫(mM/EI)dx",15,"#818cf8",{b:1});
+const by=115,bx=70,bL=260;
+// Real system
+tx(s,bx+bL/2,55,"實力系統",12,"#f59e0b",{b:1});
+mk("line",{x1:bx,y1:by,x2:bx+bL,y2:by,stroke:"#64748b","stroke-width":4},s);fixSup(s,bx,by);
+ar(s,bx+bL,by-45,bx+bL,by-5,"#e879f9",7);tx(s,bx+bL+8,by-30,"P",10,"#e879f9",{a:"start"});
+mk("line",{x1:bx,y1:by+15,x2:bx+bL,y2:by+15,stroke:"#475569","stroke-width":.5,"stroke-dasharray":"3 3"},s);
+poly(s,`${bx},${by+15} ${bx+bL},${by+15} ${bx},${by+65}`,"rgba(245,158,11,.08)","#f59e0b");
+tx(s,bx-8,by+63,"−Pℓ",9,"#f59e0b",{a:"end"});tx(s,bx+bL/2,by+45,"M 圖",10,"#f59e0b");
+// Virtual system
+const vx=430;
+tx(s,vx+bL/2,55,"虛力系統",12,"#60a5fa",{b:1});
+mk("line",{x1:vx,y1:by,x2:vx+bL,y2:by,stroke:"#64748b","stroke-width":4},s);fixSup(s,vx,by);
+ar(s,vx+bL,by-45,vx+bL,by-5,"#60a5fa",6);tx(s,vx+bL+8,by-30,"1",10,"#60a5fa",{a:"start"});
+mk("line",{x1:vx,y1:by+15,x2:vx+bL,y2:by+15,stroke:"#475569","stroke-width":.5,"stroke-dasharray":"3 3"},s);
+poly(s,`${vx},${by+15} ${vx+bL},${by+15} ${vx},${by+55}`,"rgba(96,165,250,.08)","#60a5fa");
+tx(s,vx-8,by+53,"−ℓ",9,"#60a5fa",{a:"end"});tx(s,vx+bL/2,by+42,"m 圖",10,"#60a5fa");
+mk("rect",{x:130,y:210,width:520,height:50,rx:10,fill:"rgba(34,197,94,.06)",stroke:"rgba(34,197,94,.2)","stroke-width":1.5},s);
+tx(s,390,232,"Δ = ∫(m·M / EI)dx",15,"#22c55e",{b:1});tx(s,390,250,"m：單位力彎矩　M：外力彎矩",10,"#86efac");
+mk("rect",{x:130,y:280,width:520,height:80,rx:8,fill:"rgba(245,158,11,.03)",stroke:"rgba(245,158,11,.1)","stroke-width":1},s);
+tx(s,390,300,"求位移 → 施加單位集中力",11,"#fbbf24");tx(s,390,320,"求轉角 → 施加單位集中力矩",11,"#fbbf24");tx(s,390,340,"求相對轉角 → 施加一對單位力矩",11,"#fbbf24")}
+function h02(){return `<div class="st">梁/剛架 — 彎矩積分</div><div class="ste">Beam / Frame — ∫(mM/EI)dx</div>
+<div class="ig"><div class="ic"><h3 style="color:#f59e0b">M — 外力彎矩</h3><div class="rw">由實際外力在結構中造成的彎矩分佈</div></div>
+<div class="ic"><h3 style="color:#60a5fa">m — 單位力彎矩</h3><div class="rw">僅在待求點施加單位力（矩）所造成的彎矩分佈</div></div></div>
+<div class="ok"><p>M、m 積分路徑須一致。結果為正 → 變位方向與單位力假設方向一致。</p></div>`}
+
+const T0=[{l:"原理",d:d00,h:h00},{l:"完整公式",d:d01,h:h01},{l:"梁/剛架",d:d02,h:h02}];
+
+// === TAB 1: 梁位移 ===
+const BX=130,BY=150,BL=400;
+function bm(s){mk("line",{x1:BX,y1:BY,x2:BX+BL,y2:BY,stroke:"#64748b","stroke-width":5,"stroke-linecap":"round"},s);fixSup(s,BX,BY);tx(s,BX-15,BY-10,"A",10,"#94a3b8",{a:"end",b:1});tx(s,BX+BL+10,BY-10,"B",10,"#94a3b8",{a:"start",b:1})}
+function d10(s){grid(s);tx(s,390,28,"例題：懸臂梁自由端位移",14,"#818cf8",{b:1});bm(s);ar(s,BX+BL,BY-55,BX+BL,BY-5,"#e879f9",8);tx(s,BX+BL+10,BY-40,"P",12,"#e879f9",{a:"start",b:1});
+dl(s,BX,BY+35,BX+BL,"ℓ");tx(s,BX+BL/2,BY-22,"EI = const.",10,"#94a3b8");
+const pts=[];for(let i=0;i<=30;i++){const t=i/30;pts.push(`${BX+t*BL},${BY+t*t*30}`);}mk("polyline",{points:pts.join(" "),fill:"none",stroke:"#22c55e","stroke-width":1.2,"stroke-dasharray":"4 3",opacity:.5},s);
+ar(s,BX+BL,BY+32,BX+BL,BY+5,"#22c55e",5);tx(s,BX+BL+10,BY+22,"Δ_B?",10,"#22c55e",{a:"start"});tx(s,390,BY+70,"求 B 點垂直位移 Δ_B",13,"#22c55e",{b:1})}
+function h10(){return `<div class="st">例題：懸臂梁自由端受集中力</div><div class="ste">Cantilever — Tip Deflection under P</div>
+<div class="sd">懸臂梁 AB，固定端 A，自由端 B 受向下集中力 P。EI 為常數。求 B 點垂直位移。</div>
+<div class="ht"><p>以 B 為原點，x 向左為正。這是單位力法最基本的入門題。</p></div>`}
+
+function d11(s){grid(s);tx(s,390,25,"Step 1：求外力彎矩 M",13,"#f59e0b",{b:1});bm(s);ar(s,BX+BL,BY-55,BX+BL,BY-5,"#e879f9",7);tx(s,BX+BL+10,BY-40,"P",11,"#e879f9",{a:"start"});
+ar(s,BX+BL,BY+18,BX+BL-50,BY+18,"#94a3b8",4);tx(s,BX+BL-55,BY+16,"x",9,"#94a3b8",{a:"end"});
+const mb=BY+55;mk("line",{x1:BX,y1:mb,x2:BX+BL,y2:mb,stroke:"#475569","stroke-width":.8,"stroke-dasharray":"3 3"},s);
+poly(s,`${BX},${mb} ${BX+BL},${mb} ${BX},${mb+65}`,"rgba(245,158,11,.08)","#f59e0b");tx(s,BX-8,mb+63,"−Pℓ",10,"#f59e0b",{a:"end"});tx(s,BX+BL/2,mb+40,"M 圖",11,"#f59e0b",{b:1});
+mk("rect",{x:BX+BL+25,y:mb-5,width:130,height:32,rx:7,fill:"rgba(245,158,11,.08)",stroke:"rgba(245,158,11,.2)","stroke-width":1},s);tx(s,BX+BL+90,mb+16,"M = −Px",12,"#f59e0b",{b:1})}
+function h11(){return `<div class="st">Step 1：建立外力彎矩 M</div><div class="ste">Real Moment M(x)</div>
+<div class="eq"><h3>B→A 段（x 從 B 向左）</h3><div class="el r">M(x) = −Px　（0 ≤ x ≤ ℓ）</div><div class="el">彎矩圖為線性，A 端達最大值 −Pℓ</div></div>`}
+
+function d12(s){grid(s);tx(s,390,25,"Step 2：虛力系統 — 在 B 施加單位力",13,"#60a5fa",{b:1});bm(s);
+ar(s,BX+BL,BY-55,BX+BL,BY-5,"#60a5fa",8);tx(s,BX+BL+10,BY-40,"1",14,"#60a5fa",{a:"start",b:1});tx(s,BX+BL+22,BY-28,"(單位力)",9,"#60a5fa",{a:"start"});
+mk("rect",{x:100,y:BY+40,width:580,height:40,rx:8,fill:"rgba(96,165,250,.04)",stroke:"rgba(96,165,250,.15)","stroke-width":1},s);
+tx(s,390,BY+55,"求 B 點「位移」→ 在 B 點施加「單位集中力」",12,"#93c5fd");tx(s,390,BY+72,"移除外力 P，僅保留此單位力",10,"#64748b");
+const mb=BY+100;mk("line",{x1:BX,y1:mb,x2:BX+BL,y2:mb,stroke:"#475569","stroke-width":.8,"stroke-dasharray":"3 3"},s);
+poly(s,`${BX},${mb} ${BX+BL},${mb} ${BX},${mb+50}`,"rgba(96,165,250,.08)","#60a5fa");tx(s,BX-8,mb+48,"−ℓ",10,"#60a5fa",{a:"end"});tx(s,BX+BL/2,mb+30,"m 圖",11,"#60a5fa",{b:1});
+mk("rect",{x:BX+BL+25,y:mb-5,width:130,height:32,rx:7,fill:"rgba(96,165,250,.08)",stroke:"rgba(96,165,250,.2)","stroke-width":1},s);tx(s,BX+BL+90,mb+16,"m = −x",12,"#60a5fa",{b:1})}
+function h12(){return `<div class="st">Step 2：建立虛力系統 & 彎矩 m</div><div class="ste">Virtual System — m(x)</div>
+<div class="eq"><h3>虛力彎矩</h3><div class="el">在 B 施加單位向下力 1</div><div class="el r">m(x) = −x　（0 ≤ x ≤ ℓ）</div></div>
+<div class="warn"><p>m 的座標方向和積分路徑必須與 M 一致！</p></div>`}
+
+function d13(s){grid(s);tx(s,390,25,"Step 3：代入公式積分",13,"#22c55e",{b:1});
+const lx=50,rx2=420,by=100,bL2=250;
+tx(s,lx+bL2/2,55,"M 圖",10,"#f59e0b",{b:1});mk("line",{x1:lx,y1:by,x2:lx+bL2,y2:by,stroke:"#64748b","stroke-width":3},s);fixSup(s,lx,by);
+poly(s,`${lx},${by+12} ${lx+bL2},${by+12} ${lx},${by+58}`,"rgba(245,158,11,.08)","#f59e0b");tx(s,lx-6,by+56,"−Pℓ",8,"#f59e0b",{a:"end"});
+tx(s,rx2+bL2/2,55,"m 圖",10,"#60a5fa",{b:1});mk("line",{x1:rx2,y1:by,x2:rx2+bL2,y2:by,stroke:"#64748b","stroke-width":3},s);fixSup(s,rx2,by);
+poly(s,`${rx2},${by+12} ${rx2+bL2},${by+12} ${rx2},${by+48}`,"rgba(96,165,250,.08)","#60a5fa");tx(s,rx2-6,by+46,"−ℓ",8,"#60a5fa",{a:"end"});
+const iy=175;mk("rect",{x:80,y:iy,width:620,height:170,rx:10,fill:"rgba(30,20,50,.6)",stroke:"rgba(34,197,94,.2)","stroke-width":1.5},s);
+tx(s,390,iy+25,"Δ = ∫₀ˡ (mM / EI) dx",14,"#e2e8f0",{b:1});
+tx(s,390,iy+55,"= ∫₀ˡ (−x)(−Px) / EI  dx",13,"#cbd5e1");
+tx(s,390,iy+80,"= (P/EI) ∫₀ˡ x² dx",13,"#86efac");
+tx(s,390,iy+105,"= (P/EI)·[x³/3]₀ˡ",13,"#86efac");
+tx(s,390,iy+140,"= Pℓ³ / (3EI)　↓",17,"#22c55e",{b:1})}
+function h13(){return `<div class="st">Step 3：代入積分求解</div><div class="ste">Integration</div>
+<div class="eq"><h3>計算過程</h3><div class="el">Δ = ∫₀ˡ (−x)(−Px)/EI dx = (P/EI)∫₀ˡ x² dx</div><div class="el r">= Pℓ³ / (3EI)　↓</div></div>
+<div class="ok"><p><b>Δ_B = Pℓ³/(3EI) ↓</b>　結果為正→與單位力同向（向下）。經典公式！</p></div>`}
+
+const T1=[{l:"題目",d:d10,h:h10},{l:"實力M",d:d11,h:h11},{l:"虛力m",d:d12,h:h12},{l:"積分結果",d:d13,h:h13}];
+
+// === TAB 2: 梁轉角 ===
+const B2X=130,B2Y=145,B2L=400;
+function bm2(s){mk("line",{x1:B2X,y1:B2Y,x2:B2X+B2L,y2:B2Y,stroke:"#64748b","stroke-width":5,"stroke-linecap":"round"},s);pinSup(s,B2X,B2Y);rolSup(s,B2X+B2L,B2Y);tx(s,B2X,B2Y+35,"A",10,"#94a3b8",{b:1});tx(s,B2X+B2L,B2Y+35,"B",10,"#94a3b8",{b:1})}
+function d20(s){grid(s);tx(s,390,25,"例題：簡支梁中點受力 — 求 A 端轉角",13,"#818cf8",{b:1});bm2(s);
+ar(s,B2X+B2L/2,B2Y-55,B2X+B2L/2,B2Y-5,"#e879f9",8);tx(s,B2X+B2L/2+10,B2Y-42,"P",12,"#e879f9",{a:"start",b:1});
+dl(s,B2X,B2Y+55,B2X+B2L/2,"ℓ/2");dl(s,B2X+B2L/2,B2Y+55,B2X+B2L,"ℓ/2");
+tx(s,B2X+B2L/2,B2Y-22,"EI = const.",10,"#94a3b8");
+mArc(s,B2X,B2Y-5,20,"#22c55e",true);tx(s,B2X+28,B2Y-20,"θ_A?",10,"#22c55e",{a:"start"});
+tx(s,390,B2Y+85,"求 A 端轉角 θ_A",13,"#22c55e",{b:1})}
+function h20(){return `<div class="st">例題：簡支梁 — A 端轉角</div><div class="ste">Simply Supported Beam — End Rotation θ_A</div>
+<div class="sd">簡支梁 AB 跨度 ℓ，中點受力 P。EI 常數。求 A 端轉角。</div>
+<div class="ht"><p>求轉角 → 施加「<b>單位力矩</b>」而非單位力！</p></div>`}
+
+function d21(s){grid(s);tx(s,390,25,"M 圖 & m 圖",13,"#818cf8",{b:1});
+// M diagram
+const ly=90;tx(s,200,ly-15,"M 圖（外力）",10,"#f59e0b",{b:1});
+mk("line",{x1:80,y1:ly,x2:380,y2:ly,stroke:"#475569","stroke-width":.8,"stroke-dasharray":"3 3"},s);
+poly(s,`80,${ly} 230,${ly-50} 380,${ly}`,"rgba(245,158,11,.08)","#f59e0b");tx(s,230,ly-58,"Pℓ/4",9,"#f59e0b");
+// m diagram
+tx(s,580,ly-15,"m 圖（虛力矩=1 at A）",10,"#60a5fa",{b:1});
+mk("line",{x1:430,y1:ly,x2:730,y2:ly,stroke:"#475569","stroke-width":.8,"stroke-dasharray":"3 3"},s);
+poly(s,`430,${ly} 430,${ly-40} 730,${ly}`,"rgba(96,165,250,.08)","#60a5fa");tx(s,428,ly-45,"1",9,"#60a5fa",{a:"end"});
+mk("rect",{x:430,y:ly+5,width:300,height:28,rx:6,fill:"rgba(96,165,250,.05)",stroke:"rgba(96,165,250,.15)","stroke-width":1},s);
+tx(s,580,ly+24,"m(x) = 1−x/ℓ （A端=1, B端=0）",9,"#93c5fd");
+// Integration
+const iy=170;mk("rect",{x:80,y:iy,width:620,height:185,rx:10,fill:"rgba(30,20,50,.6)",stroke:"rgba(34,197,94,.2)","stroke-width":1.5},s);
+tx(s,390,iy+22,"θ_A = (1/EI) ∫₀ˡ m·M dx",14,"#e2e8f0",{b:1});
+tx(s,390,iy+50,"分兩段（M 在中點斜率改變）：",10,"#94a3b8");
+tx(s,390,iy+75,"段1: ∫₀^{ℓ/2} (1−x/ℓ)·(Px/2) dx",12,"#cbd5e1");
+tx(s,390,iy+98,"段2: ∫_{ℓ/2}^ℓ (1−x/ℓ)·P(ℓ−x)/2 dx",12,"#cbd5e1");
+tx(s,390,iy+125,"= (P/2EI)(ℓ²/8 + ℓ²/24)",12,"#86efac");
+tx(s,390,iy+155,"= Pℓ²/(16EI)　↺",17,"#22c55e",{b:1})}
+function h21(){return `<div class="st">M 圖、m 圖 & 積分</div><div class="ste">Real M, Virtual m, and Integration</div>
+<div class="eq"><h3>反力 & 彎矩</h3><div class="el">A<sub>y</sub>=B<sub>y</sub>=P/2。M 圖三角形，峰值 Pℓ/4</div>
+<div class="el">虛力：A 端施加單位力矩 1（逆時針）</div>
+<div class="el r">m(x) = 1−x/ℓ（線性從 1 到 0）</div></div>
+<div class="ok"><p><b>θ_A = Pℓ²/(16EI) ↺</b>　正值→與假設單位力矩同向。</p></div>`}
+
+const T2=[{l:"題目",d:d20,h:h20},{l:"M & m & 結果",d:d21,h:h21}];
+
+// === TAB 3: 圖乘法 ===
+function d30(s){grid(s);tx(s,390,28,"圖乘法 — 幾何方法快速積分",15,"#818cf8",{b:1});
+mk("rect",{x:100,y:52,width:580,height:50,rx:10,fill:"rgba(129,140,248,.06)",stroke:"rgba(129,140,248,.2)","stroke-width":1.5},s);
+tx(s,390,78,"∫(mM/EI)dx = Σ (A_i · y_i) / EI",15,"#e2e8f0",{b:1});tx(s,390,95,"A：M 圖面積　y：M 形心對應到 m 圖的高度",10,"#94a3b8");
+const lx=80,ly=155,bL=240;
+tx(s,lx+bL/2,ly-10,"M 圖（求面積 A）",10,"#f59e0b",{b:1});
+mk("line",{x1:lx,y1:ly,x2:lx+bL,y2:ly,stroke:"#475569","stroke-width":.8,"stroke-dasharray":"3 3"},s);
+poly(s,`${lx},${ly} ${lx+bL},${ly} ${lx+bL},${ly+55}`,"rgba(245,158,11,.1)","#f59e0b");
+tx(s,lx+bL/2,ly+32,"A",13,"#f59e0b",{b:1});
+const cxM=lx+bL*2/3;mk("circle",{cx:cxM,cy:ly+37,r:4,fill:"#f59e0b"},s);tx(s,cxM+8,ly+30,"形心",8,"#f59e0b",{a:"start"});
+mk("line",{x1:cxM,y1:ly+40,x2:cxM,y2:ly+75,stroke:"#fbbf24","stroke-width":1,"stroke-dasharray":"3 3"},s);
+const my=ly+75;tx(s,lx+bL/2,my-8,"m 圖（讀高度 y）",10,"#60a5fa",{b:1});
+mk("line",{x1:lx,y1:my,x2:lx+bL,y2:my,stroke:"#475569","stroke-width":.8,"stroke-dasharray":"3 3"},s);
+poly(s,`${lx},${my} ${lx+bL},${my} ${lx+bL},${my+42}`,"rgba(96,165,250,.08)","#60a5fa");
+const yy=my+(cxM-lx)/bL*42;mk("line",{x1:cxM,y1:my,x2:cxM,y2:yy,stroke:"#22c55e","stroke-width":2},s);mk("circle",{cx:cxM,cy:yy,r:3,fill:"#22c55e"},s);tx(s,cxM+10,yy,"y",11,"#22c55e",{a:"start",b:1});
+// Conditions
+const rx=400,ry=135;mk("rect",{x:rx,y:ry,width:340,height:200,rx:10,fill:"rgba(245,158,11,.03)",stroke:"rgba(245,158,11,.1)","stroke-width":1},s);
+tx(s,rx+170,ry+22,"使用條件",12,"#fbbf24",{b:1});
+const conds=[["① m 圖必須是直線（線性）","#fbbf24"],["② M 不連續或過零須分段","#fbbf24"],["③ 取 M 的面積 A","#f59e0b"],["④ 讀 m 在 M 形心處的高度 y","#60a5fa"],["⑤ 注意面積和高度的正負號","#22c55e"],["⑥ EI 變化也要分段","#c084fc"]];
+conds.forEach((c,i)=>tx(s,rx+170,ry+50+i*28,c[0],10.5,c[1]))}
+function h30(){return `<div class="st">圖乘法</div><div class="ste">Graphical Multiplication Method</div>
+<div class="sd">圖乘法將 ∫(mM/EI)dx 化為幾何計算：面積 × 高度 / EI。</div>
+<div class="eq"><h3>核心公式</h3><div class="el r">∫(mM/EI)dx = Σ(A_i·y_i)/EI</div><div class="el">A = M 圖曲線下面積（含正負號）</div><div class="el">y = M 形心位置在 m 圖上對應的高度值</div></div>
+<div class="warn"><p>m 必須是直線才能用圖乘法！若 M 和 m 都是直線，取哪個的面積都可以。</p></div>`}
+
+function d31(s){grid(s);tx(s,390,25,"圖乘法驗證：懸臂梁 B 點位移",14,"#818cf8",{b:1});
+const bx=100,by=100,bL=300;mk("line",{x1:bx,y1:by,x2:bx+bL,y2:by,stroke:"#64748b","stroke-width":4},s);fixSup(s,bx,by);
+ar(s,bx+bL,by-40,bx+bL,by-5,"#e879f9",7);tx(s,bx+bL+8,by-28,"P",10,"#e879f9",{a:"start"});
+tx(s,bx-12,by-8,"A",9,"#94a3b8",{a:"end"});tx(s,bx+bL+8,by-8,"B",9,"#94a3b8",{a:"start"});
+const mb=by+25;mk("line",{x1:bx,y1:mb,x2:bx+bL,y2:mb,stroke:"#475569","stroke-width":.5,"stroke-dasharray":"3 3"},s);
+poly(s,`${bx},${mb} ${bx+bL},${mb} ${bx},${mb+50}`,"rgba(245,158,11,.1)","#f59e0b");tx(s,bx-8,mb+48,"−Pℓ",9,"#f59e0b",{a:"end"});tx(s,bx+bL/2+30,mb+30,"M 圖",9,"#f59e0b");
+const cx0=bx+bL*2/3;mk("circle",{cx:cx0,cy:mb+50/3,r:3,fill:"#f59e0b"},s);
+mk("line",{x1:cx0,y1:mb+50/3,x2:cx0,y2:mb+65,stroke:"#fbbf24","stroke-width":1,"stroke-dasharray":"3 3"},s);
+const mm=mb+65;mk("line",{x1:bx,y1:mm,x2:bx+bL,y2:mm,stroke:"#475569","stroke-width":.5,"stroke-dasharray":"3 3"},s);
+poly(s,`${bx},${mm} ${bx+bL},${mm} ${bx},${mm+40}`,"rgba(96,165,250,.08)","#60a5fa");tx(s,bx-8,mm+38,"−ℓ",9,"#60a5fa",{a:"end"});tx(s,bx+bL/2+30,mm+25,"m 圖",9,"#60a5fa");
+const yy2=mm+(cx0-bx)/bL*40;mk("line",{x1:cx0,y1:mm,x2:cx0,y2:yy2,stroke:"#22c55e","stroke-width":2},s);mk("circle",{cx:cx0,cy:yy2,r:3,fill:"#22c55e"},s);tx(s,cx0+10,yy2,"y=−⅔ℓ",9,"#22c55e",{a:"start",b:1});
+// Calculation
+const fx=470,fy=90;mk("rect",{x:fx,y:fy,width:280,height:250,rx:10,fill:"rgba(30,20,50,.6)",stroke:"rgba(34,197,94,.2)","stroke-width":1.5},s);
+tx(s,fx+140,fy+22,"圖乘法計算",12,"#22c55e",{b:1});
+tx(s,fx+140,fy+55,"A = ½(−Pℓ)(ℓ)",11,"#f59e0b");tx(s,fx+140,fy+75,"= −Pℓ²/2",12,"#f59e0b",{b:1});
+tx(s,fx+140,fy+105,"y = −⅔ℓ",12,"#60a5fa",{b:1});
+mk("line",{x1:fx+30,y1:fy+125,x2:fx+250,y2:fy+125,stroke:"rgba(71,85,105,.3)","stroke-width":1},s);
+tx(s,fx+140,fy+148,"Δ = Ay/EI",12,"#e2e8f0",{b:1});
+tx(s,fx+140,fy+172,"= (−Pℓ²/2)(−⅔ℓ)/EI",11,"#86efac");
+tx(s,fx+140,fy+200,"= Pℓ³/(3EI) ↓",15,"#22c55e",{b:1});
+tx(s,fx+140,fy+228,"✓ 與積分法一致",11,"#22c55e")}
+function h31(){return `<div class="st">圖乘法驗證</div><div class="ste">Verification by Graphical Multiplication</div>
+<div class="eq"><h3>計算</h3><div class="el">M 圖三角形：A = ½(−Pℓ)(ℓ) = −Pℓ²/2</div><div class="el">形心在距 A 端 ⅓ℓ（距 B 端 ⅔ℓ）</div><div class="el">m 圖在形心位置的值：y = −⅔ℓ</div>
+<div class="el r chk">Δ = Ay/EI = (−Pℓ²/2)(−⅔ℓ)/EI = Pℓ³/(3EI) ✓</div></div>
+<div class="ok"><p>圖乘法將「建立方程式→積分」簡化為「查面積×讀高度」！</p></div>`}
+
+const T3=[{l:"原理",d:d30,h:h30},{l:"例題驗證",d:d31,h:h31}];
+
+// === TAB 4: 桁架 ===
+const TX=70,TY=240,TS=120;
+function tq(n){return TX+n*TS}function ty2(n){return TY-n*TS}
+function dtrs(s){
+[[0,0,1,0],[1,0,2,0],[0,0,0,1],[0,1,1,1],[1,0,0,1],[1,0,1,1],[1,1,2,0]].forEach(([x1,y1,x2,y2])=>mk("line",{x1:tq(x1),y1:ty2(y1),x2:tq(x2),y2:ty2(y2),stroke:"#64748b","stroke-width":3,"stroke-linecap":"round"},s));
+pinSup(s,tq(0),ty2(0));rolSup(s,tq(2),ty2(0));
+[["A",0,0,-12,12],["B",1,0,0,18],["C",2,0,12,12],["D",0,1,-14,-5],["E",1,1,0,-12]].forEach(([n,x,y,ox,oy])=>{jDot(s,tq(x),ty2(y),3);tx(s,tq(x)+ox,ty2(y)+oy,n,9,"#94a3b8",{b:1})})}
+
+function d40(s){grid(s);tx(s,390,25,"例題：桁架 E 點垂直位移",14,"#818cf8",{b:1});dtrs(s);
+ar(s,tq(1),ty2(1)-50,tq(1),ty2(1)-5,"#e879f9",8);tx(s,tq(1)+10,ty2(1)-42,"P",12,"#e879f9",{a:"start",b:1});
+dl(s,tq(0),ty2(0)+35,tq(1),"L");dl(s,tq(1),ty2(0)+35,tq(2),"L");
+mk("rect",{x:380,y:70,width:360,height:100,rx:10,fill:"rgba(30,20,50,.5)",stroke:"rgba(71,85,105,.3)","stroke-width":1},s);
+tx(s,560,95,"EA = 常數（各桿相同）",11,"#94a3b8");tx(s,560,118,"正方形桁架 2L×L",11,"#94a3b8");tx(s,560,141,"求 E 點垂直位移 Δ_E",11,"#22c55e",{b:1})}
+function h40(){return `<div class="st">例題：桁架節點位移</div><div class="ste">Truss Joint Deflection Δ_E</div>
+<div class="sd">Pratt 桁架，A 鉸支，C 滾支。E 受向下集中力 P。EA 相同。</div>
+<div class="eq"><h3>公式</h3><div class="el r">Δ = Σ(nNℓ/EA)</div><div class="el">n:單位力桿件軸力、N:外力桿件軸力、ℓ:桿長</div></div>`}
+
+function d41(s){grid(s);tx(s,390,25,"求 N（外力）& n（單位力）",13,"#818cf8",{b:1});
+// N table
+const fx=60,fy=50;mk("rect",{x:fx,y:fy,width:660,height:300,rx:10,fill:"rgba(30,20,50,.5)",stroke:"rgba(71,85,105,.3)","stroke-width":1},s);
+const cols=[fx+50,fx+130,fx+220,fx+310,fx+420,fx+560];
+["桿件","N","n","ℓ","nNℓ","累計 ÷EA"].forEach((h,i)=>tx(s,cols[i],fy+22,h,10,"#818cf8",{b:1}));
+mk("line",{x1:fx+10,y1:fy+30,x2:fx+650,y2:fy+30,stroke:"rgba(71,85,105,.3)","stroke-width":1},s);
+const data=[["AB","0","0","L","0","0"],["BC","0","0","L","0","0"],["AD","−P/2","−1/2","L","PL/4","PL/4"],["DE","0","0","L","0","PL/4"],["BD","P√2/2","√2/2","L√2","PL/2","3PL/4"],["BE","−P","−1","L","PL","7PL/4"],["CE","P√2/2","√2/2","L√2","PL/2","9PL/4"]];
+data.forEach((d,i)=>{const ry=fy+52+i*34;d.forEach((v,j)=>{const c=j===4?(v==="0"?"#64748b":"#86efac"):j===5?"#22c55e":"#cbd5e1";tx(s,cols[j],ry,v,10,c,{b:j>=4})});if(i<6)mk("line",{x1:fx+10,y1:ry+14,x2:fx+650,y2:ry+14,stroke:"rgba(71,85,105,.1)","stroke-width":.5},s)});
+mk("line",{x1:fx+10,y1:fy+288,x2:fx+650,y2:fy+288,stroke:"rgba(34,197,94,.3)","stroke-width":1.5},s);
+tx(s,cols[3],fy+310,"Σ =",11,"#94a3b8",{b:1});tx(s,cols[4],fy+310,"9PL/4",12,"#22c55e",{b:1});
+tx(s,390,fy+340,"Δ_E = 9PL/(4EA)　↓",16,"#22c55e",{b:1})}
+function h41(){return `<div class="st">逐桿計算 nNℓ/EA</div><div class="ste">Member-by-member Calculation</div>
+<div class="eq"><h3>有貢獻桿件</h3><div class="el">AD: (−P/2)(−1/2)(L) = PL/4</div><div class="el">BD: (P√2/2)(√2/2)(L√2) = PL/2</div><div class="el">BE: (−P)(−1)(L) = PL</div><div class="el">CE: (P√2/2)(√2/2)(L√2) = PL/2</div><div class="el r chk">Σ = 9PL/4 → Δ_E = 9PL/(4EA) ↓</div></div>
+<div class="ht"><p>零力桿件對位移無貢獻。表格法可確保不遺漏。</p></div>`}
+
+const T4=[{l:"題目",d:d40,h:h40},{l:"計算表 & 結果",d:d41,h:h41}];
+
+// === TAB 5: 剛架 ===
+const FX=150,FY=290,FW=230,FH=190;
+function dfr(s){
+mk("line",{x1:FX,y1:FY,x2:FX,y2:FY-FH,stroke:"#64748b","stroke-width":5,"stroke-linecap":"round"},s);
+mk("line",{x1:FX,y1:FY-FH,x2:FX+FW,y2:FY-FH,stroke:"#64748b","stroke-width":5,"stroke-linecap":"round"},s);
+fixSup(s,FX,FY);tx(s,FX-15,FY+5,"A",10,"#94a3b8",{a:"end",b:1});tx(s,FX-10,FY-FH-8,"B",10,"#94a3b8",{a:"end",b:1});tx(s,FX+FW+10,FY-FH-8,"C",10,"#94a3b8",{a:"start",b:1});jDot(s,FX,FY-FH,4)}
+
+function d50(s){grid(s);tx(s,490,25,"例題：L型剛架 — C 端垂直位移",14,"#818cf8",{b:1});dfr(s);
+ar(s,FX+FW,FY-FH-50,FX+FW,FY-FH-5,"#e879f9",8);tx(s,FX+FW+10,FY-FH-38,"P",12,"#e879f9",{a:"start",b:1});
+mk("line",{x1:FX-28,y1:FY,x2:FX-28,y2:FY-FH,stroke:"#475569","stroke-width":.8,"stroke-dasharray":"3 3"},s);tx(s,FX-38,(FY+FY-FH)/2,"h",9,"#64748b");
+dl(s,FX,FY-FH-22,FX+FW,"ℓ");
+mk("rect",{x:430,y:100,width:310,height:120,rx:10,fill:"rgba(30,20,50,.5)",stroke:"rgba(71,85,105,.3)","stroke-width":1},s);
+tx(s,585,125,"L型剛架，A 端固定",11,"#94a3b8");tx(s,585,148,"C 端受向下力 P，EI=const.",11,"#94a3b8");tx(s,585,172,"僅考慮彎矩效應",11,"#94a3b8");tx(s,585,198,"求 C 點垂直位移 Δ_C",11,"#22c55e",{b:1})}
+function h50(){return `<div class="st">例題：L型剛架 C 端位移</div><div class="ste">L-Frame — Deflection at Free End C</div>
+<div class="sd">A 固定端，B 剛接，C 自由端受 P↓。柱高 h，梁長 ℓ，EI 常數。</div>
+<div class="eq"><h3>反力</h3><div class="el">A<sub>x</sub>=0, A<sub>y</sub>=P↑, M<sub>A</sub>=Pℓ (↺)</div></div>`}
+
+function d51(s){grid(s);tx(s,390,25,"M 圖 & m 圖 → 圖乘法求解",13,"#818cf8",{b:1});
+// Real frame M
+dfr(s);ar(s,FX+FW,FY-FH-40,FX+FW,FY-FH-5,"#e879f9",6);tx(s,FX+FW+6,FY-FH-30,"P",9,"#e879f9",{a:"start"});
+// M on column (constant Pℓ, drawn to right)
+const mOff=40;poly(s,`${FX},${FY} ${FX+mOff},${FY} ${FX+mOff},${FY-FH} ${FX},${FY-FH}`,"rgba(245,158,11,.1)","#f59e0b");
+tx(s,FX+mOff+5,(FY+FY-FH)/2,"Pℓ",9,"#f59e0b",{a:"start"});
+// M on beam (linear from Pℓ to 0, drawn below)
+const mH=45;poly(s,`${FX},${FY-FH} ${FX+FW},${FY-FH} ${FX},${FY-FH+mH}`,"rgba(245,158,11,.1)","#f59e0b");
+tx(s,FX-8,FY-FH+mH+3,"Pℓ",9,"#f59e0b",{a:"end"});
+// Info panel
+const bx=420,by=55;mk("rect",{x:bx,y:by,width:340,height:315,rx:10,fill:"rgba(30,20,50,.6)",stroke:"rgba(34,197,94,.2)","stroke-width":1.5},s);
+tx(s,bx+170,by+22,"圖乘法求 Δ_C",12,"#22c55e",{b:1});
+// Column contribution
+tx(s,bx+170,by+52,"① 柱 AB（M=Pℓ 常數, m=ℓ−y 線性）",10,"#f59e0b");
+tx(s,bx+170,by+72,"虛力系統柱：m(y)=ℓ (常數，因Ax=0)",10,"#60a5fa");
+tx(s,bx+170,by+95,"∫ M·m/EI dy = Pℓ·ℓ·h/EI = Pℓ²h/EI",11,"#86efac");
+// Beam contribution
+tx(s,bx+170,by+130,"② 梁 BC（M=P(ℓ−x) 三角, m=ℓ−x 三角）",10,"#f59e0b");
+tx(s,bx+170,by+155,"圖乘法：A=½·Pℓ·ℓ, 形心⅓ℓ處",10,"#94a3b8");
+tx(s,bx+170,by+175,"m 在形心處= ⅔ℓ",10,"#60a5fa");
+tx(s,bx+170,by+198,"Ay/EI = ½Pℓ²·⅔ℓ/EI = Pℓ³/(3EI)",11,"#86efac");
+mk("line",{x1:bx+30,y1:by+218,x2:bx+310,y2:by+218,stroke:"rgba(34,197,94,.3)","stroke-width":1.5},s);
+tx(s,bx+170,by+242,"Δ_C = 柱 + 梁",12,"#e2e8f0",{b:1});
+tx(s,bx+170,by+265,"= Pℓ²h/EI + Pℓ³/(3EI)",12,"#86efac");
+tx(s,bx+170,by+295,"= Pℓ²(3h+ℓ)/(3EI) ↓",15,"#22c55e",{b:1})}
+function h51(){return `<div class="st">M圖 & m圖 → 圖乘法求解</div><div class="ste">Moment Diagrams & Graphical Multiplication</div>
+<div class="ig"><div class="ic"><h3 style="color:#f59e0b">柱 AB — M 圖</h3><div class="rw">M = Pℓ（常數）<br>因 A<sub>x</sub>=0，柱上無水平力，彎矩沿柱高不變。</div></div>
+<div class="ic"><h3 style="color:#f59e0b">梁 BC — M 圖</h3><div class="rw">M(x) = P(ℓ−x)（線性）<br>B 端 Pℓ，C 端 0。三角形分佈。</div></div></div>
+<div class="eq"><h3>虛力系統（C端施加單位力↓）</h3><div class="el">柱 m = ℓ（常數），梁 m(x)=ℓ−x（三角形）</div></div>
+<div class="eq"><h3>圖乘法積分</h3><div class="el">柱：Pℓ·ℓ·h/EI = Pℓ²h/EI</div><div class="el">梁：½Pℓ²·⅔ℓ/EI = Pℓ³/(3EI)</div><div class="el r chk">Δ_C = Pℓ²(3h+ℓ)/(3EI) ↓ ✓</div></div>
+<div class="ok"><p>剛架各桿件需分別積分後加總。注意柱和梁的積分變數不同（y vs x）。</p></div>`}
+
+const T5=[{l:"題目",d:d50,h:h50},{l:"M/m圖 & 結果",d:d51,h:h51}];
+
+// ═══════════════════════════════════
+const ALL=[T0,T1,T2,T3,T4,T5];
+
+function render(){
+  const svg=document.getElementById("svg");svg.innerHTML="";
+  const pnl=document.getElementById("pnl");
+  const steps=ALL[CT];
+  steps[CS].d(svg);
+  pnl.innerHTML=steps[CS].h();
+  // Tabs
+  document.getElementById("tabs").innerHTML=TABS.map((t,i)=>`<button class="tab${i===CT?" on":""}" onclick="setTab(${i})">${t.label}</button>`).join("");
+  // Steps
+  let nb='';steps.forEach((s,i)=>{nb+=`<button class="nb${i===CS?" on":""}" onclick="setStep(${i})">${s.l}</button>`});
+  if(steps.length>1){
+    nb+=`<button class="nb pl${AT?" ru":""}" onclick="autoPlay()">${AT?"⏸ 暫停":"▶ 自動"}</button>`;
+  }
+  document.getElementById("nav").innerHTML=nb;
+}
+function setTab(i){CT=i;CS=0;stopAuto();render()}
+function setStep(i){CS=i;render()}
+function autoPlay(){if(AT){stopAuto()}else{AT=setInterval(()=>{const steps=ALL[CT];CS=(CS+1)%steps.length;render()},3500);render()}}
+function stopAuto(){if(AT){clearInterval(AT);AT=null}}
+render();
+</script>
+</body>
+</html>
