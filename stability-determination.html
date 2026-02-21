@@ -36,8 +36,11 @@ button{font-family:inherit;cursor:pointer}
 .nav-item:hover{color:var(--text2);background:rgba(255,255,255,.03)}
 .nav-item.active{color:var(--gold);background:rgba(232,179,57,.06);border-left-color:var(--gold);font-weight:700}
 .nav-item .num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text4);width:24px;flex-shrink:0}
-.hamburger{display:none;position:fixed;top:14px;right:14px;z-index:200;background:rgba(30,27,22,.95);border:1px solid var(--border);border-radius:10px;padding:10px 13px;cursor:pointer;color:var(--text2);font-size:18px}
-@media(max-width:860px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.hamburger{display:block}.layout{padding-left:0!important}.main{padding:16px!important;padding-top:56px!important}}
+.hamburger{display:none;position:fixed;top:14px;left:14px;z-index:200;background:rgba(30,27,22,.95);border:1px solid var(--border);border-radius:10px;padding:10px 13px;cursor:pointer;color:var(--text2);font-size:18px}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;backdrop-filter:blur(2px)}
+.sidebar-overlay.show{display:block}
+.sidebar-close{display:none;position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:4px 8px}
+@media(max-width:860px){.sidebar{transform:translateX(-100%);width:280px;max-width:85vw}.sidebar.open{transform:translateX(0)}.sidebar-close{display:block}.hamburger{display:block}.layout{padding-left:0!important}.main{padding:16px!important;padding-top:56px!important}}
 @media(max-width:480px){.main{padding:10px!important;padding-top:52px!important}.section-title{font-size:22px}.card{padding:14px 16px}.interactive-box{padding:12px}.formula-block{padding:10px;font-size:12px}.btn{padding:6px 14px;font-size:12px}.result-box{font-size:12px}input.input-num{width:44px;height:32px;font-size:13px}.flow-row{flex-wrap:wrap;justify-content:center}.flow-box{font-size:11px}}
 .main{padding:36px 40px 60px;max-width:920px;width:100%;margin:0 auto}
 .section{display:none;animation:fadeIn .3s ease}.section.active{display:block}
@@ -174,9 +177,11 @@ input.input-num:focus{outline:none;border-color:var(--teal);background:rgba(45,1
 </head>
 <body>
 <a href="index.html" style="position:fixed;top:14px;right:14px;z-index:9999;display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:10px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.12);color:#c8c0b0;font-size:13px;font-family:'Noto Sans TC',sans-serif;text-decoration:none;backdrop-filter:blur(8px);transition:all 0.2s" onmouseover="this.style.background='rgba(0,0,0,0.8)';this.style.color='#f0ead6'" onmouseout="this.style.background='rgba(0,0,0,0.6)';this.style.color='#c8c0b0'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>返回首頁</a>
-<button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <div class="layout">
 <nav class="sidebar" id="sidebar">
+  <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
   <div class="sidebar-header"><h1>穩定性與靜定性</h1><div class="sub">結構學 I — 互動教學</div></div>
   <div class="nav-group">
     <div class="nav-group-title">壹、基礎觀念</div>
@@ -1560,12 +1565,17 @@ input.input-num:focus{outline:none;border-color:var(--teal);background:rgba(45,1
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script>
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
 function go(el,id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   el.classList.add('active');
-  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
