@@ -339,7 +339,7 @@ const FX=150,FY=290,FW=230,FH=190;
 function dfr(s){
 mk("line",{x1:FX,y1:FY,x2:FX,y2:FY-FH,stroke:"#64748b","stroke-width":5,"stroke-linecap":"round"},s);
 mk("line",{x1:FX,y1:FY-FH,x2:FX+FW,y2:FY-FH,stroke:"#64748b","stroke-width":5,"stroke-linecap":"round"},s);
-fixSup(s,FX,FY);tx(s,FX-15,FY+5,"A",10,"#94a3b8",{a:"end",b:1});tx(s,FX-10,FY-FH-8,"B",10,"#94a3b8",{a:"end",b:1});tx(s,FX+FW+10,FY-FH-8,"C",10,"#94a3b8",{a:"start",b:1});jDot(s,FX,FY-FH,4)}
+fixSup(s,FX,FY);tx(s,FX-15,FY+5,"A",10,"#94a3b8",{a:"end",b:1});tx(s,FX-10,FY-FH-8,"B",10,"#94a3b8",{a:"end",b:1});tx(s,FX+FW+10,FY-FH-8,"C",10,"#94a3b8",{a:"start",b:1})}
 
 function d50(s){grid(s);tx(s,490,25,"例題：L型剛架 — C 端垂直位移",14,"#818cf8",{b:1});dfr(s);
 ar(s,FX+FW,FY-FH-50,FX+FW,FY-FH-5,"#e879f9",8);tx(s,FX+FW+10,FY-FH-38,"P",12,"#e879f9",{a:"start",b:1});
@@ -364,7 +364,7 @@ tx(s,FX-8,FY-FH+mH+3,"Pℓ",9,"#f59e0b",{a:"end"});
 const bx=420,by=55;mk("rect",{x:bx,y:by,width:340,height:315,rx:10,fill:"rgba(30,20,50,.6)",stroke:"rgba(34,197,94,.2)","stroke-width":1.5},s);
 tx(s,bx+170,by+22,"圖乘法求 Δ_C",12,"#22c55e",{b:1});
 // Column contribution
-tx(s,bx+170,by+52,"① 柱 AB（M=Pℓ 常數, m=ℓ−y 線性）",10,"#f59e0b");
+tx(s,bx+170,by+52,"① 柱 AB（M=Pℓ 常數, m=ℓ 常數）",10,"#f59e0b");
 tx(s,bx+170,by+72,"虛力系統柱：m(y)=ℓ (常數，因Ax=0)",10,"#60a5fa");
 tx(s,bx+170,by+95,"∫ M·m/EI dy = Pℓ·ℓ·h/EI = Pℓ²h/EI",11,"#86efac");
 // Beam contribution
