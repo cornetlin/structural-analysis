@@ -279,7 +279,7 @@ button{font-family:inherit;cursor:pointer}
 
 .summary-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:12px 0}
 @media(max-width:700px){.summary-grid{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:768px){.interactive-box{overflow-x:auto;-webkit-overflow-scrolling:touch}.interactive-box svg{min-width:500px}.formula-block{overflow-x:auto}.card svg{max-width:100%}}
+@media(max-width:768px){.interactive-box{overflow:hidden}.interactive-box svg{width:100%;height:auto}.formula-block{overflow-x:auto}.card svg{width:100%;height:auto}}
 @media(max-width:480px){.main{padding:10px!important;padding-top:52px!important}.section-title{font-size:20px}.card{padding:12px 14px}.interactive-box{padding:10px}.formula-block{padding:8px;font-size:12px}.result-box{font-size:12px}.btn{padding:5px 12px;font-size:12px}.summary-grid{grid-template-columns:repeat(2,1fr)!important}}
 .summary-card{background:var(--card2);border-radius:6px;padding:6px 4px;text-align:center;border:1px solid var(--border)}
 .summary-card .name{font-size:9px;color:var(--text4);font-family:'JetBrains Mono',monospace;margin-bottom:1px}
