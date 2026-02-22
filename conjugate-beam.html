@@ -462,8 +462,8 @@ canvas {
   .step-desc { font-size: 13px; margin-bottom: 20px; }
   .step-dot { padding: 4px 10px; font-size: 11px; }
   .step-line { width: 8px; }
-  .canvas-wrapper { padding: 12px; overflow-x: auto; overflow-y: hidden; }
-  .canvas-wrapper canvas { min-width: 700px; }
+  .canvas-wrapper { padding: 12px; overflow: hidden; }
+  .canvas-wrapper canvas { width: 100%; height: auto; }
   .info-grid { grid-template-columns: 1fr; gap: 10px; }
   .info-card { padding: 14px; }
   .info-card .value { font-size: 15px; }
@@ -486,8 +486,7 @@ canvas {
   .main { padding: 12px 8px; }
   .step-title { font-size: 18px; flex-wrap: wrap; }
   .step-dot { padding: 3px 8px; font-size: 10px; }
-  .canvas-wrapper { padding: 8px; border-radius: 10px; }
-  .canvas-wrapper canvas { min-width: 600px; }
+  .canvas-wrapper { padding: 6px; border-radius: 10px; }
   .concept-box .formula { font-size: 12px; overflow-x: auto; white-space: nowrap; }
 }
 
