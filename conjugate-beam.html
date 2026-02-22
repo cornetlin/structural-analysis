@@ -1,0 +1,3288 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>共軛梁法互動教學</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e17;
+  --surface: #111827;
+  --surface2: #1a2332;
+  --border: #2a3a50;
+  --accent: #3b82f6;
+  --accent2: #06b6d4;
+  --accent3: #8b5cf6;
+  --green: #10b981;
+  --orange: #f59e0b;
+  --red: #ef4444;
+  --pink: #ec4899;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 24px 40px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(20px);
+}
+
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header h1 {
+  font-size: 24px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+}
+
+.header .subtitle {
+  font-size: 13px;
+  color: var(--text3);
+  margin-top: 2px;
+  font-weight: 300;
+}
+
+/* Step Navigation */
+.step-nav {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.step-dot {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: transparent;
+  color: var(--text3);
+  font-family: 'Noto Sans TC', sans-serif;
+  white-space: nowrap;
+}
+
+.step-dot.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(59,130,246,0.3);
+}
+
+.step-dot.completed {
+  border-color: var(--green);
+  background: rgba(16,185,129,0.15);
+  color: var(--green);
+}
+
+.step-line {
+  width: 16px;
+  height: 2px;
+  background: var(--border);
+  position: relative;
+}
+
+.step-line::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -3px;
+  border: 4px solid transparent;
+  border-left-color: var(--border);
+}
+
+.step-line.completed {
+  background: var(--green);
+}
+
+.step-line.completed::after {
+  border-left-color: var(--green);
+}
+
+/* Main Content */
+.main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px 40px;
+}
+
+/* Step Container */
+.step-container {
+  display: none;
+  animation: fadeSlideIn 0.5s ease;
+}
+
+.step-container.active {
+  display: block;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Step Title */
+.step-title {
+  font-size: 28px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.step-desc {
+  font-size: 15px;
+  color: var(--text2);
+  margin-bottom: 30px;
+  line-height: 1.7;
+  max-width: 800px;
+}
+
+/* Canvas Area */
+.canvas-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 30px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.canvas-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 16px 16px 0 0;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+/* Info Cards */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s;
+}
+
+.info-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.info-card .label {
+  font-size: 12px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.info-card .value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Key Concepts */
+.concept-box {
+  background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(6,182,212,0.08));
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.concept-box h3 {
+  font-size: 15px;
+  color: var(--accent);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.concept-box p {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.8;
+}
+
+.concept-box .formula {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(0,0,0,0.3);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 15px;
+  color: var(--accent2);
+  text-align: center;
+}
+
+/* Support Conversion Table */
+.conversion-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.conversion-table th,
+.conversion-table td {
+  padding: 12px 16px;
+  text-align: center;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.conversion-table th {
+  background: rgba(59,130,246,0.1);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.conversion-table td {
+  color: var(--text2);
+}
+
+.conversion-table tr:hover td {
+  background: rgba(59,130,246,0.05);
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Noto Sans TC', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  background: rgba(59,130,246,0.1);
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.btn.primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+}
+
+.btn.success {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}
+
+/* Slider Controls */
+.slider-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.slider-group label {
+  font-size: 13px;
+  color: var(--text2);
+  min-width: 120px;
+}
+
+.slider-group input[type="range"] {
+  flex: 1;
+  max-width: 300px;
+  accent-color: var(--accent);
+  height: 4px;
+}
+
+.slider-group .val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--accent2);
+  min-width: 60px;
+}
+
+/* Animation Progress */
+.anim-progress {
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.anim-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+/* Highlight animation */
+@keyframes highlight-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.highlight { animation: highlight-pulse 1.5s infinite; }
+
+/* Color tags */
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tag.blue { background: rgba(59,130,246,0.15); color: var(--accent); }
+.tag.green { background: rgba(16,185,129,0.15); color: var(--green); }
+.tag.orange { background: rgba(245,158,11,0.15); color: var(--orange); }
+.tag.red { background: rgba(239,68,68,0.15); color: var(--red); }
+.tag.purple { background: rgba(139,92,246,0.15); color: var(--accent3); }
+
+/* Tooltip-like annotation */
+.annotation {
+  position: absolute;
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text);
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header { padding: 16px 20px; }
+  .main { padding: 20px; }
+  .header h1 { font-size: 18px; }
+  .step-title { font-size: 22px; }
+  .step-dot { width: 28px; height: 28px; font-size: 11px; }
+  .step-line { width: 10px; }
+}
+
+/* Quiz styles */
+.quiz-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 20px;
+  margin: 8px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+
+.quiz-option:hover {
+  border-color: var(--accent);
+  background: rgba(59,130,246,0.05);
+}
+
+.quiz-option.correct {
+  border-color: var(--green);
+  background: rgba(16,185,129,0.1);
+  color: var(--green);
+}
+
+.quiz-option.wrong {
+  border-color: var(--red);
+  background: rgba(239,68,68,0.1);
+  color: var(--red);
+}
+
+.quiz-result {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  display: none;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+
+/* Deformed shape animation */
+@keyframes deform-bounce {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.02); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1>共軛梁法 Conjugate Beam Method</h1>
+      <div class="subtitle">互動式教學動畫 — 結構學 彈性變形分析</div>
+    </div>
+    <div class="step-nav" id="stepNav"></div>
+  </div>
+</div>
+
+<div class="main" id="mainContent"></div>
+
+<script>
+// ============================================================
+// DATA & STATE
+// ============================================================
+const STEPS = [
+  { id: 0, label: '概述', short: '概述' },
+  { id: 1, label: '步驟一：畫彎矩圖', short: '彎矩圖' },
+  { id: 2, label: '步驟二：支承轉換', short: '支承轉換' },
+  { id: 3, label: '步驟三：M/EI 載重', short: 'M/EI' },
+  { id: 4, label: '步驟四：求解共軛梁', short: '求解' },
+  { id: 5, label: '基礎範例', short: '基礎範例' },
+  { id: 6, label: '進階範例：含內鉸梁疊加法', short: '進階範例' },
+  { id: 7, label: '隨堂測驗', short: '測驗' },
+];
+
+let currentStep = 0;
+let animState = {};
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function buildNav() {
+  const nav = document.getElementById('stepNav');
+  nav.innerHTML = '';
+  STEPS.forEach((s, i) => {
+    if (i > 0) {
+      const line = document.createElement('div');
+      line.className = 'step-line' + (i <= currentStep ? ' completed' : '');
+      nav.appendChild(line);
+    }
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (i === currentStep ? ' active' : i < currentStep ? ' completed' : '');
+    dot.textContent = s.short;
+    dot.onclick = () => goToStep(i);
+    dot.title = s.label;
+    nav.appendChild(dot);
+  });
+}
+
+function goToStep(n) {
+  currentStep = Math.max(0, Math.min(n, STEPS.length - 1));
+  buildNav();
+  renderStep();
+}
+
+// ============================================================
+// RENDER STEPS
+// ============================================================
+function renderStep() {
+  const main = document.getElementById('mainContent');
+  switch (currentStep) {
+    case 0: renderOverview(main); break;
+    case 1: renderStep1(main); break;
+    case 2: renderStep2(main); break;
+    case 3: renderStep3(main); break;
+    case 4: renderStep4(main); break;
+    case 5: renderFullExample(main); break;
+    case 6: renderAdvancedExample(main); break;
+    case 7: renderQuiz(main); break;
+  }
+}
+
+function navButtons() {
+  return `<div class="bottom-nav">
+    <button class="btn" onclick="goToStep(${currentStep - 1})" ${currentStep === 0 ? 'disabled style="opacity:0.3"' : ''}>← 上一步</button>
+    <span style="color:var(--text3);font-size:13px">${currentStep + 1} / ${STEPS.length}</span>
+    <button class="btn primary" onclick="goToStep(${currentStep + 1})" ${currentStep === STEPS.length - 1 ? 'disabled style="opacity:0.3"' : ''}>下一步 →</button>
+  </div>`;
+}
+
+// ============================================================
+// STEP 0: OVERVIEW
+// ============================================================
+function renderOverview(el) {
+  el.innerHTML = `
+    <div class="step-container active">
+      <div class="step-title">
+        <span class="step-badge" style="background:rgba(59,130,246,0.15);color:var(--accent)">📖</span>
+        共軛梁法概述
+      </div>
+      <div class="step-desc">
+        共軛梁法是求解梁的<strong>轉角（θ）</strong>和<strong>撓度（Δ）</strong>的強力工具。核心思想是：將原梁的 M/EI 圖作為載重施加在一根「共軛梁」上，共軛梁的<span class="tag blue">剪力 = 原梁轉角</span>，共軛梁的<span class="tag green">彎矩 = 原梁撓度</span>。
+      </div>
+      
+      <div class="canvas-wrapper" style="--top-bar:var(--accent)">
+        <canvas id="overviewCanvas" width="900" height="440"></canvas>
+      </div>
+
+      <div class="concept-box">
+        <h3>💡 核心四步驟</h3>
+        <p>
+          ① 畫出原梁的<strong>剪力彎矩圖</strong>（需先解反力）<br>
+          ② 將原梁支承進行<strong>共軛梁支承轉換</strong><br>
+          ③ 將原梁的 <strong>M/EI</strong> 作為載重，放在共軛梁上（載重指向離開梁身）<br>
+          ④ 求解共軛梁的<strong>剪力與彎矩</strong>，即為原梁的轉角與撓度
+        </p>
+        <div class="formula">共軛梁剪力 V' = 原梁轉角 θ　｜　共軛梁彎矩 M' = 原梁撓度 Δ</div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="label">符號規定 — 轉角</div>
+          <div class="value" style="color:var(--accent)">θ：逆時針為正 ↺</div>
+        </div>
+        <div class="info-card">
+          <div class="label">符號規定 — 撓度</div>
+          <div class="value" style="color:var(--green)">Δ：向上為正 ↑</div>
+        </div>
+        <div class="info-card">
+          <div class="label">適用範圍</div>
+          <div class="value" style="color:var(--orange)">靜定梁 & 靜不定梁</div>
+        </div>
+      </div>
+      ${navButtons()}
+    </div>
+  `;
+  drawOverviewCanvas();
+}
+
+function drawOverviewCanvas() {
+  const c = document.getElementById('overviewCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Draw original beam
+  const beamY = 120;
+  const x1 = 120, x2 = 780;
+  
+  // Title
+  ctx.font = '700 16px "Noto Sans TC"';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('原梁 (Original Beam)', x1, 40);
+
+  // Beam
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x1, beamY);
+  ctx.lineTo(x2, beamY);
+  ctx.stroke();
+
+  // Pin support at left
+  drawPinSupport(ctx, x1, beamY, '#3b82f6');
+  // Roller at right
+  drawRollerSupport(ctx, x2, beamY, '#3b82f6');
+
+  // Load
+  const loadX = (x1 + x2) / 2;
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 2.5;
+  drawArrow(ctx, loadX, 50, loadX, beamY - 8, '#ef4444');
+  ctx.font = '600 15px "JetBrains Mono"';
+  ctx.fillStyle = '#ef4444';
+  ctx.fillText('P', loadX - 6, 42);
+
+  // Labels
+  ctx.font = '600 14px "JetBrains Mono"';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText('A', x1 - 4, beamY + 50);
+  ctx.fillText('B', x2 - 4, beamY + 50);
+  ctx.fillText('L', (x1 + x2) / 2 - 4, beamY + 30);
+
+  // Arrow for big concept
+  ctx.strokeStyle = '#8b5cf6';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  drawArrow(ctx, W / 2, 165, W / 2, 195, '#8b5cf6');
+  ctx.setLineDash([]);
+  
+  ctx.font = '700 13px "Noto Sans TC"';
+  ctx.fillStyle = '#8b5cf6';
+  ctx.fillText('支承轉換 + M/EI 載重', W / 2 + 15, 185);
+
+  // Conjugate beam
+  const cBeamY = 300;
+  ctx.font = '700 16px "Noto Sans TC"';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('共軛梁 (Conjugate Beam)', x1, 250);
+
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x1, cBeamY);
+  ctx.lineTo(x2, cBeamY);
+  ctx.stroke();
+
+  // Same supports for simply supported beam
+  drawPinSupport(ctx, x1, cBeamY, '#10b981');
+  drawRollerSupport(ctx, x2, cBeamY, '#10b981');
+
+  // M/EI loading (triangular)
+  ctx.fillStyle = 'rgba(245,158,11,0.15)';
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x1, cBeamY);
+  ctx.lineTo(loadX, cBeamY - 60);
+  ctx.lineTo(x2, cBeamY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = '600 13px "JetBrains Mono"';
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillText('M/EI 載重', loadX + 80, cBeamY - 55);
+
+  // Result labels
+  ctx.font = '600 13px "Noto Sans TC"';
+  ctx.fillStyle = '#06b6d4';
+  ctx.fillText('V\' = θ (轉角)', x1, cBeamY + 55);
+  ctx.fillText('M\' = Δ (撓度)', x2 - 100, cBeamY + 55);
+
+  // Deformed shape hint
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = 'rgba(236,72,153,0.5)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x1, cBeamY + 80);
+  ctx.quadraticCurveTo((x1 + x2) / 2, cBeamY + 110, x2, cBeamY + 80);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font = '500 12px "Noto Sans TC"';
+  ctx.fillStyle = '#ec4899';
+  ctx.fillText('撓度曲線', (x1 + x2) / 2 - 25, cBeamY + 120);
+}
+
+// ============================================================
+// STEP 1: Draw Moment Diagram
+// ============================================================
+function renderStep1(el) {
+  el.innerHTML = `
+    <div class="step-container active">
+      <div class="step-title">
+        <span class="step-badge" style="background:rgba(59,130,246,0.15);color:var(--accent)">1</span>
+        畫出原梁剪力彎矩圖
+      </div>
+      <div class="step-desc">
+        第一步是求出原梁的反力，然後繪製剪力圖（SFD）與彎矩圖（BMD）。以簡支梁受中央集中力 P 為例。
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" onclick="animateStep1()">▶ 播放動畫</button>
+        <button class="btn" onclick="resetStep1()">↻ 重置</button>
+      </div>
+
+      <div class="slider-group">
+        <label>集中力 P =</label>
+        <input type="range" id="forceP" min="10" max="100" value="40" oninput="updateStep1()">
+        <span class="val" id="forcePVal">40 kN</span>
+      </div>
+      <div class="slider-group">
+        <label>梁長 L =</label>
+        <input type="range" id="beamL" min="4" max="12" value="6" oninput="updateStep1()">
+        <span class="val" id="beamLVal">6 m</span>
+      </div>
+
+      <div class="anim-progress"><div class="anim-progress-bar" id="step1Progress" style="width:0%"></div></div>
+
+      <div class="canvas-wrapper">
+        <canvas id="step1Canvas" width="900" height="550"></canvas>
+      </div>
+
+      <div class="concept-box">
+        <h3>📝 重點提醒</h3>
+        <p>
+          共軛梁法的前提是正確畫出原梁的<strong>彎矩圖</strong>。彎矩圖的形狀將決定共軛梁上的載重分布。<br>
+          • 集中力 → 三角形彎矩圖<br>
+          • 均佈載重 → 拋物線彎矩圖
+        </p>
+      </div>
+      ${navButtons()}
+    </div>
+  `;
+  animState.step1Phase = 0;
+  drawStep1();
+}
+
+function updateStep1() {
+  document.getElementById('forcePVal').textContent = document.getElementById('forceP').value + ' kN';
+  document.getElementById('beamLVal').textContent = document.getElementById('beamL').value + ' m';
+  animState.step1Phase = 4; // show all
+  drawStep1();
+}
+
+function resetStep1() {
+  animState.step1Phase = 0;
+  document.getElementById('step1Progress').style.width = '0%';
+  drawStep1();
+}
+
+function animateStep1() {
+  animState.step1Phase = 0;
+  const phases = [0, 1, 2, 3, 4];
+  let idx = 0;
+  const interval = setInterval(() => {
+    animState.step1Phase = phases[idx];
+    document.getElementById('step1Progress').style.width = ((idx + 1) / phases.length * 100) + '%';
+    drawStep1();
+    idx++;
+    if (idx >= phases.length) clearInterval(interval);
+  }, 800);
+}
+
+function drawStep1() {
+  const c = document.getElementById('step1Canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const P = parseFloat(document.getElementById('forceP')?.value || 40);
+  const L = parseFloat(document.getElementById('beamL')?.value || 6);
+  const phase = animState.step1Phase || 0;
+
+  const x1 = 120, x2 = 780, beamY = 80;
+  const midX = (x1 + x2) / 2;
+
+  // Phase 0: Beam only
+  ctx.font = '600 14px "Noto Sans TC"';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText('原梁', x1, 30);
+
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x1, beamY);
+  ctx.lineTo(x2, beamY);
+  ctx.stroke();
+
+  drawPinSupport(ctx, x1, beamY, '#3b82f6');
+  drawRollerSupport(ctx, x2, beamY, '#3b82f6');
+
+  // Load
+  drawArrow(ctx, midX, 30, midX, beamY - 8, '#ef4444');
+  ctx.font = '600 14px "JetBrains Mono"';
+  ctx.fillStyle = '#ef4444';
+  ctx.fillText(`P = ${P} kN`, midX + 10, 40);
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '600 13px "JetBrains Mono"';
+  ctx.fillText('A', x1 - 4, beamY + 48);
+  ctx.fillText('B', x2 - 4, beamY + 48);
+  ctx.fillText(`L = ${L} m`, midX - 25, beamY + 28);
+
+  if (phase >= 1) {
+    // Reactions
+    const Ra = P / 2;
+    drawArrow(ctx, x1, beamY + 50, x1, beamY + 8, '#10b981');
+    ctx.fillStyle = '#10b981';
+    ctx.font = '600 13px "JetBrains Mono"';
+    ctx.fillText(`R_A = ${Ra} kN ↑`, x1 + 10, beamY + 60);
+
+    drawArrow(ctx, x2, beamY + 50, x2, beamY + 8, '#10b981');
+    ctx.fillText(`R_B = ${Ra} kN ↑`, x2 - 90, beamY + 60);
+  }
+
+  if (phase >= 2) {
+    // SFD
+    const sfdY = 230;
+    const sfdH = 55;
+    ctx.font = '600 14px "Noto Sans TC"';
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText('剪力圖 (SFD)', x1, sfdY - 15);
+
+    // Base line
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x1, sfdY);
+    ctx.lineTo(x2, sfdY);
+    ctx.stroke();
+
+    // SFD shape
+    ctx.fillStyle = 'rgba(6,182,212,0.12)';
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, sfdY);
+    ctx.lineTo(x1, sfdY - sfdH);
+    ctx.lineTo(midX, sfdY - sfdH);
+    ctx.lineTo(midX, sfdY + sfdH);
+    ctx.lineTo(x2, sfdY + sfdH);
+    ctx.lineTo(x2, sfdY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '600 12px "JetBrains Mono"';
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText(`+${P / 2}`, x1 + 10, sfdY - sfdH - 5);
+    ctx.fillText(`-${P / 2}`, midX + 10, sfdY + sfdH + 15);
+  }
+
+  if (phase >= 3) {
+    // BMD
+    const bmdY = 410;
+    const bmdH = 70;
+    ctx.font = '600 14px "Noto Sans TC"';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText('彎矩圖 (BMD)', x1, bmdY - 15);
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x1, bmdY);
+    ctx.lineTo(x2, bmdY);
+    ctx.stroke();
+
+    // BMD triangle (positive = below baseline for sagging)
+    const Mmax = P * L / 4;
+    ctx.fillStyle = 'rgba(245,158,11,0.12)';
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, bmdY);
+    ctx.lineTo(midX, bmdY - bmdH);
+    ctx.lineTo(x2, bmdY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '600 13px "JetBrains Mono"';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText(`M_max = PL/4 = ${Mmax} kN·m`, midX + 10, bmdY - bmdH - 5);
+
+    // Highlight peak
+    ctx.beginPath();
+    ctx.arc(midX, bmdY - bmdH, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fill();
+  }
+
+  if (phase >= 4) {
+    // Arrow pointing to next step
+    ctx.font = '700 14px "Noto Sans TC"';
+    ctx.fillStyle = '#8b5cf6';
+    ctx.fillText('✓ 彎矩圖完成！接下來進行支承轉換 →', x1, H - 20);
+  }
+}
+
+// ============================================================
+// STEP 2: Support Conversion
+// ============================================================
+function renderStep2(el) {
+  el.innerHTML = `
+    <div class="step-container active">
+      <div class="step-title">
+        <span class="step-badge" style="background:rgba(16,185,129,0.15);color:var(--green)">2</span>
+        共軛梁支承轉換
+      </div>
+      <div class="step-desc">
+        將原梁的支承與接續轉換為共軛梁的對應型式。關鍵原則：原梁某處的邊界條件（θ, Δ）需對應到共軛梁該處的力學量（V', M'）。
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" onclick="animateStep2()">▶ 播放轉換動畫</button>
+        <button class="btn" onclick="resetStep2()">↻ 重置</button>
+      </div>
+
+      <div class="anim-progress"><div class="anim-progress-bar" id="step2Progress" style="width:0%"></div></div>
+
+      <div class="canvas-wrapper">
+        <canvas id="step2Canvas" width="900" height="780"></canvas>
+      </div>
+
+      <div class="concept-box">
+        <h3>🔄 完整支承轉換規則表</h3>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:8px">一、端點支承</p>
+        <table class="conversion-table">
+          <tr><th>原梁</th><th>θ</th><th>Δ</th><th>→</th><th>共軛梁</th><th>V'</th><th>M'</th></tr>
+          <tr><td>固定端</td><td>= 0</td><td>= 0</td><td>→</td><td style="color:var(--accent)">自由端</td><td>≠ 0</td><td>≠ 0</td></tr>
+          <tr><td>自由端</td><td>≠ 0</td><td>≠ 0</td><td>→</td><td style="color:var(--accent)">固定端</td><td>= 0</td><td>= 0</td></tr>
+          <tr><td>鉸支承（端點）</td><td>≠ 0</td><td>= 0</td><td>→</td><td style="color:var(--accent)">鉸支承</td><td>≠ 0</td><td>= 0</td></tr>
+          <tr><td>輥支承（端點）</td><td>≠ 0</td><td>= 0</td><td>→</td><td style="color:var(--accent)">輥支承</td><td>≠ 0</td><td>= 0</td></tr>
+        </table>
+        <p style="font-size:13px;color:var(--text3);margin:12px 0 8px">二、中間接續與中間支承</p>
+        <table class="conversion-table">
+          <tr><th>原梁</th><th>θ</th><th>Δ</th><th>→</th><th>共軛梁</th><th>V'</th><th>M'</th></tr>
+          <tr><td>中間剛性接續</td><td>連續</td><td>連續</td><td>→</td><td style="color:var(--accent)">中間剛性接續</td><td>連續</td><td>連續</td></tr>
+          <tr><td>中間鉸接續</td><td>不連續</td><td>連續</td><td>→</td><td style="color:var(--accent)">中間內鉸/輥支承</td><td>不連續</td><td>連續</td></tr>
+          <tr><td>中間輥接續</td><td>不連續</td><td>不連續</td><td>→</td><td style="color:var(--accent)">中間內固定端</td><td>不連續</td><td>不連續</td></tr>
+          <tr><td>連續梁內鉸支承</td><td>連續</td><td>= 0</td><td>→</td><td style="color:var(--accent)">鉸/輥接續</td><td>連續</td><td>= 0</td></tr>
+          <tr><td>連續梁內輥支承</td><td>連續</td><td>= 0</td><td>→</td><td style="color:var(--accent)">鉸（輥）接續</td><td>連續</td><td>= 0</td></tr>
+        </table>
+      </div>
+
+      <div class="concept-box">
+        <h3>📌 備註一</h3>
+        <p>除了<strong>自由端</strong>與<strong>固定端</strong>互相轉換以外，其他支承或接續皆為截取梁的一部份，即圖左（右）還有其他支承或接續。</p>
+      </div>
+
+      <div class="concept-box">
+        <h3>📌 備註二</h3>
+        <p>對於<strong>梁（beam）</strong>來說，只考慮剪力和彎矩（不考慮軸力），因此：<br>
+          • 連續梁內<strong>鉸/輥支承</strong>皆可轉換為<strong>鉸（輥）接續</strong><br>
+          • <strong>鉸/輥接續</strong>皆可轉換為連續梁內<strong>鉸（輥）支承</strong>
+        </p>
+      </div>
+
+      <div class="concept-box">
+        <h3>📌 備註三（判斷技巧）</h3>
+        <p>
+          可利用原梁受力產生的<strong>轉角</strong>或<strong>變位</strong>判斷轉換是否正確：<br>
+          • 原梁<strong>固定端</strong>：θ = 0, Δ = 0 → 共軛梁需 V' ≠ 0, M' ≠ 0 → <strong>自由端</strong> ✓<br>
+          • 原梁<strong>自由端</strong>：θ ≠ 0, Δ ≠ 0 → 共軛梁需 V' = 0, M' = 0 → <strong>固定端</strong> ✓<br>
+          • 原梁<strong>內鉸支承</strong>：θ ≠ 0, Δ = 0 → 共軛梁需 V' ≠ 0, M' = 0 → <strong>鉸接續</strong> ✓<br>
+          • 原梁<strong>鉸接續</strong>：θ_L ≠ θ_R, Δ 連續 → 共軛梁 V' 不連續 → <strong>內支承</strong> ✓
+        </p>
+      </div>
+      ${navButtons()}
+    </div>
+  `;
+  animState.step2Phase = 0;
+  drawStep2();
+}
+
+function resetStep2() {
+  animState.step2Phase = 0;
+  document.getElementById('step2Progress').style.width = '0%';
+  drawStep2();
+}
+
+function animateStep2() {
+  animState.step2Phase = 0;
+  let idx = 0;
+  const phases = [0, 1, 2, 3, 4, 5, 6];
+  const interval = setInterval(() => {
+    animState.step2Phase = phases[idx];
+    document.getElementById('step2Progress').style.width = ((idx + 1) / phases.length * 100) + '%';
+    drawStep2();
+    idx++;
+    if (idx >= phases.length) clearInterval(interval);
+  }, 1200);
+}
+
+function drawHingeConnection(ctx, x, y, color) {
+  ctx.beginPath();
+  ctx.arc(x, y, 6, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(0,0,0,0.8)';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y, 3, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawRollerConnection(ctx, x, y, color) {
+  // Double circle for roller connection
+  ctx.beginPath();
+  ctx.arc(x, y - 4, 4, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y + 4, 4, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawStep2() {
+  const c = document.getElementById('step2Canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const phase = animState.step2Phase || 0;
+  const origX1 = 60, origX2 = 310;
+  const conjX1 = 560, conjX2 = 810;
+  const rowH = 115;
+  const startY = 65;
+
+  // Title row
+  ctx.font = '700 15px "Noto Sans TC"';
+  ctx.fillStyle = '#3b82f6';
+  ctx.fillText('原梁', (origX1 + origX2) / 2 - 20, 20);
+  ctx.fillStyle = '#8b5cf6';
+  ctx.fillText('→', (origX2 + conjX1) / 2 - 6, 20);
+  ctx.fillStyle = '#10b981';
+  ctx.fillText('共軛梁', (conjX1 + conjX2) / 2 - 20, 20);
+
+  function drawConvArrow(y) {
+    ctx.save();
+    ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath(); ctx.moveTo(origX2 + 20, y); ctx.lineTo(conjX1 - 20, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#8b5cf6';
+    ctx.beginPath(); ctx.moveTo(conjX1 - 20, y); ctx.lineTo(conjX1 - 28, y - 4); ctx.lineTo(conjX1 - 28, y + 4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  // ---- Row 1: Simply Supported ----
+  const y1 = startY;
+  ctx.font = '600 12px "Noto Sans TC"'; ctx.fillStyle = '#94a3b8';
+  ctx.fillText('① 簡支梁（鉸 + 輥）', origX1, y1 - 22);
+  ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(origX1, y1); ctx.lineTo(origX2, y1); ctx.stroke();
+  drawPinSupport(ctx, origX1, y1, '#3b82f6');
+  drawRollerSupport(ctx, origX2, y1, '#3b82f6');
+
+  if (phase >= 1) {
+    drawConvArrow(y1);
+    ctx.font = '600 11px "Noto Sans TC"'; ctx.fillStyle = '#10b981';
+    ctx.fillText('鉸→鉸，輥→輥', conjX1, y1 - 22);
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(conjX1, y1); ctx.lineTo(conjX2, y1); ctx.stroke();
+    drawPinSupport(ctx, conjX1, y1, '#10b981');
+    drawRollerSupport(ctx, conjX2, y1, '#10b981');
+  }
+
+  // ---- Row 2: Cantilever ----
+  const y2 = startY + rowH;
+  ctx.font = '600 12px "Noto Sans TC"'; ctx.fillStyle = '#94a3b8';
+  ctx.fillText('② 懸臂梁（固定端 + 自由端）', origX1, y2 - 22);
+  ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(origX1, y2); ctx.lineTo(origX2, y2); ctx.stroke();
+  drawFixedSupport(ctx, origX1, y2, '#3b82f6');
+  ctx.beginPath(); ctx.arc(origX2, y2, 4, 0, Math.PI*2); ctx.fillStyle = '#3b82f6'; ctx.fill();
+  ctx.font = '500 10px "Noto Sans TC"'; ctx.fillStyle = '#64748b';
+  ctx.fillText('固定', origX1 + 12, y2 + 28);
+  ctx.fillText('自由', origX2 - 14, y2 - 12);
+
+  if (phase >= 2) {
+    drawConvArrow(y2);
+    ctx.font = '600 11px "Noto Sans TC"'; ctx.fillStyle = '#10b981';
+    ctx.fillText('固定→自由，自由→固定', conjX1, y2 - 22);
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(conjX1, y2); ctx.lineTo(conjX2, y2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(conjX1, y2, 4, 0, Math.PI*2); ctx.fillStyle = '#10b981'; ctx.fill();
+    drawFixedSupport(ctx, conjX2, y2, '#10b981');
+    ctx.font = '500 10px "Noto Sans TC"'; ctx.fillStyle = '#64748b';
+    ctx.fillText('自由', conjX1 - 4, y2 - 12);
+    ctx.fillText('固定', conjX2 + 12, y2 + 28);
+  }
+
+  // ---- Row 3: Propped cantilever ----
+  const y3 = startY + 2 * rowH;
+  ctx.font = '600 12px "Noto Sans TC"'; ctx.fillStyle = '#94a3b8';
+  ctx.fillText('③ 一端固定一端輥', origX1, y3 - 22);
+  ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(origX1, y3); ctx.lineTo(origX2, y3); ctx.stroke();
+  drawFixedSupport(ctx, origX1, y3, '#3b82f6');
+  drawRollerSupport(ctx, origX2, y3, '#3b82f6');
+  ctx.font = '500 10px "Noto Sans TC"'; ctx.fillStyle = '#64748b';
+  ctx.fillText('固定', origX1 + 12, y3 + 28);
+
+  if (phase >= 3) {
+    drawConvArrow(y3);
+    ctx.font = '600 11px "Noto Sans TC"'; ctx.fillStyle = '#10b981';
+    ctx.fillText('固定→自由，輥不變', conjX1, y3 - 22);
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(conjX1, y3); ctx.lineTo(conjX2, y3); ctx.stroke();
+    ctx.beginPath(); ctx.arc(conjX1, y3, 4, 0, Math.PI*2); ctx.fillStyle = '#10b981'; ctx.fill();
+    drawRollerSupport(ctx, conjX2, y3, '#10b981');
+    ctx.font = '500 10px "Noto Sans TC"'; ctx.fillStyle = '#64748b';
+    ctx.fillText('自由', conjX1 - 4, y3 - 12);
+  }
+
+  // ==== Divider ====
+  const divY = startY + 2.5 * rowH + 25;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(100,116,139,0.4)'; ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(20, divY); ctx.lineTo(W - 20, divY); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+  ctx.font = '600 11px "Noto Sans TC"'; ctx.fillStyle = '#64748b';
+  ctx.fillText('▲ 端點支承　　　　　　　　　▼ 中間接續 / 中間支承', 20, divY - 6);
+
+  const bStartY = divY + 40;
+
+  // ---- Row 4: Interior hinge connection ----
+  const y4 = bStartY;
+  ctx.font = '600 12px "Noto Sans TC"'; ctx.fillStyle = '#94a3b8';
+  ctx.fillText('④ 含中間鉸接續', origX1, y4 - 22);
+  {
+    const midX = (origX1 + origX2) / 2;
+    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(origX1, y4); ctx.lineTo(midX - 8, y4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(midX + 8, y4); ctx.lineTo(origX2, y4); ctx.stroke();
+    drawPinSupport(ctx, origX1, y4, '#3b82f6');
+    drawRollerSupport(ctx, origX2, y4, '#3b82f6');
+    drawHingeConnection(ctx, midX, y4, '#f59e0b');
+    ctx.font = '500 10px "Noto Sans TC"'; ctx.fillStyle = '#f59e0b';
+    ctx.fillText('鉸接續', midX - 15, y4 - 14);
+  }
+  if (phase >= 4) {
+    drawConvArrow(y4);
+    ctx.font = '600 11px "Noto Sans TC"'; ctx.fillStyle = '#10b981';
+    ctx.fillText('鉸接續 → 內鉸支承', conjX1, y4 - 22);
+    const midX = (conjX1 + conjX2) / 2;
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(conjX1, y4); ctx.lineTo(conjX2, y4); ctx.stroke();
+    drawPinSupport(ctx, conjX1, y4, '#10b981');
+    drawRollerSupport(ctx, conjX2, y4, '#10b981');
+    drawPinSupport(ctx, midX, y4, '#f59e0b');
+    ctx.font = '500 10px "Noto Sans TC"'; ctx.fillStyle = '#f59e0b';
+    ctx.fillText('內支承', midX - 15, y4 + 42);
+  }
+
+  // ---- Row 5: Continuous beam interior hinge support ----
+  const y5 = bStartY + rowH;
+  ctx.font = '600 12px "Noto Sans TC"'; ctx.fillStyle = '#94a3b8';
+  ctx.fillText('⑤ 連續梁（含中間鉸支承）', origX1, y5 - 22);
+  {
+    const midX = (origX1 + origX2) / 2;
+    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(origX1, y5); ctx.lineTo(origX2, y5); ctx.stroke();
+    drawPinSupport(ctx, origX1, y5, '#3b82f6');
+    drawPinSupport(ctx, midX, y5, '#ec4899');
+    drawRollerSupport(ctx, origX2, y5, '#3b82f6');
+    ctx.font = '500 10px "Noto Sans TC"'; ctx.fillStyle = '#ec4899';
+    ctx.fillText('內鉸支承', midX - 18, y5 + 42);
+  }
+  if (phase >= 5) {
+    drawConvArrow(y5);
+    ctx.font = '600 11px "Noto Sans TC"'; ctx.fillStyle = '#10b981';
+    ctx.fillText('內鉸支承 → 鉸接續', conjX1, y5 - 22);
+    const midX = (conjX1 + conjX2) / 2;
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(conjX1, y5); ctx.lineTo(midX - 8, y5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(midX + 8, y5); ctx.lineTo(conjX2, y5); ctx.stroke();
+    drawPinSupport(ctx, conjX1, y5, '#10b981');
+    drawRollerSupport(ctx, conjX2, y5, '#10b981');
+    drawHingeConnection(ctx, midX, y5, '#ec4899');
+    ctx.font = '500 10px "Noto Sans TC"'; ctx.fillStyle = '#ec4899';
+    ctx.fillText('鉸接續', midX - 15, y5 - 14);
+  }
+
+  // ---- Row 6: Continuous beam interior roller support ----
+  const y6 = bStartY + 2 * rowH;
+  ctx.font = '600 12px "Noto Sans TC"'; ctx.fillStyle = '#94a3b8';
+  ctx.fillText('⑥ 連續梁（含中間輥支承）', origX1, y6 - 22);
+  {
+    const midX = (origX1 + origX2) / 2;
+    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(origX1, y6); ctx.lineTo(origX2, y6); ctx.stroke();
+    drawFixedSupport(ctx, origX1, y6, '#3b82f6');
+    drawRollerSupport(ctx, midX, y6, '#06b6d4');
+    drawFixedSupport(ctx, origX2, y6, '#3b82f6');
+    ctx.font = '500 10px "Noto Sans TC"'; ctx.fillStyle = '#06b6d4';
+    ctx.fillText('內輥支承', midX - 18, y6 + 42);
+  }
+  if (phase >= 6) {
+    drawConvArrow(y6);
+    ctx.font = '600 11px "Noto Sans TC"'; ctx.fillStyle = '#10b981';
+    ctx.fillText('內輥支承→鉸接續（不考慮軸力）', conjX1, y6 - 22);
+    const midX = (conjX1 + conjX2) / 2;
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(conjX1, y6); ctx.lineTo(midX - 8, y6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(midX + 8, y6); ctx.lineTo(conjX2, y6); ctx.stroke();
+    ctx.beginPath(); ctx.arc(conjX1, y6, 4, 0, Math.PI*2); ctx.fillStyle = '#10b981'; ctx.fill();
+    ctx.beginPath(); ctx.arc(conjX2, y6, 4, 0, Math.PI*2); ctx.fillStyle = '#10b981'; ctx.fill();
+    drawHingeConnection(ctx, midX, y6, '#06b6d4');
+    ctx.font = '500 10px "Noto Sans TC"'; ctx.fillStyle = '#06b6d4';
+    ctx.fillText('鉸接續', midX - 15, y6 - 14);
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('自由', conjX1 - 4, y6 - 12);
+    ctx.fillText('自由', conjX2 - 8, y6 - 12);
+  }
+}
+
+// ============================================================
+// STEP 3: M/EI Loading
+// ============================================================
+function renderStep3(el) {
+  el.innerHTML = `
+    <div class="step-container active">
+      <div class="step-title">
+        <span class="step-badge" style="background:rgba(245,158,11,0.15);color:var(--orange)">3</span>
+        將 M/EI 作為載重施加
+      </div>
+      <div class="step-desc">
+        將原梁的彎矩圖除以 EI 後，作為載重施加在共軛梁上。<strong>載重方向指向離開梁身</strong>（正彎矩→向上，負彎矩→向下）。
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" onclick="animateStep3()">▶ 播放動畫</button>
+        <button class="btn" onclick="resetStep3()">↻ 重置</button>
+      </div>
+
+      <div class="anim-progress"><div class="anim-progress-bar" id="step3Progress" style="width:0%"></div></div>
+
+      <div class="canvas-wrapper">
+        <canvas id="step3Canvas" width="900" height="500"></canvas>
+      </div>
+
+      <div class="concept-box">
+        <h3>⚠️ 載重方向規則</h3>
+        <p>
+          M/EI 作為載重的方向規則：<strong>載重指向離開梁身</strong><br>
+          • 正彎矩（梁下側受拉）→ M/EI 載重向<strong>上</strong>（離開梁身）<br>
+          • 負彎矩（梁上側受拉）→ M/EI 載重向<strong>下</strong>（離開梁身）<br><br>
+          這樣的對應確保共軛梁的剪力和彎矩能正確反映原梁的轉角和撓度。
+        </p>
+      </div>
+      ${navButtons()}
+    </div>
+  `;
+  animState.step3Phase = 0;
+  drawStep3();
+}
+
+function resetStep3() {
+  animState.step3Phase = 0;
+  document.getElementById('step3Progress').style.width = '0%';
+  drawStep3();
+}
+
+function animateStep3() {
+  animState.step3Phase = 0;
+  let idx = 0;
+  const phases = [0, 1, 2, 3];
+  const interval = setInterval(() => {
+    animState.step3Phase = phases[idx];
+    document.getElementById('step3Progress').style.width = ((idx + 1) / phases.length * 100) + '%';
+    drawStep3();
+    idx++;
+    if (idx >= phases.length) clearInterval(interval);
+  }, 1000);
+}
+
+function drawStep3() {
+  const c = document.getElementById('step3Canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const phase = animState.step3Phase || 0;
+  const x1 = 120, x2 = 780, midX = (x1 + x2) / 2;
+
+  // Phase 0: BMD
+  const bmdY = 120, bmdH = 80;
+  ctx.font = '600 15px "Noto Sans TC"';
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillText('原梁彎矩圖 (BMD)', x1, bmdY - 50);
+
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x1, bmdY); ctx.lineTo(x2, bmdY); ctx.stroke();
+
+  ctx.fillStyle = 'rgba(245,158,11,0.12)';
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(x1, bmdY);
+  ctx.lineTo(midX, bmdY - bmdH);
+  ctx.lineTo(x2, bmdY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = '600 13px "JetBrains Mono"';
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillText('PL/4', midX + 8, bmdY - bmdH - 5);
+  ctx.fillText('+', midX - 20, bmdY - 25);
+
+  if (phase >= 1) {
+    // Division by EI
+    ctx.font = '700 16px "Noto Sans TC"';
+    ctx.fillStyle = '#8b5cf6';
+    ctx.fillText('÷ EI', midX + 20, bmdY + 45);
+    
+    ctx.strokeStyle = '#8b5cf6';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 3]);
+    drawArrow(ctx, midX, bmdY + 55, midX, bmdY + 90, '#8b5cf6');
+    ctx.setLineDash([]);
+  }
+
+  if (phase >= 2) {
+    // M/EI diagram
+    const meiY = 250, meiH = 65;
+    ctx.font = '600 15px "Noto Sans TC"';
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText('M/EI 圖', x1, meiY - 30);
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x1, meiY); ctx.lineTo(x2, meiY); ctx.stroke();
+
+    ctx.fillStyle = 'rgba(6,182,212,0.12)';
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, meiY);
+    ctx.lineTo(midX, meiY - meiH);
+    ctx.lineTo(x2, meiY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '600 13px "JetBrains Mono"';
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText('PL/(4EI)', midX + 8, meiY - meiH - 5);
+  }
+
+  if (phase >= 3) {
+    // Conjugate beam with loading
+    const cbY = 400;
+    ctx.font = '600 15px "Noto Sans TC"';
+    ctx.fillStyle = '#10b981';
+    ctx.fillText('共軛梁上的 M/EI 載重', x1, cbY - 80);
+
+    // Beam
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(x1, cbY); ctx.lineTo(x2, cbY); ctx.stroke();
+    drawPinSupport(ctx, x1, cbY, '#10b981');
+    drawRollerSupport(ctx, x2, cbY, '#10b981');
+
+    // Loading (upward = away from beam)
+    const loadH = 70;
+    ctx.fillStyle = 'rgba(245,158,11,0.15)';
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, cbY);
+    ctx.lineTo(midX, cbY - loadH);
+    ctx.lineTo(x2, cbY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Load arrows
+    for (let i = 0; i <= 8; i++) {
+      const t = i / 8;
+      const xx = x1 + t * (x2 - x1);
+      const hh = t <= 0.5 ? t * 2 * loadH : (1 - t) * 2 * loadH;
+      if (hh > 5) {
+        drawArrow(ctx, xx, cbY - 2, xx, cbY - hh + 5, '#f59e0b');
+      }
+    }
+
+    ctx.font = '600 14px "JetBrains Mono"';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText('PL/(4EI)', midX + 8, cbY - loadH - 8);
+
+    ctx.font = '500 12px "Noto Sans TC"';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('載重方向：離開梁身（向上）', x1, cbY + 45);
+    ctx.fillText('✓ 正彎矩 → 載重向上', x1, cbY + 65);
+  }
+}
+
+// ============================================================
+// STEP 4: Solve Conjugate Beam
+// ============================================================
+function renderStep4(el) {
+  el.innerHTML = `
+    <div class="step-container active">
+      <div class="step-title">
+        <span class="step-badge" style="background:rgba(139,92,246,0.15);color:var(--accent3)">4</span>
+        求解共軛梁 → 得到轉角與撓度
+      </div>
+      <div class="step-desc">
+        求解共軛梁的反力、剪力和彎矩。共軛梁的剪力 V' 即為原梁的轉角 θ，彎矩 M' 即為原梁的撓度 Δ。
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" onclick="animateStep4()">▶ 播放求解</button>
+        <button class="btn" onclick="resetStep4()">↻ 重置</button>
+      </div>
+
+      <div class="anim-progress"><div class="anim-progress-bar" id="step4Progress" style="width:0%"></div></div>
+
+      <div class="canvas-wrapper">
+        <canvas id="step4Canvas" width="900" height="600"></canvas>
+      </div>
+
+      <div class="two-col">
+        <div class="concept-box">
+          <h3>🔵 轉角 θ = V' (共軛梁剪力)</h3>
+          <div class="formula">θ_A = -PL²/(16EI)　(順時針)</div>
+          <div class="formula" style="margin-top:6px">θ_B = +PL²/(16EI)　(逆時針)</div>
+        </div>
+        <div class="concept-box">
+          <h3>🟢 撓度 Δ = M' (共軛梁彎矩)</h3>
+          <div class="formula">Δ_mid = PL³/(48EI)　(向下)</div>
+          <p style="margin-top:8px;font-size:13px">最大撓度發生在梁中央</p>
+        </div>
+      </div>
+
+      <div class="concept-box">
+        <h3>📊 常用彎矩圖面積與形心</h3>
+        <p>
+          • 三角形：面積 = bh/2，形心在 b/3 處（從較大端量起）<br>
+          • 拋物線（二次）：面積 = bh/3，形心在 b/4 處<br>
+          • 互補拋物線：面積 = 2bh/3，形心在 3b/8 處
+        </p>
+      </div>
+      ${navButtons()}
+    </div>
+  `;
+  animState.step4Phase = 0;
+  drawStep4();
+}
+
+function resetStep4() {
+  animState.step4Phase = 0;
+  document.getElementById('step4Progress').style.width = '0%';
+  drawStep4();
+}
+
+function animateStep4() {
+  animState.step4Phase = 0;
+  let idx = 0;
+  const phases = [0, 1, 2, 3, 4];
+  const interval = setInterval(() => {
+    animState.step4Phase = phases[idx];
+    document.getElementById('step4Progress').style.width = ((idx + 1) / phases.length * 100) + '%';
+    drawStep4();
+    idx++;
+    if (idx >= phases.length) clearInterval(interval);
+  }, 1000);
+}
+
+function drawStep4() {
+  const c = document.getElementById('step4Canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const phase = animState.step4Phase || 0;
+  const x1 = 120, x2 = 780, midX = (x1+x2)/2;
+
+  // Conjugate beam
+  const cbY = 100;
+  ctx.font = '600 15px "Noto Sans TC"';
+  ctx.fillStyle = '#10b981';
+  ctx.fillText('共軛梁', x1, cbY - 50);
+
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(x1, cbY); ctx.lineTo(x2, cbY); ctx.stroke();
+  drawPinSupport(ctx, x1, cbY, '#10b981');
+  drawRollerSupport(ctx, x2, cbY, '#10b981');
+
+  // M/EI loading (upward = away from beam body, positive moment)
+  const loadH = 55;
+  ctx.fillStyle = 'rgba(245,158,11,0.1)';
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x1, cbY);
+  ctx.lineTo(midX, cbY - loadH);
+  ctx.lineTo(x2, cbY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Upward arrows for M/EI loading
+  for (let i = 1; i <= 7; i++) {
+    const t = i / 8;
+    const xx = x1 + t * (x2 - x1);
+    const hh = (t <= 0.5 ? t * 2 : (1-t) * 2) * loadH;
+    if (hh > 8) drawArrow(ctx, xx, cbY - 2, xx, cbY - hh + 4, '#f59e0b');
+  }
+
+  ctx.font = '500 12px "JetBrains Mono"';
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillText('PL/(4EI)', midX + 5, cbY - loadH - 5);
+  ctx.font = '500 11px "Noto Sans TC"';
+  ctx.fillText('正彎矩 → 向上（離開梁身）', midX + 70, cbY - loadH - 5);
+
+  if (phase >= 1) {
+    // Reactions: DOWNWARD (opposing upward load)
+    drawArrow(ctx, x1, cbY + 8, x1, cbY + 45, '#06b6d4');
+    drawArrow(ctx, x2, cbY + 8, x2, cbY + 45, '#06b6d4');
+    ctx.font = '600 12px "JetBrains Mono"';
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText("R'_A = PL²/(16EI) ↓", x1 + 15, cbY + 42);
+    ctx.fillText("R'_B = PL²/(16EI) ↓", x2 - 130, cbY + 42);
+
+    // Calculation
+    ctx.font = '500 13px "Noto Sans TC"';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('載重向上，反力向下抵抗。由對稱性: R\'_A = R\'_B = ½ × ½ × L × PL/(4EI) = PL²/(16EI)', x1, cbY + 72);
+  }
+
+  if (phase >= 2) {
+    // SFD of conjugate beam = theta
+    const sfdY = 270, sfdH = 45;
+    ctx.font = '600 14px "Noto Sans TC"';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillText('共軛梁剪力圖 V\' = 原梁轉角 θ', x1, sfdY - 20);
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x1, sfdY); ctx.lineTo(x2, sfdY); ctx.stroke();
+
+    // Correct SFD: V'(0) = -R'_A (negative/clockwise), V'(L/2) = 0, V'(L) = +R'_B (positive/counterclockwise)
+    // Left half: V'(t) = -PL²/(16EI) + ∫₀ˣ w ds → proportional to (4t²-1)
+    // Right half: by antisymmetry → proportional to (1-4(1-t)²)
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let i = 0; i <= 100; i++) {
+      const t = i / 100;
+      const xx = x1 + t * (x2 - x1);
+      let v;
+      if (t <= 0.5) {
+        v = 4 * t * t - 1;  // -1 at A, 0 at midspan
+      } else {
+        v = 1 - 4 * (1 - t) * (1 - t);  // 0 at midspan, +1 at B
+      }
+      const yy = sfdY - v * sfdH;
+      if (i === 0) ctx.moveTo(xx, yy);
+      else ctx.lineTo(xx, yy);
+    }
+    ctx.stroke();
+
+    // Fill areas
+    ctx.fillStyle = 'rgba(59,130,246,0.08)';
+    ctx.beginPath();
+    ctx.moveTo(x1, sfdY);
+    for (let i = 0; i <= 50; i++) {
+      const t = i / 100;
+      const xx = x1 + t * (x2 - x1);
+      const v = 4 * t * t - 1;
+      ctx.lineTo(xx, sfdY - v * sfdH);
+    }
+    ctx.lineTo(midX, sfdY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(midX, sfdY);
+    for (let i = 50; i <= 100; i++) {
+      const t = i / 100;
+      const xx = x1 + t * (x2 - x1);
+      const v = 1 - 4 * (1 - t) * (1 - t);
+      ctx.lineTo(xx, sfdY - v * sfdH);
+    }
+    ctx.lineTo(x2, sfdY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.font = '600 12px "JetBrains Mono"';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillText('θ_A = -PL²/(16EI) (↻順時針)', x1, sfdY + sfdH + 18);
+    ctx.fillText('θ_B = +PL²/(16EI) (↺逆時針)', x2 - 160, sfdY - sfdH - 8);
+    ctx.fillText('V\'= 0 (θ = 0)', midX + 10, sfdY - 5);
+  }
+
+  if (phase >= 3) {
+    // BMD of conjugate beam = delta (NEGATIVE = downward deflection)
+    const bmdY = 430, bmdH = 55;
+    ctx.font = '600 14px "Noto Sans TC"';
+    ctx.fillStyle = '#10b981';
+    ctx.fillText('共軛梁彎矩圖 M\' = 原梁撓度 Δ', x1, bmdY - 20);
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x1, bmdY); ctx.lineTo(x2, bmdY); ctx.stroke();
+
+    // M' is NEGATIVE (deflection downward) → draw BELOW baseline
+    ctx.fillStyle = 'rgba(16,185,129,0.1)';
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, bmdY);
+    for (let i = 0; i <= 100; i++) {
+      const t = i / 100;
+      const xx = x1 + t * (x2 - x1);
+      const m = 4 * t * (1 - t) * bmdH;
+      ctx.lineTo(xx, bmdY + m);  // BELOW baseline (negative M')
+    }
+    ctx.lineTo(x2, bmdY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x1, bmdY);
+    for (let i = 0; i <= 100; i++) {
+      const t = i / 100;
+      const xx = x1 + t * (x2 - x1);
+      const m = 4 * t * (1 - t) * bmdH;
+      ctx.lineTo(xx, bmdY + m);
+    }
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(midX, bmdY + bmdH, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#10b981';
+    ctx.fill();
+
+    ctx.font = '700 13px "JetBrains Mono"';
+    ctx.fillStyle = '#10b981';
+    ctx.fillText('Δ_max = -PL³/(48EI) (↓向下)', midX + 10, bmdY + bmdH + 18);
+    ctx.font = '500 11px "Noto Sans TC"';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('負值 = 向下撓度', midX + 10, bmdY + bmdH + 35);
+  }
+
+  if (phase >= 4) {
+    // Deformed shape (curves DOWNWARD)
+    ctx.font = '700 14px "Noto Sans TC"';
+    ctx.fillStyle = '#ec4899';
+    ctx.fillText('✓ 原梁撓度曲線（向下彎曲）', x1, H - 30);
+
+    ctx.setLineDash([5, 3]);
+    ctx.strokeStyle = '#ec4899';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const defBaseY = H - 55;
+    for (let i = 0; i <= 100; i++) {
+      const t = i / 100;
+      const xx = x1 + t * (x2 - x1);
+      const d = 4 * t * (1 - t) * 20;
+      if (i === 0) ctx.moveTo(xx, defBaseY);
+      else ctx.lineTo(xx, defBaseY + d);  // curves downward
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+// ============================================================
+// STEP 5: Full Example
+// ============================================================
+function renderFullExample(el) {
+  el.innerHTML = `
+    <div class="step-container active">
+      <div class="step-title">
+        <span class="step-badge" style="background:rgba(16,185,129,0.15);color:var(--green)">✅</span>
+        完整範例：懸臂梁受端點載重
+      </div>
+      <div class="step-desc">
+        懸臂梁 AB，A 端固定，B 端自由，受自由端集中力 P（向下）。用共軛梁法求 B 端的轉角 θ_B 和撓度 Δ_B。
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" onclick="animateStep5()">▶ 播放完整解題</button>
+        <button class="btn" onclick="resetStep5()">↻ 重置</button>
+      </div>
+
+      <div class="slider-group">
+        <label>集中力 P =</label>
+        <input type="range" id="ex5P" min="10" max="80" value="30" oninput="updateStep5Val()">
+        <span class="val" id="ex5PVal">30 kN</span>
+      </div>
+      <div class="slider-group">
+        <label>梁長 L =</label>
+        <input type="range" id="ex5L" min="3" max="10" value="5" oninput="updateStep5Val()">
+        <span class="val" id="ex5LVal">5 m</span>
+      </div>
+
+      <div class="anim-progress"><div class="anim-progress-bar" id="step5Progress" style="width:0%"></div></div>
+
+      <div class="canvas-wrapper">
+        <canvas id="step5Canvas" width="900" height="1120"></canvas>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="label">B 端轉角</div>
+          <div class="value" id="ex5Theta" style="color:var(--accent)">θ_B = -PL²/(2EI)</div>
+        </div>
+        <div class="info-card">
+          <div class="label">B 端撓度</div>
+          <div class="value" id="ex5Delta" style="color:var(--green)">Δ_B = -PL³/(3EI)</div>
+        </div>
+      </div>
+      ${navButtons()}
+    </div>
+  `;
+  animState.step5Phase = 0;
+  updateStep5Val();
+  drawStep5();
+}
+
+function updateStep5Val() {
+  const P = document.getElementById('ex5P')?.value || 30;
+  const L = document.getElementById('ex5L')?.value || 5;
+  document.getElementById('ex5PVal').textContent = P + ' kN';
+  document.getElementById('ex5LVal').textContent = L + ' m';
+  document.getElementById('ex5Theta').textContent = `θ_B = -${P}×${L}²/(2EI) = -${(P*L*L/2).toFixed(1)}/(EI) ↻`;
+  document.getElementById('ex5Delta').textContent = `Δ_B = -${P}×${L}³/(3EI) = -${(P*L*L*L/3).toFixed(1)}/(EI) ↓`;
+  if (animState.step5Phase > 0) {
+    animState.step5Phase = 6;
+    drawStep5();
+  }
+}
+
+function resetStep5() {
+  animState.step5Phase = 0;
+  document.getElementById('step5Progress').style.width = '0%';
+  drawStep5();
+}
+
+function animateStep5() {
+  animState.step5Phase = 0;
+  let idx = 0;
+  const phases = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  const interval = setInterval(() => {
+    animState.step5Phase = phases[idx];
+    document.getElementById('step5Progress').style.width = ((idx + 1) / phases.length * 100) + '%';
+    drawStep5();
+    idx++;
+    if (idx >= phases.length) clearInterval(interval);
+  }, 900);
+}
+
+function drawStep5() {
+  const c = document.getElementById('step5Canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const P = parseFloat(document.getElementById('ex5P')?.value || 30);
+  const L = parseFloat(document.getElementById('ex5L')?.value || 5);
+  const phase = animState.step5Phase || 0;
+
+  const x1 = 120, x2 = 550;
+
+  // Phase 0: Original cantilever
+  const y0 = 70;
+  ctx.font = '700 15px "Noto Sans TC"';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('① 原梁', x1, y0 - 25);
+
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(x1, y0); ctx.lineTo(x2, y0); ctx.stroke();
+  drawFixedSupport(ctx, x1, y0, '#3b82f6');
+  ctx.beginPath(); ctx.arc(x2, y0, 4, 0, Math.PI*2); ctx.fillStyle = '#3b82f6'; ctx.fill();
+
+  drawArrow(ctx, x2, y0 - 50, x2, y0 - 8, '#ef4444');
+  ctx.font = '600 14px "JetBrains Mono"';
+  ctx.fillStyle = '#ef4444';
+  ctx.fillText(`P = ${P} kN`, x2 + 10, y0 - 30);
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '600 13px "JetBrains Mono"';
+  ctx.fillText('A (固定端)', x1 - 10, y0 + 35);
+  ctx.fillText('B (自由端)', x2 - 20, y0 + 35);
+  ctx.fillText(`L = ${L} m`, (x1+x2)/2 - 15, y0 + 22);
+
+  // Reactions
+  if (phase >= 1) {
+    drawArrow(ctx, x1 + 8, y0 + 50, x1 + 8, y0 + 8, '#10b981');
+    ctx.fillStyle = '#10b981';
+    ctx.font = '600 12px "JetBrains Mono"';
+    ctx.fillText(`R_A = ${P} kN ↑`, x1 + 20, y0 + 55);
+    
+    // Moment at A
+    ctx.beginPath();
+    ctx.arc(x1 + 5, y0 - 5, 15, -Math.PI * 0.8, Math.PI * 0.3);
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillText(`M_A = ${P*L} kN·m ↻`, x1 + 25, y0 - 15);
+  }
+
+  // BMD
+  if (phase >= 2) {
+    const bmdY = 170, bmdH = 50;
+    ctx.font = '700 14px "Noto Sans TC"';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText('② 彎矩圖', x1, bmdY - 15);
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x1, bmdY); ctx.lineTo(x2, bmdY); ctx.stroke();
+
+    // Linear BMD: -PL at A, 0 at B (negative = below line)
+    ctx.fillStyle = 'rgba(245,158,11,0.12)';
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, bmdY);
+    ctx.lineTo(x1, bmdY + bmdH);
+    ctx.lineTo(x2, bmdY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '600 12px "JetBrains Mono"';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText(`-PL = -${P*L}`, x1 - 5, bmdY + bmdH + 18);
+    ctx.fillText('0', x2 + 5, bmdY - 5);
+    ctx.fillText('(負彎矩)', (x1+x2)/2, bmdY + bmdH/2 + 20);
+  }
+
+  // Support conversion
+  if (phase >= 3) {
+    const scY = 340;
+    ctx.font = '700 14px "Noto Sans TC"';
+    ctx.fillStyle = '#8b5cf6';
+    ctx.fillText('③ 支承轉換 + M/EI 載重', x1, scY - 25);
+
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(x1, scY); ctx.lineTo(x2, scY); ctx.stroke();
+
+    // A: Fixed → Free
+    ctx.beginPath(); ctx.arc(x1, scY, 4, 0, Math.PI*2); ctx.fillStyle = '#10b981'; ctx.fill();
+    // B: Free → Fixed
+    drawFixedSupport(ctx, x2, scY, '#10b981');
+
+    ctx.font = '600 12px "Noto Sans TC"';
+    ctx.fillStyle = '#10b981';
+    ctx.fillText('A\': 自由端', x1 - 10, scY - 35);
+    ctx.fillText('B\': 固定端', x2 - 20, scY - 35);
+
+    ctx.font = '500 11px "Noto Sans TC"';
+    ctx.fillStyle = '#8b5cf6';
+    ctx.fillText('固定→自由', x1 - 10, scY - 48);
+    ctx.fillText('自由→固定', x2 - 20, scY - 48);
+  }
+
+  // M/EI loading on conjugate beam
+  if (phase >= 4) {
+    const lcY = 340;
+    const loadH = 50;
+    // Negative moment → M/EI load goes DOWNWARD (away from beam = downward for hogging)
+    ctx.fillStyle = 'rgba(245,158,11,0.1)';
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, lcY);
+    ctx.lineTo(x1, lcY + loadH);
+    ctx.lineTo(x2, lcY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Arrows pointing DOWNWARD
+    for (let i = 0; i < 6; i++) {
+      const t = i / 6;
+      const xx = x1 + t * (x2 - x1);
+      const hh = (1 - t) * loadH;
+      if (hh > 5) drawArrow(ctx, xx, lcY + 2, xx, lcY + hh - 3, '#f59e0b');
+    }
+
+    ctx.font = '600 12px "JetBrains Mono"';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText(`PL/EI = ${P*L}/EI`, x1 + 5, lcY + loadH + 18);
+    ctx.font = '500 11px "Noto Sans TC"';
+    ctx.fillText('負彎矩 → 向下（離開梁身）', x2 + 20, lcY + 25);
+  }
+
+  // Solve - Phase 5: FBD with resultant force
+  if (phase >= 5) {
+    const fbdY = 490;
+    ctx.font = '700 15px "Noto Sans TC"';
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText('④ 求解共軛梁 — 自由體圖 (FBD)', x1, fbdY);
+
+    // Redraw conjugate beam for FBD
+    const beamFbdY = fbdY + 60;
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x1, beamFbdY); ctx.lineTo(x2, beamFbdY); ctx.stroke();
+
+    // A': Free end (dot)
+    ctx.beginPath(); ctx.arc(x1, beamFbdY, 4, 0, Math.PI*2); ctx.fillStyle = '#10b981'; ctx.fill();
+    // B': Fixed end
+    drawFixedSupport(ctx, x2, beamFbdY, '#10b981');
+
+    ctx.font = '600 12px "Noto Sans TC"';
+    ctx.fillStyle = '#10b981';
+    ctx.fillText('A\'(自由)', x1 - 15, beamFbdY - 10);
+    ctx.fillText('B\'(固定)', x2 + 10, beamFbdY - 10);
+
+    // Key note: A' is free → V'=0, M'=0
+    ctx.font = '600 12px "Noto Sans TC"';
+    ctx.fillStyle = '#8b5cf6';
+    ctx.fillText('V\'=0, M\'=0', x1 - 15, beamFbdY + 20);
+
+    // M/EI triangular load (downward)
+    const fbdLoadH = 40;
+    ctx.fillStyle = 'rgba(245,158,11,0.08)';
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x1, beamFbdY);
+    ctx.lineTo(x1, beamFbdY + fbdLoadH);
+    ctx.lineTo(x2, beamFbdY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Small downward arrows
+    for (let i = 0; i < 5; i++) {
+      const t = i / 5;
+      const xx = x1 + t * (x2 - x1);
+      const hh = (1 - t) * fbdLoadH;
+      if (hh > 6) drawArrow(ctx, xx, beamFbdY + 2, xx, beamFbdY + hh - 3, '#f59e0b');
+    }
+
+    ctx.font = '500 11px "JetBrains Mono"';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText(`PL/EI = ${P*L}/EI`, x1 - 5, beamFbdY + fbdLoadH + 15);
+
+    // Resultant force (big arrow at centroid, DOWNWARD)
+    const centroidX = x1 + (x2 - x1) / 3;  // 1/3 from A for triangle
+    const resultantTopY = beamFbdY + fbdLoadH + 48;
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2.5;
+    drawArrow(ctx, centroidX, beamFbdY + fbdLoadH + 5, centroidX, resultantTopY, '#ef4444');
+    ctx.font = '700 13px "JetBrains Mono"';
+    ctx.fillStyle = '#ef4444';
+    ctx.fillText('F = PL²/(2EI) ↓', centroidX + 8, resultantTopY + 2);
+    ctx.font = '500 11px "Noto Sans TC"';
+    ctx.fillStyle = '#ef4444';
+    ctx.fillText('(合力 = ½ × L × PL/EI)', centroidX + 8, resultantTopY + 18);
+
+    // Centroid marker
+    ctx.beginPath(); ctx.arc(centroidX, beamFbdY, 5, 0, Math.PI*2);
+    ctx.fillStyle = '#ef4444'; ctx.fill();
+
+    // Dashed line from centroid
+    ctx.setLineDash([3, 2]);
+    ctx.strokeStyle = 'rgba(239,68,68,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(centroidX, beamFbdY); ctx.lineTo(centroidX, beamFbdY + fbdLoadH + 50); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Distance labels
+    ctx.font = '600 11px "JetBrains Mono"';
+    ctx.fillStyle = '#94a3b8';
+    const dimY1 = beamFbdY - 22;
+    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x1, dimY1); ctx.lineTo(centroidX, dimY1); ctx.stroke();
+    ctx.fillText('L/3', (x1 + centroidX) / 2 - 10, dimY1 - 5);
+    ctx.beginPath(); ctx.moveTo(centroidX, dimY1); ctx.lineTo(x2, dimY1); ctx.stroke();
+    ctx.fillText('2L/3', (centroidX + x2) / 2 - 12, dimY1 - 5);
+
+    // B' reactions: V'_B DOWNWARD (+), M'_B counterclockwise (+) — right end convention
+    drawArrow(ctx, x2 + 5, beamFbdY + 5, x2 + 5, beamFbdY + 40, '#06b6d4');
+    ctx.font = '600 12px "JetBrains Mono"';
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText("V'_B ↓ ?", x2 + 15, beamFbdY + 30);
+
+    // M'_B moment arc — right end convention: ↺ positive (counterclockwise)
+    ctx.beginPath();
+    ctx.arc(x2 - 5, beamFbdY + 5, 18, Math.PI * 0.4, Math.PI * 1.3);
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillText("M'_B ↺ ?", x2 + 15, beamFbdY + 60);
+  }
+
+  // Solve - Phase 6: Equilibrium equations
+  if (phase >= 6) {
+    const eqY = 700;
+    ctx.font = '700 14px "Noto Sans TC"';
+    ctx.fillStyle = '#8b5cf6';
+    ctx.fillText('⑤ 平衡方程式（A\' 為自由端，V\'=0, M\'=0）', x1, eqY);
+
+    // V' calculation
+    ctx.font = '600 13px "Noto Sans TC"';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillText('力平衡 ΣF_y = 0（右端 V\'↓(+)）：', x1, eqY + 30);
+    ctx.font = '500 13px "JetBrains Mono"';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(`V'_B + F = 0`, x1 + 20, eqY + 52);
+    ctx.font = '500 11px "Noto Sans TC"';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('（V\'_B ↓(+)；F↓同向 → 同號相加）', x1 + 200, eqY + 52);
+
+    ctx.font = '500 13px "JetBrains Mono"';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(`V'_B + PL²/(2EI) = 0`, x1 + 20, eqY + 74);
+    ctx.font = '700 13px "JetBrains Mono"';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillText(`V'_B = -PL²/(2EI)`, x1 + 20, eqY + 96);
+    ctx.font = '500 11px "Noto Sans TC"';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('負值 → 假設 ↓ 錯 → 實際 ↑ → 順時針轉角', x1 + 240, eqY + 96);
+
+    // M' calculation
+    ctx.font = '600 13px "Noto Sans TC"';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillText('力矩平衡 ΣM_B\' = 0（右端 ↺ 正）：', x1, eqY + 130);
+    ctx.font = '500 13px "JetBrains Mono"';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(`M'_B + F × (2L/3) = 0`, x1 + 20, eqY + 152);
+    ctx.font = '500 11px "Noto Sans TC"';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('（M\'_B ↺(+)；F↓在左方 → ↺矩(+) → 同號相加）', x1 + 250, eqY + 152);
+
+    ctx.font = '500 13px "JetBrains Mono"';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(`M'_B + PL²/(2EI) × (2L/3) = 0`, x1 + 20, eqY + 174);
+    ctx.font = '700 13px "JetBrains Mono"';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillText(`M'_B = -PL³/(3EI)`, x1 + 20, eqY + 196);
+    ctx.font = '500 11px "Noto Sans TC"';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('負值 → 假設 ↺ 錯 → 實際 ↻ → 向下撓度', x1 + 240, eqY + 196);
+
+    // Physical meaning
+    ctx.font = '600 13px "Noto Sans TC"';
+    ctx.fillStyle = '#8b5cf6';
+    ctx.fillText('對應關係：', x1, eqY + 232);
+    ctx.font = '500 13px "Noto Sans TC"';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('V\'_B = θ_B（共軛梁剪力 = 原梁轉角）', x1 + 20, eqY + 254);
+    ctx.fillText('M\'_B = Δ_B（共軛梁彎矩 = 原梁撓度）', x1 + 20, eqY + 274);
+  }
+
+  // Solve - Phase 7: Final answers
+  if (phase >= 7) {
+    const ansY = 990;
+    ctx.font = '700 15px "Noto Sans TC"';
+    ctx.fillStyle = '#10b981';
+    ctx.fillText('⑥ 最終結果', x1, ansY);
+
+    // Box background
+    ctx.fillStyle = 'rgba(16,185,129,0.05)';
+    ctx.strokeStyle = 'rgba(16,185,129,0.3)';
+    ctx.lineWidth = 1.5;
+    const boxX = x1 - 10, boxW = 560, boxTop = ansY + 10, boxH = 75;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxTop, boxW, boxH, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '700 15px "JetBrains Mono"';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillText(`θ_B = -PL²/(2EI) = -${(P*L*L/2).toFixed(1)}/(EI)　負值 → 順時針 ↻`, x1, ansY + 35);
+    ctx.fillStyle = '#10b981';
+    ctx.fillText(`Δ_B = -PL³/(3EI) = -${(P*L*L*L/3).toFixed(1)}/(EI)　負值 → 向下 ↓`, x1, ansY + 62);
+  }
+
+  // Deformed shape
+  if (phase >= 8) {
+    const dsY = 80;
+    ctx.font = '600 13px "Noto Sans TC"';
+    ctx.fillStyle = '#ec4899';
+    ctx.fillText('撓度曲線', 620, dsY - 10);
+
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = '#ec4899';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i <= 50; i++) {
+      const t = i / 50;
+      const xx = 620 + t * 230;
+      // Cantilever deflection: delta = Px²(3L-x)/(6EI), normalized
+      const d = t * t * (3 - t) / 2 * 50;
+      if (i === 0) ctx.moveTo(xx, dsY);
+      else ctx.lineTo(xx, dsY + d);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // reference line
+    ctx.strokeStyle = 'rgba(236,72,153,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(620, dsY);
+    ctx.lineTo(850, dsY);
+    ctx.stroke();
+
+    ctx.font = '600 11px "JetBrains Mono"';
+    ctx.fillStyle = '#ec4899';
+    ctx.fillText('Δ_B', 855, dsY + 50);
+  }
+}
+
+// ============================================================
+// STEP 6: Advanced Example - Internal Hinge + Superposition
+// ============================================================
+function renderAdvancedExample(el) {
+  el.innerHTML = `
+    <div class="step-container active">
+      <div class="step-title">
+        <span class="step-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b">⭐</span>
+        進階範例：含內鉸梁 — 個別彎矩圖疊加法
+      </div>
+      <div class="step-desc">
+        梁 AB，A 端鉸支承，B 端固定端，C 為內鉸。<br>
+        AC 段中點受集中力 2wℓ↓，CB 段受均佈載重 w↓。<br>
+        用<strong>共軛梁法</strong>配合<strong>個別彎矩圖疊加</strong>，求 Δ<sub>B</sub>、Δ<sub>C</sub> 與 C 點相對轉角。
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" onclick="animateStep6()">▶ 播放完整解題</button>
+        <button class="btn" onclick="resetStep6()">↻ 重置</button>
+      </div>
+
+      <div class="anim-progress"><div class="anim-progress-bar" id="step6Progress" style="width:0%"></div></div>
+
+      <div class="canvas-wrapper">
+        <canvas id="step6Canvas" width="900" height="4500"></canvas>
+      </div>
+      ${navButtons()}
+    </div>
+  `;
+  animState.step6Phase = 0;
+  drawStep6();
+}
+
+function resetStep6() {
+  animState.step6Phase = 0;
+  document.getElementById('step6Progress').style.width = '0%';
+  drawStep6();
+}
+
+function animateStep6() {
+  animState.step6Phase = 0;
+  let idx = 0;
+  const phases = [0,1,2,3,4,5,6,7,8,9,10,11];
+  const interval = setInterval(() => {
+    animState.step6Phase = phases[idx];
+    document.getElementById('step6Progress').style.width = ((idx+1)/phases.length*100)+'%';
+    drawStep6();
+    idx++;
+    if (idx >= phases.length) clearInterval(interval);
+  }, 1400);
+}
+
+function drawStep6() {
+  const c = document.getElementById('step6Canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+  const phase = animState.step6Phase || 0;
+
+  // Beam X: A---ℓ/2---P---ℓ/2---C(hinge)---ℓ---B(fixed)
+  const xA = 80, xP = 260, xC = 440, xB = 800;
+
+  // helper: section title
+  function secTitle(text, x, y, color) {
+    ctx.font = '700 15px "Noto Sans TC"'; ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+  }
+  // helper: info text
+  function info(text, x, y) {
+    ctx.font = '500 12px "Noto Sans TC"'; ctx.fillStyle = '#94a3b8';
+    ctx.fillText(text, x, y);
+  }
+  function mono(text, x, y, color) {
+    ctx.font = '600 12px "JetBrains Mono"'; ctx.fillStyle = color || '#94a3b8';
+    ctx.fillText(text, x, y);
+  }
+
+  // ================= Phase 0: Original Beam =================
+  const y0 = 70;
+  secTitle('① 原梁與載重', xA, y0 - 30, '#94a3b8');
+
+  ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(xA, y0); ctx.lineTo(xB, y0); ctx.stroke();
+  drawPinSupport(ctx, xA, y0, '#3b82f6');
+  drawFixedSupport(ctx, xB, y0, '#3b82f6');
+
+  // Hinge C
+  ctx.beginPath(); ctx.arc(xC, y0, 7, 0, Math.PI*2);
+  ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(xC, y0, 3, 0, Math.PI*2);
+  ctx.fillStyle = '#8b5cf6'; ctx.fill();
+
+  ctx.font = '700 14px "JetBrains Mono"'; ctx.fillStyle = '#64748b';
+  ctx.fillText('A', xA-4, y0+45); ctx.fillText('C', xC-4, y0+45); ctx.fillText('B', xB-4, y0+45);
+
+  // 2wℓ at P
+  drawArrow(ctx, xP, y0-55, xP, y0-6, '#ef4444');
+  ctx.font='700 14px "JetBrains Mono"'; ctx.fillStyle='#ef4444';
+  ctx.fillText('2wℓ', xP-15, y0-62);
+
+  // UDL
+  ctx.strokeStyle='#ef4444'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(xC, y0-42); ctx.lineTo(xB, y0-42); ctx.stroke();
+  for(let i=0;i<=6;i++){
+    const xx=xC+i*(xB-xC)/6;
+    drawArrow(ctx, xx, y0-42, xx, y0-6, '#ef4444');
+  }
+  ctx.font='700 14px "JetBrains Mono"'; ctx.fillStyle='#ef4444';
+  ctx.fillText('w', (xC+xB)/2-5, y0-50);
+
+  // Dimensions
+  ctx.font='600 12px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+  const dimY=y0+65; ctx.strokeStyle='#64748b'; ctx.lineWidth=1;
+  [xA,xP,xC,xB].forEach(x=>{ctx.beginPath();ctx.moveTo(x,dimY-5);ctx.lineTo(x,dimY+5);ctx.stroke();});
+  ctx.beginPath();ctx.moveTo(xA,dimY);ctx.lineTo(xB,dimY);ctx.stroke();
+  ctx.fillText('ℓ/2',(xA+xP)/2-10,dimY+18);
+  ctx.fillText('ℓ/2',(xP+xC)/2-10,dimY+18);
+  ctx.fillText('ℓ',(xC+xB)/2-4,dimY+18);
+
+  // ================= Phase 1: Reactions =================
+  if(phase>=1){
+    const rY=175;
+    secTitle('② 求反力（利用 C 點鉸接 M_C = 0）', xA, rY, '#10b981');
+
+    mono('左段 ΣM_C=0：A_y × ℓ − 2wℓ × ℓ/2 = 0 → A_y = wℓ ↑', xA, rY+25, '#94a3b8');
+    mono('全梁 ΣF_y=0：wℓ + B_y − 2wℓ − wℓ = 0 → B_y = 2wℓ ↑', xA, rY+47, '#94a3b8');
+    mono('全梁 ΣM_A=0：B_y(2ℓ) − M_B − 2wℓ(ℓ/2) − wℓ(3ℓ/2) = 0', xA, rY+69, '#94a3b8');
+    mono('→ M_B = 4wℓ² − wℓ² − 3wℓ²/2 = 3wℓ²/2 ↻', xA+80, rY+89, '#94a3b8');
+
+    ctx.fillStyle='rgba(16,185,129,0.06)'; ctx.strokeStyle='rgba(16,185,129,0.3)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(xA-5,rY+100,620,28,6); ctx.fill(); ctx.stroke();
+    ctx.font='700 13px "JetBrains Mono"'; ctx.fillStyle='#10b981';
+    ctx.fillText('A_y = wℓ ↑　　B_y = 2wℓ ↑　　M_B = 3wℓ²/2 ↻', xA+10, rY+119);
+  }
+
+  // ================= Phase 2: AC Individual BMDs (cantilever from C) =================
+  if(phase>=2){
+    const pY=340;
+    secTitle('③ 左段 AC 個別彎矩圖（視為 C 端固定之懸臂梁）', xA, pY, '#f59e0b');
+
+    // FBD: beam with wℓ↑ at A, 2wℓ↓ at P, fixed at C
+    const fbdY=pY+50;
+    const lx1=80, lx2=380, lmid=(lx1+lx2)/2;
+
+    ctx.strokeStyle='#3b82f6'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(lx1,fbdY); ctx.lineTo(lx2,fbdY); ctx.stroke();
+
+    // Pin at A
+    drawPinSupport(ctx, lx1, fbdY, '#3b82f6');
+
+    // Fixed at C (hatching)
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(lx2,fbdY-18); ctx.lineTo(lx2,fbdY+18); ctx.stroke();
+    for(let i=0;i<5;i++){
+      const yy=fbdY-16+i*8;
+      ctx.beginPath(); ctx.moveTo(lx2,yy); ctx.lineTo(lx2+10,yy-6); ctx.stroke();
+    }
+
+    // A_y up
+    drawArrow(ctx, lx1, fbdY+35, lx1, fbdY+6, '#10b981');
+    ctx.font='600 11px "JetBrains Mono"'; ctx.fillStyle='#10b981'; ctx.fillText('wℓ', lx1+8, fbdY+42);
+
+    // 2wℓ down
+    drawArrow(ctx, lmid, fbdY-35, lmid, fbdY-5, '#ef4444');
+    ctx.font='600 11px "JetBrains Mono"'; ctx.fillStyle='#ef4444'; ctx.fillText('2wℓ', lmid+5, fbdY-40);
+
+    // wℓ up at C (from right segment pushing up)
+    drawArrow(ctx, lx2-15, fbdY+35, lx2-15, fbdY+6, '#06b6d4');
+    ctx.font='600 11px "JetBrains Mono"'; ctx.fillStyle='#06b6d4'; ctx.fillText('wℓ', lx2-40, fbdY+42);
+
+    ctx.font='600 11px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText('A', lx1-4, fbdY+58); ctx.fillText('C', lx2-4, fbdY+58);
+
+    // ---- Individual load 1: wℓ↑ at A (cantilever from C) ----
+    const ld1Y=pY+130;
+    ctx.font='600 12px "Noto Sans TC"'; ctx.fillStyle='#10b981';
+    ctx.fillText('載重 1：A_y = wℓ ↑', lx1, ld1Y);
+
+    // Small beam
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(lx1, ld1Y+22); ctx.lineTo(lx2, ld1Y+22); ctx.stroke();
+    drawArrow(ctx, lx1, ld1Y+38, lx1, ld1Y+24, '#10b981');
+    ctx.font='500 10px "JetBrains Mono"'; ctx.fillStyle='#10b981'; ctx.fillText('wℓ↑',lx1+8,ld1Y+46);
+    // hatching at C
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(lx2,ld1Y+10); ctx.lineTo(lx2,ld1Y+34); ctx.stroke();
+    for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(lx2,ld1Y+12+i*7);ctx.lineTo(lx2+8,ld1Y+8+i*7);ctx.stroke();}
+
+    // BMD₁: linear 0 at A → +wℓ² at C (positive = above baseline)
+    const bmd1Y=ld1Y+75;
+    const bmd1H=40;
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(lx1,bmd1Y); ctx.lineTo(lx2,bmd1Y); ctx.stroke();
+
+    ctx.fillStyle='rgba(16,185,129,0.1)';
+    ctx.strokeStyle='#10b981'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(lx1,bmd1Y); ctx.lineTo(lx2,bmd1Y-bmd1H); ctx.lineTo(lx2,bmd1Y); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#10b981';
+    ctx.fillText('wℓ²', lx2+5, bmd1Y-bmd1H-3);
+    ctx.font='600 10px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText('+', (lx1+lx2*2)/3, bmd1Y-bmd1H/3);
+
+    // Area info
+    mono('面積 F₁=½×ℓ×wℓ²=wℓ³/2', 500, ld1Y+60, '#94a3b8');
+    mono('形心距A=2ℓ/3, 距C=ℓ/3', 500, ld1Y+80, '#94a3b8');
+
+    // ---- Individual load 2: 2wℓ↓ at midpoint ----
+    const ld2Y=pY+260;
+    ctx.font='600 12px "Noto Sans TC"'; ctx.fillStyle='#ef4444';
+    ctx.fillText('載重 2：2wℓ ↓（作用在中點）', lx1, ld2Y);
+
+    // Small beam
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(lx1, ld2Y+22); ctx.lineTo(lx2, ld2Y+22); ctx.stroke();
+    drawArrow(ctx, lmid, ld2Y+8, lmid, ld2Y+20, '#ef4444');
+    ctx.font='500 10px "JetBrains Mono"'; ctx.fillStyle='#ef4444'; ctx.fillText('2wℓ↓',lmid+5,ld2Y+6);
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(lx2,ld2Y+10); ctx.lineTo(lx2,ld2Y+34); ctx.stroke();
+    for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(lx2,ld2Y+12+i*7);ctx.lineTo(lx2+8,ld2Y+8+i*7);ctx.stroke();}
+
+    // BMD₂: 0 from A to P, then linear 0 at P → -wℓ² at C (negative = below baseline)
+    const bmd2Y=ld2Y+70;
+    const bmd2H=40;
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(lx1,bmd2Y); ctx.lineTo(lx2,bmd2Y); ctx.stroke();
+
+    ctx.fillStyle='rgba(239,68,68,0.1)';
+    ctx.strokeStyle='#ef4444'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(lmid,bmd2Y); ctx.lineTo(lx2,bmd2Y+bmd2H); ctx.lineTo(lx2,bmd2Y); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Zero line from A to P
+    ctx.strokeStyle='#ef4444'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(lx1,bmd2Y); ctx.lineTo(lmid,bmd2Y); ctx.stroke();
+
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#ef4444';
+    ctx.fillText('-wℓ²', lx2+5, bmd2Y+bmd2H+12);
+    ctx.font='600 10px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText('−', (lmid+lx2*2)/3, bmd2Y+bmd2H/2+10);
+
+    // Area info
+    mono('面積 F₂=½×(ℓ/2)×wℓ²=wℓ³/4', 500, ld2Y+55, '#94a3b8');
+    mono('形心距A=5ℓ/6, 距C=ℓ/6', 500, ld2Y+75, '#94a3b8');
+
+    // Superposition note
+    const supY=pY+400;
+    ctx.fillStyle='rgba(245,158,11,0.06)'; ctx.strokeStyle='rgba(245,158,11,0.25)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.roundRect(lx1-5,supY,700,24,5); ctx.fill(); ctx.stroke();
+    ctx.font='600 12px "Noto Sans TC"'; ctx.fillStyle='#f59e0b';
+    ctx.fillText('疊加：M_P = wℓ²/2（峰值在中點），M_A = 0，M_C = wℓ² − wℓ² = 0 ✓', lx1+5, supY+16);
+  }
+
+  // ================= Phase 3: CB Individual BMDs (cantilever from B) =================
+  if(phase>=3){
+    const pY=790;
+    secTitle('④ 右段 CB 個別彎矩圖（視為 B 端固定之懸臂梁）', xA, pY, '#f59e0b');
+
+    const bx1=80, bx2=420;
+
+    // ---- Case 1: wℓ↓ at C ----
+    const c1Y=pY+32;
+    ctx.font='600 12px "Noto Sans TC"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText('載重 1：C 端集中力 wℓ ↓', bx1, c1Y);
+
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(bx1,c1Y+22); ctx.lineTo(bx2,c1Y+22); ctx.stroke();
+    drawArrow(ctx, bx1, c1Y+8, bx1, c1Y+20, '#06b6d4');
+    ctx.font='500 10px "JetBrains Mono"'; ctx.fillStyle='#06b6d4'; ctx.fillText('wℓ↓',bx1+8,c1Y+6);
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(bx2,c1Y+10); ctx.lineTo(bx2,c1Y+34); ctx.stroke();
+    for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(bx2,c1Y+12+i*7);ctx.lineTo(bx2+8,c1Y+8+i*7);ctx.stroke();}
+    ctx.font='500 10px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText('C',bx1-4,c1Y+34); ctx.fillText('B',bx2-4,c1Y+34);
+
+    // BMD: linear 0 at C → -wℓ² at B
+    const c1base=c1Y+65;
+    const c1H=38;
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(bx1,c1base); ctx.lineTo(bx2,c1base); ctx.stroke();
+    ctx.fillStyle='rgba(6,182,212,0.1)'; ctx.strokeStyle='#06b6d4'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(bx1,c1base); ctx.lineTo(bx2,c1base+c1H); ctx.lineTo(bx2,c1base); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText('-wℓ²', bx2+5, c1base+c1H+10);
+    ctx.font='600 10px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText('−', (bx1+bx2*2)/3, c1base+c1H/2+10);
+    mono('面積 F₃=½×ℓ×wℓ²=wℓ³/2', 500, c1Y+50, '#94a3b8');
+    mono('形心距C=2ℓ/3, 距B=ℓ/3', 500, c1Y+70, '#94a3b8');
+
+    // ---- Case 2: UDL w ----
+    const c2Y=pY+155;
+    ctx.font='600 12px "Noto Sans TC"'; ctx.fillStyle='#ec4899';
+    ctx.fillText('載重 2：均佈載重 w ↓', bx1, c2Y);
+
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(bx1,c2Y+22); ctx.lineTo(bx2,c2Y+22); ctx.stroke();
+    ctx.strokeStyle='#ec4899'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(bx1,c2Y+10); ctx.lineTo(bx2,c2Y+10); ctx.stroke();
+    for(let i=0;i<=4;i++){
+      drawArrow(ctx, bx1+i*(bx2-bx1)/4, c2Y+10, bx1+i*(bx2-bx1)/4, c2Y+20, '#ec4899');
+    }
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(bx2,c2Y+10); ctx.lineTo(bx2,c2Y+34); ctx.stroke();
+    for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(bx2,c2Y+12+i*7);ctx.lineTo(bx2+8,c2Y+8+i*7);ctx.stroke();}
+    ctx.font='500 10px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText('C',bx1-4,c2Y+34); ctx.fillText('B',bx2-4,c2Y+34);
+
+    // BMD: parabola 0 at C → -wℓ²/2 at B
+    const c2base=c2Y+65;
+    const c2H=28;
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(bx1,c2base); ctx.lineTo(bx2,c2base); ctx.stroke();
+    ctx.fillStyle='rgba(236,72,153,0.1)'; ctx.strokeStyle='#ec4899'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(bx1,c2base);
+    for(let i=0;i<=50;i++){const t=i/50; ctx.lineTo(bx1+t*(bx2-bx1), c2base+t*t*c2H);}
+    ctx.lineTo(bx2,c2base); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(bx1,c2base);
+    for(let i=0;i<=50;i++){const t=i/50; ctx.lineTo(bx1+t*(bx2-bx1), c2base+t*t*c2H);}
+    ctx.stroke();
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#ec4899';
+    ctx.fillText('-wℓ²/2', bx2+5, c2base+c2H+10);
+    mono('面積 F₄=⅓×ℓ×wℓ²/2=wℓ³/6', 500, c2Y+50, '#94a3b8');
+    mono('形心距C=3ℓ/4, 距B=ℓ/4', 500, c2Y+70, '#94a3b8');
+  }
+
+  // ================= Phase 4: Combined V & M diagrams =================
+  if(phase>=4){
+    const vY=1060;
+    secTitle('⑤ 完整剪力圖與彎矩圖', xA, vY, '#3b82f6');
+
+    // SFD
+    const sB=vY+55; const sH=30;
+    ctx.font='600 12px "Noto Sans TC"'; ctx.fillStyle='#3b82f6'; ctx.fillText('V 剪力圖', xA, sB-12);
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(xA,sB); ctx.lineTo(xB,sB); ctx.stroke();
+
+    ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2.5;
+    // A→P: +wℓ
+    ctx.beginPath(); ctx.moveTo(xA,sB-sH); ctx.lineTo(xP,sB-sH); ctx.stroke();
+    // jump at P
+    ctx.setLineDash([3,2]);
+    ctx.beginPath(); ctx.moveTo(xP,sB-sH); ctx.lineTo(xP,sB+sH); ctx.stroke();
+    ctx.setLineDash([]);
+    // P→C: -wℓ
+    ctx.beginPath(); ctx.moveTo(xP,sB+sH); ctx.lineTo(xC,sB+sH); ctx.stroke();
+    // C→B: linear -wℓ → -2wℓ
+    ctx.beginPath(); ctx.moveTo(xC,sB+sH); ctx.lineTo(xB,sB+2*sH); ctx.stroke();
+
+    // fill
+    ctx.fillStyle='rgba(59,130,246,0.06)';
+    ctx.beginPath(); ctx.moveTo(xA,sB); ctx.lineTo(xA,sB-sH); ctx.lineTo(xP,sB-sH); ctx.lineTo(xP,sB); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(xP,sB); ctx.lineTo(xP,sB+sH); ctx.lineTo(xB,sB+2*sH); ctx.lineTo(xB,sB); ctx.closePath(); ctx.fill();
+
+    ctx.font='600 11px "JetBrains Mono"'; ctx.fillStyle='#3b82f6';
+    ctx.fillText('wℓ', xA+5, sB-sH-5);
+    ctx.fillText('-wℓ', xC-35, sB+sH+15);
+    ctx.fillText('-2wℓ', xB+5, sB+2*sH+5);
+
+    // BMD
+    const bB=vY+170; const posH=28; const negH=55;
+    ctx.font='600 12px "Noto Sans TC"'; ctx.fillStyle='#10b981'; ctx.fillText('M 彎矩圖', xA, bB-12);
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(xA,bB); ctx.lineTo(xB,bB); ctx.stroke();
+
+    // Left: triangle
+    ctx.fillStyle='rgba(16,185,129,0.1)'; ctx.strokeStyle='#10b981'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(xA,bB); ctx.lineTo(xP,bB-posH); ctx.lineTo(xC,bB); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+    // Right: parabolic curve
+    ctx.fillStyle='rgba(239,68,68,0.1)'; ctx.strokeStyle='#ef4444'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(xC,bB);
+    for(let i=0;i<=50;i++){const t=i/50; const xx=xC+t*(xB-xC); const m=(t+0.5*t*t)/1.5*negH; ctx.lineTo(xx,bB+m);}
+    ctx.lineTo(xB,bB); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(xC,bB);
+    for(let i=0;i<=50;i++){const t=i/50; const xx=xC+t*(xB-xC); const m=(t+0.5*t*t)/1.5*negH; ctx.lineTo(xx,bB+m);}
+    ctx.stroke();
+
+    ctx.font='700 12px "JetBrains Mono"';
+    ctx.fillStyle='#10b981'; ctx.fillText('+wℓ²/2', xP+5, bB-posH-5);
+    ctx.beginPath(); ctx.arc(xP,bB-posH,3,0,Math.PI*2); ctx.fillStyle='#10b981'; ctx.fill();
+    ctx.fillStyle='#ef4444'; ctx.fillText('-3wℓ²/2', xB+5, bB+negH+5);
+    ctx.beginPath(); ctx.arc(xB,bB+negH,3,0,Math.PI*2); ctx.fillStyle='#ef4444'; ctx.fill();
+    ctx.font='500 11px "Noto Sans TC"'; ctx.fillStyle='#8b5cf6'; ctx.fillText('M_C=0',xC+5,bB-8);
+  }
+
+  // ================= Phase 5: Conjugate beam with M/EI =================
+  if(phase>=5){
+    const cjY=1360;
+    secTitle('⑥ 共軛梁：支承轉換 + 個別 M/EI 載重', xA, cjY, '#10b981');
+    info('鉸支承A → 鉸A\'　　內鉸C → 內鉸支承C\'　　固定端B → 自由端B\'', xA, cjY+22);
+
+    // Draw conjugate beam (reference line only)
+    const bY=cjY+65;
+    ctx.strokeStyle='#10b981'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(xA,bY); ctx.lineTo(xB,bY); ctx.stroke();
+    drawPinSupport(ctx, xA, bY, '#10b981');
+    drawPinSupport(ctx, xC, bY, '#10b981');
+    ctx.beginPath(); ctx.arc(xB,bY,4,0,Math.PI*2); ctx.fillStyle='#10b981'; ctx.fill();
+    ctx.font='600 11px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText("A'(鉸)", xA-10, bY+38);
+    ctx.fillText("C'(鉸)", xC-10, bY+38);
+    ctx.fillText("B'(自由)", xB-15, bY+38);
+
+    // === F₁: triangle UP, 0 at A → wℓ²/EI at C ===
+    const f1Y=bY+70;
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(xA,f1Y); ctx.lineTo(xB,f1Y); ctx.stroke();
+    const h1=40;
+    ctx.fillStyle='rgba(16,185,129,0.12)'; ctx.strokeStyle='#10b981'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(xA,f1Y); ctx.lineTo(xC,f1Y-h1); ctx.lineTo(xC,f1Y); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    for(let i=1;i<=3;i++){const t=i/4; const xx=xA+t*(xC-xA); const hh=t*h1;
+      if(hh>5) drawArrow(ctx, xx, f1Y-2, xx, f1Y-hh+3, '#10b981');}
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#10b981';
+    ctx.fillText('F₁↑  wℓ²/EI', xC+8, f1Y-h1+5);
+    ctx.fillText('+', (xA+xC)/2, f1Y-h1/3);
+
+    // === F₂: triangle DOWN, 0 at P → wℓ²/EI at C (only P to C) ===
+    const f2Y=f1Y+60;
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(xA,f2Y); ctx.lineTo(xB,f2Y); ctx.stroke();
+    const h2=35;
+    ctx.fillStyle='rgba(239,68,68,0.1)'; ctx.strokeStyle='#ef4444'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(xP,f2Y); ctx.lineTo(xC,f2Y+h2); ctx.lineTo(xC,f2Y); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    drawArrow(ctx, (xP+xC)/2, f2Y+2, (xP+xC)/2, f2Y+h2/2, '#ef4444');
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#ef4444';
+    ctx.fillText('F₂↓  wℓ²/EI', xC+8, f2Y+h2+5);
+    ctx.fillText('−', (xP+xC)/2+15, f2Y+h2/2);
+
+    // === F₃: triangle DOWN, 0 at C → wℓ²/EI at B ===
+    const f3Y=f2Y+60;
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(xA,f3Y); ctx.lineTo(xB,f3Y); ctx.stroke();
+    const h3=40;
+    ctx.fillStyle='rgba(6,182,212,0.1)'; ctx.strokeStyle='#06b6d4'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(xC,f3Y); ctx.lineTo(xB,f3Y+h3); ctx.lineTo(xB,f3Y); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    for(let i=1;i<=3;i++){const t=i/4; const xx=xC+t*(xB-xC); const hh=t*h3;
+      if(hh>5) drawArrow(ctx, xx, f3Y+2, xx, f3Y+hh-3, '#06b6d4');}
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText('F₃↓  wℓ²/EI', xB+8, f3Y+h3+5);
+    ctx.fillText('−', (xC+xB)/2, f3Y+h3/2+10);
+
+    // === F₄: parabola DOWN, 0 at C → wℓ²/(2EI) at B ===
+    const f4Y=f3Y+60;
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(xA,f4Y); ctx.lineTo(xB,f4Y); ctx.stroke();
+    const h4=28;
+    ctx.fillStyle='rgba(236,72,153,0.1)'; ctx.strokeStyle='#ec4899'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(xC,f4Y);
+    for(let i=0;i<=50;i++){const t=i/50; ctx.lineTo(xC+t*(xB-xC), f4Y+t*t*h4);}
+    ctx.lineTo(xB,f4Y); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(xC,f4Y);
+    for(let i=0;i<=50;i++){const t=i/50; ctx.lineTo(xC+t*(xB-xC), f4Y+t*t*h4);}
+    ctx.stroke();
+    for(let i=1;i<=3;i++){const t=i/4; const xx=xC+t*(xB-xC); const hh=t*t*h4;
+      if(hh>5) drawArrow(ctx, xx, f4Y+2, xx, f4Y+hh-3, '#ec4899');}
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#ec4899';
+    ctx.fillText('F₄↓  wℓ²/(2EI)', xB+8, f4Y+h4+5);
+    ctx.fillText('−', (xC*2+xB)/3+30, f4Y+h4/2+10);
+
+    // Legend
+    const legY = f4Y+h4+30;
+    info('正 M → M/EI 向上（離開梁身）；負 M → M/EI 向下（離開梁身）', xA, legY);
+    info('每個 M/EI 載重都是簡單幾何（三角形或拋物線），可直接查面積公式和形心', xA, legY+20);
+  }
+
+  // ================= Phase 6: Area table =================
+  if(phase>=6){
+    const tY=1830;
+    secTitle('⑦ M/EI 面積與形心整理', xA, tY, '#8b5cf6');
+
+    const cols=[90, 260, 450, 570, 690, 810];
+    const rowH=26; const tStart=tY+30;
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#f59e0b';
+    ['載重','面積(÷1/EI)','方向','距A\'','距C\'','距B\''].forEach((h,i)=>ctx.fillText(h,cols[i],tStart));
+
+    ctx.strokeStyle='#334155'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(cols[0]-5, tStart+6); ctx.lineTo(860, tStart+6); ctx.stroke();
+
+    const rows = [
+      ['F₁(AC,A_y)', 'wℓ³/2', '↑', '2ℓ/3', 'ℓ/3', '4ℓ/3', '#10b981'],
+      ['F₂(AC,2wℓ)', 'wℓ³/4', '↓', '5ℓ/6', 'ℓ/6', '7ℓ/6', '#ef4444'],
+      ['F₃(CB,wℓ)',  'wℓ³/2', '↓', '5ℓ/3', '2ℓ/3', 'ℓ/3', '#06b6d4'],
+      ['F₄(CB,w)',   'wℓ³/6', '↓', '7ℓ/4', '3ℓ/4', 'ℓ/4', '#ec4899'],
+    ];
+    rows.forEach((r,i)=>{
+      const ry=tStart+(i+1)*rowH;
+      ctx.font='500 11px "JetBrains Mono"'; ctx.fillStyle=r[6];
+      ctx.fillText(r[0], cols[0], ry);
+      ctx.fillStyle='#cbd5e1';
+      for(let j=1;j<6;j++) ctx.fillText(r[j], cols[j], ry);
+    });
+  }
+
+  // ================= Phase 7: FBD + Solve R'_A, R'_C =================
+  if(phase>=7){
+    const eY=2020;
+    secTitle('⑧ 求共軛梁反力 — 自由體圖 (FBD)', xA, eY, '#06b6d4');
+
+    // --- Draw FBD of full conjugate beam ---
+    const fbdY=eY+60;
+    ctx.strokeStyle='#10b981'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(xA,fbdY); ctx.lineTo(xB,fbdY); ctx.stroke();
+    drawPinSupport(ctx, xA, fbdY, '#10b981');
+    drawPinSupport(ctx, xC, fbdY, '#10b981');
+    ctx.beginPath(); ctx.arc(xB,fbdY,4,0,Math.PI*2); ctx.fillStyle='#10b981'; ctx.fill();
+
+    ctx.font='600 10px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText("A'", xA-4, fbdY+38); ctx.fillText("C'", xC-4, fbdY+38); ctx.fillText("B'(自由)", xB-15, fbdY+38);
+
+    // F₁ up (centroid at 2ℓ/3 from A) — arrowhead at top
+    const f1x=xA+(xC-xA)*2/3;
+    drawArrow(ctx, f1x, fbdY-6, f1x, fbdY-48, '#10b981');
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#10b981';
+    ctx.fillText('F₁↑', f1x+5, fbdY-50);
+
+    // F₂ down (centroid at 5ℓ/6 from A) — arrowhead at bottom
+    const f2x=xA+(xC-xA)*5/6;
+    drawArrow(ctx, f2x, fbdY+6, f2x, fbdY+42, '#ef4444');
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#ef4444';
+    ctx.fillText('F₂↓', f2x+5, fbdY+52);
+
+    // F₃ down (centroid at ℓ+2ℓ/3 from A) — arrowhead at bottom
+    const f3x=xC+(xB-xC)*2/3;
+    drawArrow(ctx, f3x, fbdY+6, f3x, fbdY+42, '#06b6d4');
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText('F₃↓', f3x+5, fbdY+52);
+
+    // F₄ down (centroid at ℓ+3ℓ/4 from A) — arrowhead at bottom
+    const f4x=xC+(xB-xC)*3/4;
+    drawArrow(ctx, f4x, fbdY+6, f4x, fbdY+48, '#ec4899');
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#ec4899';
+    ctx.fillText('F₄↓', f4x+5, fbdY+58);
+
+    // R'_A up (unknown) — arrowhead at top
+    drawArrow(ctx, xA, fbdY-6, xA, fbdY-48, '#06b6d4');
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText("R'_A↑?", xA-40, fbdY-50);
+
+    // R'_C up (unknown) — arrowhead at top
+    drawArrow(ctx, xC, fbdY-6, xC, fbdY-48, '#06b6d4');
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText("R'_C↑?", xC-40, fbdY-50);
+
+    // --- Equilibrium equations ---
+    const eqY2=eY+135;
+    ctx.font='600 13px "Noto Sans TC"'; ctx.fillStyle='#f59e0b';
+    ctx.fillText("力矩平衡 ΣM_A' = 0（↺正）：", xA, eqY2);
+    mono("R'_C×ℓ + F₁×(2ℓ/3) − F₂×(5ℓ/6) − F₃×(5ℓ/3) − F₄×(7ℓ/4) = 0", xA+15, eqY2+24, '#cbd5e1');
+    mono("R'_C×ℓ = −wℓ⁴/(3EI) + 5wℓ⁴/(24EI) + 5wℓ⁴/(6EI) + 7wℓ⁴/(24EI)", xA+15, eqY2+46, '#cbd5e1');
+    mono("       = wℓ⁴/EI × (−8+5+20+7)/24 = wℓ⁴/EI", xA+15, eqY2+68, '#cbd5e1');
+
+    ctx.fillStyle='rgba(6,182,212,0.06)'; ctx.strokeStyle='rgba(6,182,212,0.3)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(xA-5,eqY2+80,350,28,6); ctx.fill(); ctx.stroke();
+    ctx.font='700 13px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText("R'_C = wℓ³/EI  ↑", xA+10, eqY2+99);
+
+    ctx.font='600 13px "Noto Sans TC"'; ctx.fillStyle='#f59e0b';
+    ctx.fillText("力平衡 ΣF_y = 0（↑正）：", xA, eqY2+128);
+    mono("R'_A + R'_C + F₁ − F₂ − F₃ − F₄ = 0", xA+15, eqY2+150, '#cbd5e1');
+    mono("R'_A = −wℓ³/EI − wℓ³/(2EI) + wℓ³/(4EI) + wℓ³/(2EI) + wℓ³/(6EI)", xA+15, eqY2+172, '#cbd5e1');
+    mono("     = wℓ³/EI × (−12−6+3+6+2)/12 = −7wℓ³/(12EI)", xA+15, eqY2+194, '#cbd5e1');
+
+    ctx.fillStyle='rgba(6,182,212,0.06)'; ctx.strokeStyle='rgba(6,182,212,0.3)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(xA-5,eqY2+206,420,28,6); ctx.fill(); ctx.stroke();
+    ctx.font='700 13px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText("R'_A = −7wℓ³/(12EI)  （負→實際向下↓）", xA+10, eqY2+225);
+  }
+
+  // ================= Phase 8: FBD right segment → Δ_C =================
+  if(phase>=8){
+    const dY=2560;
+    secTitle('⑨ 求 Δ_C = M\'(C\') — 取右段 C\'B\' 自由體圖', xA, dY, '#3b82f6');
+
+    // --- Draw FBD of right segment C'→B' ---
+    const fbdY=dY+65;
+    const rx1=180, rx2=700;
+    ctx.strokeStyle='#3b82f6'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(rx1,fbdY); ctx.lineTo(rx2,fbdY); ctx.stroke();
+
+    // Section cut at C' (wavy line)
+    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let i=0;i<8;i++) ctx.lineTo(rx1+(i%2?4:-4), fbdY-16+i*4);
+    ctx.stroke();
+
+    // B' free end (dot)
+    ctx.beginPath(); ctx.arc(rx2,fbdY,5,0,Math.PI*2); ctx.fillStyle='#3b82f6'; ctx.fill();
+    ctx.font='600 10px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText("C'(截面)", rx1+10, fbdY+35);
+    ctx.fillText("B'(自由)", rx2-15, fbdY+35);
+    ctx.font='600 11px "Noto Sans TC"'; ctx.fillStyle='#8b5cf6';
+    ctx.fillText("V'=0, M'=0", rx2-25, fbdY-18);
+
+    // F₃ down — arrowhead at bottom
+    const f3cx=rx1+(rx2-rx1)*2/3;
+    drawArrow(ctx, f3cx, fbdY+6, f3cx, fbdY+42, '#06b6d4');
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText('F₃↓', f3cx+8, fbdY+52);
+
+    // F₄ down — arrowhead at bottom
+    const f4cx=rx1+(rx2-rx1)*3/4;
+    drawArrow(ctx, f4cx, fbdY+6, f4cx, fbdY+42, '#ec4899');
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#ec4899';
+    ctx.fillText('F₄↓', f4cx+8, fbdY+52);
+
+    // ---- Cut face at C': LEFT face of right segment → M↻(+), V↑(+) ----
+    // M'_C assumed ↻ positive — arc at cut
+    ctx.strokeStyle='#8b5cf6'; ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(rx1, fbdY-20, 14, Math.PI*0.6, -Math.PI*0.6, true);
+    ctx.stroke();
+    // CW arrowhead
+    const arcTip={x:rx1+14*Math.cos(-Math.PI*0.6), y:fbdY-20+14*Math.sin(-Math.PI*0.6)};
+    ctx.beginPath(); ctx.moveTo(arcTip.x-4,arcTip.y+4); ctx.lineTo(arcTip.x,arcTip.y); ctx.lineTo(arcTip.x+4,arcTip.y+3); ctx.stroke();
+    ctx.font='700 11px "JetBrains Mono"'; ctx.fillStyle='#8b5cf6';
+    ctx.fillText("M'_C ↻(+)", rx1-100, fbdY-32);
+
+    // V'_C assumed ↑ positive — arrow at cut
+    drawArrow(ctx, rx1-15, fbdY+5, rx1-15, fbdY-30, '#8b5cf6');
+    ctx.fillText("V'_C ↑(+)", rx1-105, fbdY-10);
+
+    // Distance labels
+    ctx.font='500 10px "JetBrains Mono"'; ctx.fillStyle='#94a3b8';
+    ctx.strokeStyle='#94a3b8'; ctx.lineWidth=0.5;
+    const dimBY=fbdY+60;
+    ctx.beginPath(); ctx.moveTo(rx1,dimBY); ctx.lineTo(f3cx,dimBY); ctx.stroke();
+    ctx.fillText('2ℓ/3', (rx1+f3cx)/2-12, dimBY+14);
+    ctx.beginPath(); ctx.moveTo(rx1,dimBY+18); ctx.lineTo(f4cx,dimBY+18); ctx.stroke();
+    ctx.fillText('3ℓ/4', (rx1+f4cx)/2-12, dimBY+32);
+    ctx.beginPath(); ctx.moveTo(rx1,dimBY+36); ctx.lineTo(rx2,dimBY+36); ctx.stroke();
+    ctx.fillText('ℓ', (rx1+rx2)/2-4, dimBY+50);
+
+    // --- Equilibrium ---
+    const eqY=dY+200;
+    ctx.font='600 13px "Noto Sans TC"'; ctx.fillStyle='#f59e0b';
+    ctx.fillText("力矩平衡 ΣM_C' = 0（↻ 正）：", xA, eqY);
+    info("截面左面：M'_C ↻(+)；F₃↓距C\' = 2ℓ/3 → ↻矩(+)；F₄↓距C\' = 3ℓ/4 → ↻矩(+)", xA, eqY+22);
+
+    mono("M'_C + F₃×(2ℓ/3) + F₄×(3ℓ/4) = 0", xA+15, eqY+46, '#cbd5e1');
+    mono("M'_C = −F₃×(2ℓ/3) − F₄×(3ℓ/4)", xA+15, eqY+68, '#cbd5e1');
+    mono("     = −wℓ³/(2EI)×(2ℓ/3) − wℓ³/(6EI)×(3ℓ/4)", xA+15, eqY+90, '#cbd5e1');
+    mono("     = −wℓ⁴/(3EI) − wℓ⁴/(8EI) = −wℓ⁴/EI×(8+3)/24", xA+15, eqY+112, '#cbd5e1');
+
+    ctx.fillStyle='rgba(59,130,246,0.06)'; ctx.strokeStyle='rgba(59,130,246,0.3)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(xA-5,eqY+125,620,55,6); ctx.fill(); ctx.stroke();
+    ctx.font='700 14px "JetBrains Mono"'; ctx.fillStyle='#3b82f6';
+    ctx.fillText("Δ_C = M'_C = −11wℓ⁴/(24EI)", xA+10, eqY+147);
+    ctx.font='500 12px "Noto Sans TC"'; ctx.fillStyle='#64748b';
+    ctx.fillText("負值 → 假設 ↻ 錯誤 → 實際 ↺ → 向下 ↓", xA+10, eqY+167);
+  }
+
+  // ================= Phase 9: FBD → Δ_B =================
+  if(phase>=9){
+    const dY=2940;
+    secTitle('⑩ 求 Δ_B = M\'(B\') — B\' 為自由端', xA, dY, '#10b981');
+
+    // --- Draw FBD showing B' free end ---
+    const fbdY=dY+55;
+    ctx.strokeStyle='#10b981'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(xA,fbdY); ctx.lineTo(xB,fbdY); ctx.stroke();
+    drawPinSupport(ctx, xA, fbdY, '#10b981');
+    drawPinSupport(ctx, xC, fbdY, '#10b981');
+    ctx.beginPath(); ctx.arc(xB,fbdY,5,0,Math.PI*2); ctx.fillStyle='#10b981'; ctx.fill();
+
+    ctx.font='600 10px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText("A'", xA-4, fbdY+35); ctx.fillText("C'", xC-4, fbdY+35); ctx.fillText("B'(自由)", xB-15, fbdY+35);
+
+    // Draw forces F₁~F₄ on beam
+    // F₁ up at 2ℓ/3 from A
+    const f1x=xA+(xC-xA)*2/3;
+    drawArrow(ctx, f1x, fbdY-6, f1x, fbdY-38, '#10b981');
+    ctx.font='700 10px "JetBrains Mono"'; ctx.fillStyle='#10b981';
+    ctx.fillText('F₁↑', f1x+5, fbdY-40);
+
+    // F₂ down at 5ℓ/6 from A
+    const f2x=xA+(xC-xA)*5/6;
+    drawArrow(ctx, f2x, fbdY+6, f2x, fbdY+30, '#ef4444');
+    ctx.fillStyle='#ef4444'; ctx.fillText('F₂↓', f2x+5, fbdY+40);
+
+    // F₃ down at ℓ+2ℓ/3 from A
+    const f3x=xC+(xB-xC)*2/3;
+    drawArrow(ctx, f3x, fbdY+6, f3x, fbdY+30, '#06b6d4');
+    ctx.fillStyle='#06b6d4'; ctx.fillText('F₃↓', f3x+5, fbdY+40);
+
+    // F₄ down at ℓ+3ℓ/4 from A
+    const f4x=xC+(xB-xC)*3/4;
+    drawArrow(ctx, f4x, fbdY+6, f4x, fbdY+36, '#ec4899');
+    ctx.fillStyle='#ec4899'; ctx.fillText('F₄↓', f4x+5, fbdY+46);
+
+    // R'_A actual direction: downward (result was negative)
+    drawArrow(ctx, xA+15, fbdY+6, xA+15, fbdY+36, '#06b6d4');
+    ctx.font='600 9px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText("R'_A↓", xA+4, fbdY+48);
+
+    // R'_C up
+    drawArrow(ctx, xC, fbdY-6, xC, fbdY-38, '#06b6d4');
+    ctx.fillText("R'_C↑", xC-30, fbdY-28);
+
+    // B' free → V'=0, M'=0
+    ctx.font='600 12px "Noto Sans TC"'; ctx.fillStyle='#8b5cf6';
+    ctx.fillText("V'=0, M'=0", xB-25, fbdY-45);
+
+    info("共軛梁 B' 為自由端 → M'(B') = 0 → Δ_B = 0", xA, dY+120);
+    info("物理意義：原梁 B 為固定端，撓度必為零 ✓", xA, dY+140);
+
+    mono("驗算：M'(B') = R'_A×2ℓ + R'_C×ℓ + F₁×(4ℓ/3) − F₂×(7ℓ/6) − F₃×(ℓ/3) − F₄×(ℓ/4)", xA, dY+170, '#94a3b8');
+    mono("= wℓ⁴/EI × (−7/6+1+2/3−7/24−1/6−1/24) = wℓ⁴/EI × (−28+24+16−7−4−1)/24 = 0 ✓", xA, dY+192, '#10b981');
+
+    ctx.fillStyle='rgba(16,185,129,0.06)'; ctx.strokeStyle='rgba(16,185,129,0.3)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(xA-5,dY+205,400,32,6); ctx.fill(); ctx.stroke();
+    ctx.font='700 14px "JetBrains Mono"'; ctx.fillStyle='#10b981';
+    ctx.fillText("Δ_B = M'(B') = 0　✓", xA+10, dY+226);
+  }
+
+  // ================= Phase 10: FBD → C relative rotation =================
+  if(phase>=10){
+    const rY=3200;
+    secTitle('⑪ 求 C 點相對轉角 — 在 C\' 左右兩側分別截斷求剪力', xA, rY, '#8b5cf6');
+
+    // ===== Left FBD: A' to C'⁻ (just left of C', NOT including R'_C) =====
+    const fb1Y=rY+60;
+    ctx.font='600 12px "Noto Sans TC"'; ctx.fillStyle='#3b82f6';
+    ctx.fillText("左半段 A' → C'⁻（不含 C' 支承反力）", 80, fb1Y);
+
+    const lbY=fb1Y+40;
+    const lx1=80, lx2=440;
+    ctx.strokeStyle='#3b82f6'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(lx1,lbY); ctx.lineTo(lx2,lbY); ctx.stroke();
+    drawPinSupport(ctx, lx1, lbY, '#3b82f6');
+    // wavy cut at C'⁻
+    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2.5;
+    ctx.beginPath();
+    for(let i=0;i<10;i++) ctx.lineTo(lx2+(i%2?5:-5), lbY-18+i*3.6);
+    ctx.stroke();
+
+    ctx.font='600 10px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText("A'", lx1-4, lbY+35);
+    ctx.fillText("C'⁻", lx2-10, lbY+35);
+
+    // R'_A↓
+    drawArrow(ctx, lx1+15, lbY+6, lx1+15, lbY+32, '#06b6d4');
+    ctx.font='600 10px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText("R'_A↓", lx1+4, lbY+44);
+
+    // F₁↑
+    const f1lx=lx1+(lx2-lx1)*2/3;
+    drawArrow(ctx, f1lx, lbY-6, f1lx, lbY-35, '#10b981');
+    ctx.font='700 10px "JetBrains Mono"'; ctx.fillStyle='#10b981';
+    ctx.fillText('F₁↑', f1lx+5, lbY-38);
+
+    // F₂↓
+    const f2lx=lx1+(lx2-lx1)*5/6;
+    drawArrow(ctx, f2lx, lbY+6, f2lx, lbY+28, '#ef4444');
+    ctx.fillStyle='#ef4444'; ctx.fillText('F₂↓', f2lx+5, lbY+38);
+
+    // V'_C左↓(+) at cut (right face convention)
+    drawArrow(ctx, lx2+20, lbY+6, lx2+20, lbY+32, '#8b5cf6');
+    ctx.font='700 10px "JetBrains Mono"'; ctx.fillStyle='#8b5cf6';
+    ctx.fillText("V'_C左↓(+)", lx2+35, lbY+28);
+
+    // ===== Right FBD: C'⁺ to B' (just right of C', NOT including R'_C) =====
+    const fb2Y=fb1Y+100;
+    ctx.font='600 12px "Noto Sans TC"'; ctx.fillStyle='#10b981';
+    ctx.fillText("右半段 C'⁺ → B'（不含 C' 支承反力）", 80, fb2Y);
+
+    const rbY=fb2Y+40;
+    const rx1=80, rx2=580;
+    ctx.strokeStyle='#10b981'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(rx1,rbY); ctx.lineTo(rx2,rbY); ctx.stroke();
+    // wavy cut at C'⁺
+    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2.5;
+    ctx.beginPath();
+    for(let i=0;i<10;i++) ctx.lineTo(rx1+(i%2?5:-5), rbY-18+i*3.6);
+    ctx.stroke();
+    // B' free end
+    ctx.beginPath(); ctx.arc(rx2,rbY,5,0,Math.PI*2); ctx.fillStyle='#10b981'; ctx.fill();
+
+    ctx.font='600 10px "JetBrains Mono"'; ctx.fillStyle='#64748b';
+    ctx.fillText("C'⁺", rx1+10, rbY+35);
+    ctx.fillText("B'(自由)", rx2-15, rbY+35);
+
+    // F₃↓
+    const f3rx=rx1+(rx2-rx1)*2/3;
+    drawArrow(ctx, f3rx, rbY+6, f3rx, rbY+28, '#06b6d4');
+    ctx.font='700 10px "JetBrains Mono"'; ctx.fillStyle='#06b6d4';
+    ctx.fillText('F₃↓', f3rx+5, rbY+38);
+
+    // F₄↓
+    const f4rx=rx1+(rx2-rx1)*3/4;
+    drawArrow(ctx, f4rx, rbY+6, f4rx, rbY+34, '#ec4899');
+    ctx.fillStyle='#ec4899'; ctx.fillText('F₄↓', f4rx+5, rbY+44);
+
+    // V'_C右↑(+) at cut (left face convention)
+    drawArrow(ctx, rx1-20, rbY+5, rx1-20, rbY-28, '#8b5cf6');
+    ctx.font='700 10px "JetBrains Mono"'; ctx.fillStyle='#8b5cf6';
+    ctx.fillText("V'_C右↑(+)", rx1-95, rbY-15);
+
+    // ===== Equations =====
+    const eqY=rY+260;
+    ctx.font='600 13px "Noto Sans TC"'; ctx.fillStyle='#f59e0b';
+    ctx.fillText("【左半段】ΣF_y = 0（右面 V↓(+)）：", xA, eqY);
+    mono("R'_A + F₁ − F₂ − V'_C左 = 0", xA+15, eqY+24, '#cbd5e1');
+    mono("V'_C左 = R'_A + F₁ − F₂ = (−7/12 + 1/2 − 1/4)×wℓ³/EI", xA+15, eqY+46, '#cbd5e1');
+
+    ctx.fillStyle='rgba(59,130,246,0.06)'; ctx.strokeStyle='rgba(59,130,246,0.3)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.roundRect(xA-5,eqY+60,620,28,5); ctx.fill(); ctx.stroke();
+    ctx.font='700 13px "JetBrains Mono"'; ctx.fillStyle='#3b82f6';
+    ctx.fillText("θ_C左 = V'_C左 = −wℓ³/(3EI)　負值 → 假設↓錯 → 實際↑ → ↻", xA+10, eqY+79);
+
+    ctx.font='600 13px "Noto Sans TC"'; ctx.fillStyle='#f59e0b';
+    ctx.fillText("【右半段】ΣF_y = 0（左面 V↑(+)）：", xA, eqY+115);
+    mono("V'_C右 − F₃ − F₄ = 0", xA+15, eqY+139, '#cbd5e1');
+    mono("V'_C右 = F₃ + F₄ = wℓ³/(2EI) + wℓ³/(6EI)", xA+15, eqY+161, '#cbd5e1');
+
+    ctx.fillStyle='rgba(16,185,129,0.06)'; ctx.strokeStyle='rgba(16,185,129,0.3)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.roundRect(xA-5,eqY+175,560,28,5); ctx.fill(); ctx.stroke();
+    ctx.font='700 13px "JetBrains Mono"'; ctx.fillStyle='#10b981';
+    ctx.fillText("θ_C右 = V'_C右 = 2wℓ³/(3EI)　正值 → ↺", xA+10, eqY+194);
+
+    // ===== Relative rotation =====
+    ctx.font='600 13px "Noto Sans TC"'; ctx.fillStyle='#f59e0b';
+    ctx.fillText("C 相對轉角 = V'_C右 − V'_C左：", xA, eqY+230);
+    mono("= 2wℓ³/(3EI) − (−wℓ³/(3EI)) = wℓ³/EI", xA+15, eqY+254, '#cbd5e1');
+
+    ctx.fillStyle='rgba(139,92,246,0.06)'; ctx.strokeStyle='rgba(139,92,246,0.3)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(xA-5,eqY+268,430,32,6); ctx.fill(); ctx.stroke();
+    ctx.font='700 14px "JetBrains Mono"'; ctx.fillStyle='#8b5cf6';
+    ctx.fillText("C 相對轉角 = wℓ³/EI", xA+10, eqY+289);
+
+    // Deformed shape diagram
+    const dsX=600, dsY2=eqY+282;
+    ctx.strokeStyle='#94a3b8'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(dsX-60,dsY2); ctx.lineTo(dsX+60,dsY2); ctx.stroke();
+    ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(dsX,dsY2); ctx.lineTo(dsX-55,dsY2-10); ctx.stroke();
+    ctx.strokeStyle='#10b981'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(dsX,dsY2); ctx.lineTo(dsX+55,dsY2-14); ctx.stroke();
+    ctx.beginPath(); ctx.arc(dsX,dsY2,4,0,Math.PI*2); ctx.fillStyle='#8b5cf6'; ctx.fill();
+    ctx.beginPath(); ctx.arc(dsX,dsY2,22,Math.PI+0.18,Math.PI+0.05,true);
+    ctx.strokeStyle='#8b5cf6'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.font='500 10px "Noto Sans TC"'; ctx.fillStyle='#8b5cf6';
+    ctx.fillText('相對轉角', dsX-10, dsY2-22);
+    ctx.fillStyle='#3b82f6'; ctx.fillText('θ_C左 ↻', dsX-80, dsY2-16);
+    ctx.fillStyle='#10b981'; ctx.fillText('θ_C右 ↺', dsX+40, dsY2-20);
+  }
+
+  // ================= Phase 11: Final Summary =================
+  if(phase>=11){
+    const sumY=3950;
+    ctx.fillStyle='rgba(245,158,11,0.06)'; ctx.strokeStyle='rgba(245,158,11,0.4)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.roundRect(xA-10,sumY,780,170,10); ctx.fill(); ctx.stroke();
+
+    ctx.font='700 16px "Noto Sans TC"'; ctx.fillStyle='#f59e0b';
+    ctx.fillText('📋 最終結果', xA+10, sumY+28);
+
+    ctx.font='700 15px "JetBrains Mono"';
+    ctx.fillStyle='#3b82f6';
+    ctx.fillText("Δ_C = M'(C') = −11wℓ⁴/(24EI)", xA+20, sumY+60);
+    ctx.font='500 13px "Noto Sans TC"'; ctx.fillStyle='#64748b';
+    ctx.fillText('負值 → 向下 ↓', xA+500, sumY+60);
+
+    ctx.font='700 15px "JetBrains Mono"'; ctx.fillStyle='#10b981';
+    ctx.fillText("Δ_B = M'(B') = 0", xA+20, sumY+92);
+    ctx.font='500 13px "Noto Sans TC"'; ctx.fillStyle='#64748b';
+    ctx.fillText('固定端撓度為零 ✓', xA+500, sumY+92);
+
+    ctx.font='700 15px "JetBrains Mono"'; ctx.fillStyle='#8b5cf6';
+    ctx.fillText("C 相對轉角 = R'_C = wℓ³/EI", xA+20, sumY+124);
+    ctx.font='500 13px "Noto Sans TC"'; ctx.fillStyle='#64748b';
+    ctx.fillText('左↻ + 右↺', xA+500, sumY+124);
+
+    ctx.font='600 13px "Noto Sans TC"'; ctx.fillStyle='#f59e0b';
+    ctx.fillText('💡 V\' = θ（轉角），M\' = Δ（撓度）', xA+20, sumY+155);
+    ctx.fillText('正負值直接代表方向（正=逆時針/向上，負=順時針/向下）', xA+20, sumY+155+20);
+  }
+}
+
+
+// ============================================================
+// STEP 7: Quiz
+// ============================================================
+function renderQuiz(el) {
+  el.innerHTML = `
+    <div class="step-container active">
+      <div class="step-title">
+        <span class="step-badge" style="background:rgba(236,72,153,0.15);color:var(--pink)">🧠</span>
+        隨堂測驗
+      </div>
+      <div class="step-desc">
+        測試你對共軛梁法的理解！
+      </div>
+
+      <div class="concept-box" id="q1box">
+        <h3>Q1：共軛梁的剪力對應到原梁的什麼？</h3>
+        <button class="quiz-option" onclick="checkQuiz(1,'a',this)">A. 撓度 Δ</button>
+        <button class="quiz-option" onclick="checkQuiz(1,'b',this)">B. 轉角 θ</button>
+        <button class="quiz-option" onclick="checkQuiz(1,'c',this)">C. 剪力 V</button>
+        <button class="quiz-option" onclick="checkQuiz(1,'d',this)">D. 彎矩 M</button>
+        <div class="quiz-result" id="q1result"></div>
+      </div>
+
+      <div class="concept-box" id="q2box">
+        <h3>Q2：原梁的固定端，在共軛梁中會轉換成？</h3>
+        <button class="quiz-option" onclick="checkQuiz(2,'a',this)">A. 固定端</button>
+        <button class="quiz-option" onclick="checkQuiz(2,'b',this)">B. 鉸支承</button>
+        <button class="quiz-option" onclick="checkQuiz(2,'c',this)">C. 自由端</button>
+        <button class="quiz-option" onclick="checkQuiz(2,'d',this)">D. 輥支承</button>
+        <div class="quiz-result" id="q2result"></div>
+      </div>
+
+      <div class="concept-box" id="q3box">
+        <h3>Q3：M/EI 載重的方向規則是？</h3>
+        <button class="quiz-option" onclick="checkQuiz(3,'a',this)">A. 永遠向下</button>
+        <button class="quiz-option" onclick="checkQuiz(3,'b',this)">B. 永遠向上</button>
+        <button class="quiz-option" onclick="checkQuiz(3,'c',this)">C. 指向離開梁身</button>
+        <button class="quiz-option" onclick="checkQuiz(3,'d',this)">D. 指向梁身內側</button>
+        <div class="quiz-result" id="q3result"></div>
+      </div>
+
+      <div class="concept-box" id="q4box">
+        <h3>Q4：簡支梁受中央集中力 P，最大撓度公式為？</h3>
+        <button class="quiz-option" onclick="checkQuiz(4,'a',this)">A. PL³/(3EI)</button>
+        <button class="quiz-option" onclick="checkQuiz(4,'b',this)">B. PL³/(48EI)</button>
+        <button class="quiz-option" onclick="checkQuiz(4,'c',this)">C. PL²/(16EI)</button>
+        <button class="quiz-option" onclick="checkQuiz(4,'d',this)">D. PL⁴/(8EI)</button>
+        <div class="quiz-result" id="q4result"></div>
+      </div>
+
+      ${navButtons()}
+    </div>
+  `;
+}
+
+const quizAnswers = { 1: 'b', 2: 'c', 3: 'c', 4: 'b' };
+const quizExplanations = {
+  1: '共軛梁的剪力 V\' = 原梁的轉角 θ，共軛梁的彎矩 M\' = 原梁的撓度 Δ。',
+  2: '原梁固定端 θ=0, Δ=0，共軛梁需要 V\'≠0, M\'≠0，因此轉換為自由端。',
+  3: 'M/EI 載重的方向規則是「指向離開梁身」：正彎矩→向上，負彎矩→向下。',
+  4: '簡支梁受中央集中力的最大撓度 = PL³/(48EI)，發生在梁中央。',
+};
+
+function checkQuiz(qNum, answer, btn) {
+  const correct = quizAnswers[qNum];
+  const resultEl = document.getElementById(`q${qNum}result`);
+  const box = document.getElementById(`q${qNum}box`);
+  const btns = box.querySelectorAll('.quiz-option');
+
+  btns.forEach(b => {
+    b.disabled = true;
+    b.style.pointerEvents = 'none';
+  });
+
+  if (answer === correct) {
+    btn.classList.add('correct');
+    resultEl.style.display = 'block';
+    resultEl.style.background = 'rgba(16,185,129,0.1)';
+    resultEl.style.border = '1px solid rgba(16,185,129,0.3)';
+    resultEl.style.color = 'var(--green)';
+    resultEl.textContent = '✅ 正確！' + quizExplanations[qNum];
+  } else {
+    btn.classList.add('wrong');
+    // Highlight correct
+    const correctLetter = correct.charCodeAt(0) - 'a'.charCodeAt(0);
+    btns[correctLetter].classList.add('correct');
+    resultEl.style.display = 'block';
+    resultEl.style.background = 'rgba(239,68,68,0.1)';
+    resultEl.style.border = '1px solid rgba(239,68,68,0.3)';
+    resultEl.style.color = 'var(--red)';
+    resultEl.textContent = '❌ 答錯了。' + quizExplanations[qNum];
+  }
+}
+
+// ============================================================
+// DRAWING HELPERS
+// ============================================================
+function drawArrow(ctx, x1, y1, x2, y2, color) {
+  const headLen = 10;
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+  ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawArrowDouble(ctx, x1, y1, x2, y2, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Arrow head
+  const headLen = 8;
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+  ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawPinSupport(ctx, x, y, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x - 12, y + 20);
+  ctx.lineTo(x + 12, y + 20);
+  ctx.closePath();
+  ctx.fill();
+  // Ground line
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 16, y + 22);
+  ctx.lineTo(x + 16, y + 22);
+  ctx.stroke();
+}
+
+function drawRollerSupport(ctx, x, y, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x - 12, y + 16);
+  ctx.lineTo(x + 12, y + 16);
+  ctx.closePath();
+  ctx.fill();
+  // Circle
+  ctx.beginPath();
+  ctx.arc(x, y + 20, 4, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  // Ground line
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 16, y + 26);
+  ctx.lineTo(x + 16, y + 26);
+  ctx.stroke();
+}
+
+function drawFixedSupport(ctx, x, y, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 20);
+  ctx.lineTo(x, y + 20);
+  ctx.stroke();
+  // Hatching
+  ctx.lineWidth = 1.5;
+  for (let i = -3; i <= 3; i++) {
+    const yy = y + i * 7;
+    ctx.beginPath();
+    ctx.moveTo(x, yy);
+    ctx.lineTo(x - 10, yy + 6);
+    ctx.stroke();
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+buildNav();
+renderStep();
+</script>
+</body>
+</html>
