@@ -346,9 +346,9 @@ function drawJointB(svg){
   ar(svg,jx-6,midAB,jx-44,midAB,"#ef4444",5);
   tx(svg,jx-48,midAB-4,"12←",8,"#ef4444",{a:"end"});
 
-  // 48↻ (moment, well above 12←, near joint)
-  mArc(svg,jx+36,jy+22,13,"#ef4444",true,false);
-  tx(svg,jx+55,jy+18,"48↻",8,"#ef4444",{a:"start"});
+  // 48↻ (moment, lower part of AB stub, close to it)
+  mArc(svg,jx+18,jy+abLen*0.72,11,"#ef4444",true,false);
+  tx(svg,jx+46,jy+abLen*0.72+4,"48↻",8,"#ef4444",{a:"start"});
 
   // Label (below stub)
   tx(svg,jx+10,jy+abLen+26,"from AB (N3L反轉)",8,"#ef4444",{a:"start"});
@@ -470,7 +470,7 @@ function drawJointC(svg){
 // MEMBER CD FBD (verify)
 // ═══════════════════════════════════════
 function drawFBD_CD(svg){
-  const S=58,cx=340,dy=395,cy=dy-4*S;
+  const S=58,cx=340,dy=375,cy=dy-4*S;
   mk("line",{x1:cx,y1:dy,x2:cx,y2:cy,stroke:"#c084fc","stroke-width":4,"stroke-linecap":"round"},svg);
   rolSup(svg,cx,dy);jDot(svg,cx,cy);
   tx(svg,cx+22,dy-4,"D",12,"#8ecae6",{a:"start",b:true});
@@ -498,13 +498,24 @@ function drawNVM(svg,type){
   const c={N:"#38bdf8",V:"#a78bfa",M:"#f59e0b"}[type];
   const fo=type==="M"?.16:.1;
   const ax=fsx(0),a0=fsy(0),a4=fsy(4);
-  if(type==="N"){const off=-4*1.6,g=mk("g",{},svg);mk("polygon",{points:`${ax},${a0} ${ax+off},${a0} ${ax+off},${a4} ${ax},${a4}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:ax,y1:a0,x2:ax,y2:a4,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,ax+off-4,(a0+a4)/2,"−4(C)",8,"#fca5a5",{a:"end"})}
-  else if(type==="V"){const off=12*1.3,g=mk("g",{},svg);mk("polygon",{points:`${ax},${a0} ${ax+off},${a0} ${ax+off},${a4} ${ax},${a4}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:ax,y1:a0,x2:ax,y2:a4,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,ax+off+4,(a0+a4)/2,"12",8,c,{a:"start"})}
-  else{const offB=48*.9,g=mk("g",{},svg);mk("polygon",{points:`${ax},${a0} ${ax},${a4} ${ax+offB},${a4}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:ax,y1:a0,x2:ax,y2:a4,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,ax+3,a0+10,"0",8,c,{a:"start"});tx(g,ax+offB+4,a4+3,"48",8,c,{a:"start"})}
+  // ── Member AB (left column) ──
+  // Tension side = LEFT (outside frame, Ax=12← bends column with tension on left)
+  // N: compression drawn INWARD (right for left column)
+  if(type==="N"){const off=4*1.6,g=mk("g",{},svg);mk("polygon",{points:`${ax},${a0} ${ax+off},${a0} ${ax+off},${a4} ${ax},${a4}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:ax,y1:a0,x2:ax,y2:a4,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,ax+off+4,(a0+a4)/2,"−4(C)",8,"#fca5a5",{a:"start"})}
+  // V: drawn on tension side (LEFT)
+  else if(type==="V"){const off=-12*1.3,g=mk("g",{},svg);mk("polygon",{points:`${ax},${a0} ${ax+off},${a0} ${ax+off},${a4} ${ax},${a4}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:ax,y1:a0,x2:ax,y2:a4,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,ax+off-4,(a0+a4)/2,"12",8,c,{a:"end"})}
+  // M: drawn on tension side (LEFT), 0 at A → 48 at B
+  else{const offB=-48*.9,g=mk("g",{},svg);mk("polygon",{points:`${ax},${a0} ${ax},${a4} ${ax+offB},${a4}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:ax,y1:a0,x2:ax,y2:a4,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,ax-3,a0+10,"0",8,c,{a:"end"});tx(g,ax+offB-4,a4+3,"48",8,c,{a:"end"})}
+  // ── Member BC (top beam) ──
+  // Tension side = TOP (outside frame for this loading)
   const bx1=fsx(0),bx2=fsx(6),bxe=fsx(3),by=fsy(4);
   if(type==="N"){mk("line",{x1:bx1,y1:by,x2:bx2,y2:by,stroke:c,"stroke-width":1,opacity:.4,"stroke-dasharray":"3 3"},svg);tx(svg,(bx1+bx2)/2,by-8,"N=0",8,c)}
-  else if(type==="V"){const o1=4*1.3,o2=-20*1.3,g=mk("g",{},svg);mk("polygon",{points:`${bx1},${by} ${bx1},${by+o1} ${bxe},${by+o1} ${bxe},${by}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("polygon",{points:`${bxe},${by} ${bxe},${by+o2} ${bx2},${by+o2} ${bx2},${by}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:bxe,y1:by+o1,x2:bxe,y2:by+o2,stroke:c,"stroke-width":1.3,"stroke-dasharray":"3 2"},g);mk("line",{x1:bx1,y1:by,x2:bx2,y2:by,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,(bx1+bxe)/2,by+o1+11,"+4",8,c);tx(g,(bxe+bx2)/2,by+o2-5,"−20",8,c)}
-  else{const oB=48*.9,oE=60*.9,g=mk("g",{},svg);mk("polygon",{points:`${bx1},${by} ${bx1},${by+oB} ${bxe},${by+oE} ${bx2},${by}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:bx1,y1:by,x2:bx2,y2:by,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,bx1-4,by+oB+3,"48",8,c,{a:"end"});mk("circle",{cx:bxe,cy:by+oE,r:3,fill:c},g);tx(g,bxe,by+oE+12,"60(max)",8,c);tx(g,bx2+4,by+3,"0",8,c,{a:"start"})}
+  // V: +4 drawn ABOVE (tension side), −20 drawn BELOW
+  else if(type==="V"){const o1=-4*1.3,o2=20*1.3,g=mk("g",{},svg);mk("polygon",{points:`${bx1},${by} ${bx1},${by+o1} ${bxe},${by+o1} ${bxe},${by}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("polygon",{points:`${bxe},${by} ${bxe},${by+o2} ${bx2},${by+o2} ${bx2},${by}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:bxe,y1:by+o1,x2:bxe,y2:by+o2,stroke:c,"stroke-width":1.3,"stroke-dasharray":"3 2"},g);mk("line",{x1:bx1,y1:by,x2:bx2,y2:by,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,(bx1+bxe)/2,by+o1-5,"+4",8,c);tx(g,(bxe+bx2)/2,by+o2+11,"−20",8,c)}
+  // M: drawn ABOVE (tension side), 48 at B → 60 at E → 0 at C
+  else{const oB=-48*.9,oE=-60*.9,g=mk("g",{},svg);mk("polygon",{points:`${bx1},${by} ${bx1},${by+oB} ${bxe},${by+oE} ${bx2},${by}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:bx1,y1:by,x2:bx2,y2:by,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,bx1-4,by+oB-5,"48",8,c,{a:"end"});mk("circle",{cx:bxe,cy:by+oE,r:3,fill:c},g);tx(g,bxe,by+oE-8,"60(max)",8,c);tx(g,bx2+4,by-5,"0",8,c,{a:"start"})}
+  // ── Member CD (right column) ──
+  // N: compression drawn INWARD (left for right column) — already correct
   const dx=fsx(6),d0=fsy(0),d4=fsy(4);
   if(type==="N"){const off=20*1.6,g=mk("g",{},svg);mk("polygon",{points:`${dx},${d4} ${dx-off},${d4} ${dx-off},${d0} ${dx},${d0}`,fill:c,"fill-opacity":fo,stroke:c,"stroke-width":1.3},g);mk("line",{x1:dx,y1:d4,x2:dx,y2:d0,stroke:c,"stroke-width":.8,opacity:.3,"stroke-dasharray":"3 3"},g);tx(g,dx-off-4,(d4+d0)/2,"−20(C)",8,"#fca5a5",{a:"end"})}
   else if(type==="V"){mk("line",{x1:dx,y1:d4,x2:dx,y2:d0,stroke:c,"stroke-width":1,opacity:.4,"stroke-dasharray":"3 3"},svg);tx(svg,dx+10,(d4+d0)/2,"V=0",8,c,{a:"start"})}
