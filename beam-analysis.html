@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>結構分析器 — 靜定梁分析</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f172a; -webkit-text-size-adjust: 100%; }
+  select, input, button { font-family: inherit; -webkit-appearance: none; }
+  input[type="number"] { -moz-appearance: textfield; }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  svg { touch-action: pan-x pan-y; }
+  ::-webkit-scrollbar { height: 4px; width: 4px; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useEffect } = React;
+
+
+// ─── Constants ───
+const GRID = 40;
+const CANVAS_H = 400;
+const BEAM_Y = 160;
+const LABEL_ROW_Y = 345;
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+// ─── Responsive hook ───
+function useIsMobile(breakpoint = 640) {
+  const [w, setW] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+  useEffect(() => {
+    const h = () => setW(window.innerWidth);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  return { isMobile: w < breakpoint, isTablet: w < 1024, winW: w };
+}
+
+// ─── Build node label map: collect all notable positions → assign A, B, C... ───
+function buildNodeLabels(supports, loads, hinges, guidedConns = []) {
+  const posSet = new Set();
+  supports.forEach((s) => posSet.add(s.pos));
+  hinges.forEach((h) => posSet.add(h));
+  guidedConns.forEach((g) => posSet.add(g));
+  loads.forEach((l) => {
+    if (l.type === "point" || l.type === "moment") posSet.add(l.pos);
+  });
+  const sorted = [...posSet].sort((a, b) => a - b);
+  const map = {};
+  const list = [];
+  sorted.forEach((pos, i) => {
+    const label = i < 26 ? LETTERS[i] : LETTERS[Math.floor(i / 26) - 1] + LETTERS[i % 26];
+    map[pos] = label;
+    list.push({ pos, label });
+  });
+  return { map, list };
+}
+
+// ─── SVG Icon Components ───
+function RollerIcon({ x, y, size = 24, color = "#0ea5e9" }) {
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <polygon points={`0,0 ${-size/2},${size*0.7} ${size/2},${size*0.7}`} fill="none" stroke={color} strokeWidth="2.5" />
+      <circle cx={0} cy={size*0.7+6} r={5} fill="none" stroke={color} strokeWidth="2" />
+      <line x1={-size/2-4} y1={size*0.7+13} x2={size/2+4} y2={size*0.7+13} stroke={color} strokeWidth="2" />
+    </g>
+  );
+}
+
+function HingeIcon({ x, y, size = 24, color = "#8b5cf6" }) {
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <polygon points={`0,0 ${-size/2},${size*0.7} ${size/2},${size*0.7}`} fill="none" stroke={color} strokeWidth="2.5" />
+      <line x1={-size/2-4} y1={size*0.7+4} x2={size/2+4} y2={size*0.7+4} stroke={color} strokeWidth="2" />
+      {[-8,-2,4,10].map((dx,i) => (
+        <line key={i} x1={-size/2-4+dx+i*2} y1={size*0.7+4} x2={-size/2-8+dx+i*2} y2={size*0.7+10} stroke={color} strokeWidth="1.5" />
+      ))}
+    </g>
+  );
+}
+
+function FixedIcon({ x, y, side = "left", size = 24, color = "#ef4444" }) {
+  const dir = side === "left" ? -1 : 1;
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <line x1={0} y1={-size} x2={0} y2={size} stroke={color} strokeWidth="3" />
+      {[-size,-size/2,0,size/2,size].map((dy,i) => (
+        <line key={i} x1={0} y1={dy} x2={dir*10} y2={dy-6} stroke={color} strokeWidth="1.5" />
+      ))}
+    </g>
+  );
+}
+
+function SliderIcon({ x, y, size = 24, color = "#f97316" }) {
+  // 導向支承: vertical rail with rollers — allows vertical movement, resists Rx and M
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {/* Vertical rail */}
+      <line x1={-12} y1={-size} x2={-12} y2={size} stroke={color} strokeWidth="2.5" />
+      {/* Hatching */}
+      {[-size,-size/2,0,size/2,size].map((dy,i) => (
+        <line key={i} x1={-12} y1={dy} x2={-22} y2={dy-6} stroke={color} strokeWidth="1.5" />
+      ))}
+      {/* Rollers between rail and beam */}
+      <circle cx={-4} cy={-8} r={4} fill="none" stroke={color} strokeWidth="2" />
+      <circle cx={-4} cy={8} r={4} fill="none" stroke={color} strokeWidth="2" />
+      {/* Connection to beam */}
+      <line x1={0} y1={-12} x2={0} y2={12} stroke={color} strokeWidth="2" />
+    </g>
+  );
+}
+
+function GuidedConnIcon({ x, y, color = "#f97316" }) {
+  // 導向接續 (定向接續): transmits N and M, V=0
+  // Drawn as a vertical slot with rollers
+  return (
+    <g>
+      <rect x={x-4} y={y-10} width={8} height={20} fill="#0f172a" stroke={color} strokeWidth="2" rx="2" />
+      <circle cx={x} cy={y-5} r={2.5} fill={color} />
+      <circle cx={x} cy={y+5} r={2.5} fill={color} />
+    </g>
+  );
+}
+
+function ArrowDown({ x, y, len = 40, color = "#dc2626", label }) {
+  return (
+    <g>
+      <line x1={x} y1={y-len} x2={x} y2={y} stroke={color} strokeWidth="2.5" />
+      <polygon points={`${x},${y} ${x-5},${y-10} ${x+5},${y-10}`} fill={color} />
+      {label && <text x={x} y={y-len-6} textAnchor="middle" fill={color} fontSize="12" fontWeight="700">{label}</text>}
+    </g>
+  );
+}
+
+function ArrowUp({ x, y, len = 40, color = "#16a34a", label }) {
+  return (
+    <g>
+      <line x1={x} y1={y+len} x2={x} y2={y} stroke={color} strokeWidth="2.5" />
+      <polygon points={`${x},${y} ${x-5},${y+10} ${x+5},${y+10}`} fill={color} />
+      {label && <text x={x} y={y-6} textAnchor="middle" fill={color} fontSize="12" fontWeight="700">{label}</text>}
+    </g>
+  );
+}
+
+function MomentArc({ x, y, cw = true, color = "#d97706", label }) {
+  const r = 18;
+  return (
+    <g>
+      <path d={cw
+        ? `M ${x+r} ${y} A ${r} ${r} 0 1 1 ${x} ${y-r}`
+        : `M ${x-r} ${y} A ${r} ${r} 0 1 0 ${x} ${y-r}`
+      } fill="none" stroke={color} strokeWidth="2" />
+      <polygon points={cw
+        ? `${x},${y-r} ${x+5},${y-r+7} ${x-5},${y-r+3}`
+        : `${x},${y-r} ${x+5},${y-r+3} ${x-5},${y-r+7}`
+      } fill={color} />
+      {label && <text x={x} y={y-r-8} textAnchor="middle" fill={color} fontSize="11" fontWeight="700">{label}</text>}
+    </g>
+  );
+}
+
+function DistLoadViz({ x1, x2, y, w, color = "#dc2626" }) {
+  const n = Math.max(3, Math.round((x2-x1)/20));
+  const dx = (x2-x1)/(n-1);
+  const h = Math.min(40, Math.max(20, Math.abs(w)*8));
+  return (
+    <g>
+      <rect x={x1} y={y-h} width={x2-x1} height={h} fill={color} fillOpacity="0.08" stroke={color} strokeWidth="1" strokeDasharray="4 2" />
+      {Array.from({length:n},(_,i) => <ArrowDown key={i} x={x1+i*dx} y={y} len={h-4} color={color} />)}
+      <text x={(x1+x2)/2} y={y-h-6} textAnchor="middle" fill={color} fontSize="12" fontWeight="700">{w} kN/m</text>
+    </g>
+  );
+}
+
+function InternalHingeIcon({ x, y, color = "#a855f7" }) {
+  return <circle cx={x} cy={y} r={6} fill="white" stroke={color} strokeWidth="2.5" />;
+}
+
+// ★ Node Label — drawn in a dedicated row at bottom of SVG ★
+function NodeLabel({ x, baseY, label, pos }) {
+  return (
+    <g>
+      {/* Vertical guide line from above down to label */}
+      <line x1={x} y1={baseY - 8} x2={x} y2={baseY + 2} stroke="#1e3a5f" strokeWidth="1" strokeDasharray="2 3" />
+      {/* Label circle + letter */}
+      <circle cx={x} cy={baseY + 14} r={11} fill="#0c2d4d" stroke="#0ea5e9" strokeWidth="1.5" />
+      <text x={x} y={baseY + 18.5} textAnchor="middle" fill="#38bdf8" fontSize="13" fontWeight="900" style={{ fontFamily: "monospace" }}>{label}</text>
+    </g>
+  );
+}
+
+// ─── Analysis Engine ───
+function analyzeBeam(beamLen, supports, loads, hinges, guidedConns, nodeMap) {
+  const steps = [];
+  const L = beamLen;
+  const lb = (pos) => nodeMap[pos] || `${pos}m`;
+  const fmt = (v) => {
+    const r = Math.round(v * 10000) / 10000;
+    return Number.isInteger(r) ? r.toString() : r.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+  };
+  // mep: Moment Effective Position — 僅用於判定彎矩屬於內鉸的左側或右側
+  // ε 偏移只用在 < > <= 比較，物理計算（力臂距離）一律用原始 ld.pos
+  // 例：鉸在 6m，彎矩 side="right" → mep=6.0001 → 比較時排除在左側 FBD 外
+  //     但方程式中的力臂仍以 6m 計算，不會有數值誤差
+  const EPS = 1e-6;
+  const mep = (ld) => ld.side === "left" ? ld.pos - EPS : ld.side === "right" ? ld.pos + EPS : ld.pos;
+
+  // ────── Step 1: Stability ──────
+  // For beam with vertical loads only: ΣFx=0 trivially satisfied, Rx=0
+  // Count full reactions for display, and effective reactions for solving
+  let rFull = 0;
+  let rEff = 0; // only Ry and M (excluding trivial Rx)
+  supports.forEach((s) => {
+    if (s.type === "roller")      { rFull += 1; rEff += 1; } // Ry
+    else if (s.type === "hinge")  { rFull += 2; rEff += 1; } // Rx(=0) + Ry → eff: Ry
+    else if (s.type === "fixed")  { rFull += 3; rEff += 2; } // Rx(=0) + Ry + M → eff: Ry, M
+    else if (s.type === "slider") { rFull += 2; rEff += 1; } // Rx(=0) + M → eff: M
+  });
+  const nCondEq = hinges.length + guidedConns.length;
+  const doiFull = rFull - nCondEq - 3;
+  const doiEff = rEff - nCondEq - 2; // 2 useful eqs: ΣFy, ΣM
+
+  steps.push("═══════════════════════════════════════");
+  steps.push("【步驟 1】判定穩定性與靜定性");
+  steps.push("═══════════════════════════════════════");
+  steps.push("");
+  steps.push("  支承反力：");
+  supports.forEach((s) => {
+    const sName = s.type === "roller" ? "輥支承" : s.type === "hinge" ? "鉸支承" : s.type === "fixed" ? "固定端" : "導向支承";
+    const rCount = s.type === "roller" ? 1 : s.type === "hinge" ? 2 : s.type === "fixed" ? 3 : 2;
+    const rList = s.type === "roller" ? `Ry_${lb(s.pos)}`
+      : s.type === "hinge" ? `Rx_${lb(s.pos)}, Ry_${lb(s.pos)}`
+      : s.type === "fixed" ? `Rx_${lb(s.pos)}, Ry_${lb(s.pos)}, M_${lb(s.pos)}`
+      : `Rx_${lb(s.pos)}, M_${lb(s.pos)}`;
+    steps.push(`    ${lb(s.pos)} 點（${sName}）→ ${rCount} 個反力（${rList}）`);
+  });
+  steps.push("");
+  steps.push(`  反力數 r = ${rFull}`);
+  const condDescs = [];
+  if (hinges.length > 0) condDescs.push(`內鉸M=0：${hinges.map(h => lb(h)).join(", ")}`);
+  if (guidedConns.length > 0) condDescs.push(`導向接續V=0：${guidedConns.map(g => lb(g)).join(", ")}`);
+  steps.push(`  條件方程式 c = ${nCondEq}` + (nCondEq > 0 ? `（${condDescs.join("；")}）` : ""));
+  steps.push(`  靜不定度 n = r − c − 3 = ${rFull} − ${nCondEq} − 3 = ${doiFull}`);
+  if (doiFull !== doiEff) {
+    steps.push(`  （梁僅受垂直載重，Rx 皆為零，有效未知數 = ${rEff}，有效方程式 = ${nCondEq + 2}）`);
+    steps.push(`  有效靜不定度 = ${rEff} − ${nCondEq} − 2 = ${doiEff}`);
+  }
+
+  const doi = doiEff; // use effective DOI for solving check
+  if (doi < 0) return { error: `不穩定結構（約束不足）`, steps, reactions: {}, shearData: [], momentData: [] };
+  if (doi > 0) return { error: `靜不定 ${doi} 度，目前僅支援靜定梁。\n後續可用諧合變形法或傾角變位法求解。`, steps, reactions: {}, shearData: [], momentData: [] };
+  steps.push("");
+  steps.push("  ✓ n = 0 → 穩定靜定結構");
+  steps.push("");
+
+  // Build variable list: yR = vertical reactions, mR = moment reactions
+  const yR = []; const mR = []; let idx = 0;
+  supports.forEach((s) => {
+    if (s.type !== "slider") {
+      // roller, hinge, fixed all have Ry
+      yR.push({ lab: lb(s.pos), pos: s.pos, idx: idx++ });
+    }
+    if (s.type === "fixed" || s.type === "slider") {
+      // fixed and slider both have M reaction
+      mR.push({ lab: lb(s.pos), pos: s.pos, idx: idx++ });
+    }
+  });
+  const nVars = idx;
+
+  // ────── Step 2: List unknowns & describe loads ──────
+  steps.push("═══════════════════════════════════════");
+  steps.push("【步驟 2】標示未知反力與外力");
+  steps.push("═══════════════════════════════════════");
+  steps.push("");
+  steps.push("  未知反力：" + [...yR.map(r => `Ry_${r.lab}`), ...mR.map(r => `M_${r.lab}`)].join("、"));
+  steps.push("");
+  steps.push("  外力（↓為正）：");
+  loads.forEach((ld) => {
+    if (ld.type === "point") {
+      steps.push(`    集中力 P = ${ld.value} kN（↓）作用於 ${lb(ld.pos)} 點（x = ${ld.pos}m）`);
+    } else if (ld.type === "distributed") {
+      const F = ld.value * (ld.end - ld.start);
+      const xc = (ld.start + ld.end) / 2;
+      steps.push(`    均佈載重 w = ${ld.value} kN/m，${ld.start}m ~ ${ld.end}m`);
+      steps.push(`      → 合力 F = ${ld.value} × ${ld.end - ld.start} = ${fmt(F)} kN，作用於 x = ${fmt(xc)}m（中點）`);
+    } else if (ld.type === "moment") {
+      const dir = ld.value > 0 ? "↻順時針" : "↺逆時針";
+      const sideStr = ld.side === "left" ? "（內鉸左側）" : ld.side === "right" ? "（內鉸右側）" : "";
+      steps.push(`    集中彎矩 M₀ = ${Math.abs(ld.value)} kN·m（${dir}）作用於 ${lb(ld.pos)} 點${sideStr}`);
+    }
+  });
+  steps.push("");
+
+  // ────── Step 3: Equations & Solving ──────
+  steps.push("═══════════════════════════════════════");
+  steps.push("【步驟 3】列平衡方程式並求解反力");
+  steps.push("═══════════════════════════════════════");
+  steps.push("");
+
+  // ── Build all equations ──
+  // ALL moment equations use the M(x) = 0 formulation from the LEFT side:
+  //   M(x_s) = M_react + Σ Ry_i × (x_s - pos_i) - Σ P × arm - Σ dist + Σ M_applied = 0
+  //   => LHS: M_react(+1) + Ry_i(+(x_s - pos_i))  |  RHS: P×arm + dist - M_applied
+
+  const A = []; const b = [];
+  const eqNames = [];
+
+  // Helper: compute load moment about section x_s (from left side)
+  // Returns the RHS value for M(x_s) = 0
+  // Eq 1: ΣFy = 0
+  {
+    const row = new Array(nVars).fill(0);
+    yR.forEach((r) => (row[r.idx] = 1));
+    let rhs = 0;
+    loads.forEach((ld) => {
+      if (ld.type === "point") rhs += ld.value;
+      else if (ld.type === "distributed") rhs += ld.value * (ld.end - ld.start);
+    });
+    A.push(row); b.push(rhs);
+    eqNames.push("ΣFy = 0");
+  }
+
+  // Eq 2: Moment equation — M(x_ref) = 0
+  // Choose x_ref: a point where M is known to be 0
+  //   - Second support (roller/hinge) → M = 0 there
+  //   - Or free end of beam → M = 0 there
+  const piv = supports[0].pos; // still used for step display
+  const pivLab = lb(piv);
+  let mRef = beamLen; // default: free end
+  for (let i = supports.length - 1; i >= 0; i--) {
+    if ((supports[i].type === "roller" || supports[i].type === "hinge") && supports[i].pos !== piv) {
+      mRef = supports[i].pos; break;
+    }
+  }
+  // If first support is roller/hinge (no M reaction), use a far support or free end
+  if (supports[0].type === "roller" || supports[0].type === "hinge") {
+    // First support has no M reaction, use last support or far end
+    for (let i = supports.length - 1; i >= 0; i--) {
+      if (supports[i].pos !== piv && (supports[i].type === "roller" || supports[i].type === "hinge")) {
+        mRef = supports[i].pos; break;
+      }
+    }
+  }
+  const mRefLab = lb(mRef);
+  {
+    const row = new Array(nVars).fill(0);
+    // ΣM about mRef: include ALL reactions (coefficient can be negative for forces to the right)
+    yR.forEach((r) => { row[r.idx] = mRef - r.pos; });
+    mR.forEach((r) => { row[r.idx] = 1; }); // M reactions always contribute +1
+    // RHS: ALL loads
+    let rhs = 0;
+    loads.forEach((ld) => {
+      if (ld.type === "point") rhs += ld.value * (mRef - ld.pos);
+      else if (ld.type === "distributed") {
+        const len = ld.end - ld.start;
+        const xc = (ld.start + ld.end) / 2;
+        rhs += ld.value * len * (mRef - xc);
+      }
+      else if (ld.type === "moment") rhs -= ld.value;
+    });
+    A.push(row); b.push(rhs);
+    eqNames.push(`M(${mRefLab}) = 0`);
+  }
+
+  // Hinge conditions: M(hPos) = 0
+  // Strategy: if a moment is applied at hinge-left → use RIGHT FBD (avoid the moment)
+  //           if a moment is applied at hinge-right or none → use LEFT FBD (default)
+  hinges.forEach((hPos) => {
+    const hLab = lb(hPos);
+    // Check if any moment is on the left side of this hinge
+    const hasMomentLeft = loads.some(ld => ld.type === "moment" && ld.pos === hPos && ld.side === "left");
+    const useRight = hasMomentLeft; // use right FBD to avoid the left-side moment
+
+    const row = new Array(nVars).fill(0);
+    let rhs = 0;
+
+    if (useRight) {
+      // RIGHT FBD: Σ Ry_right × (pos − hPos) + Σ M_react_right = Σ P_right × (pos − hPos) + Σ w_right − Σ M_applied_right
+      yR.forEach((r) => { if (r.pos > hPos) row[r.idx] = r.pos - hPos; });
+      mR.forEach((r) => { if (r.pos > hPos) row[r.idx] = 1; });
+      loads.forEach((ld) => {
+        if (ld.type === "point" && ld.pos > hPos) rhs += ld.value * (ld.pos - hPos);
+        else if (ld.type === "distributed") {
+          const a = Math.max(ld.start, hPos);
+          const be = ld.end;
+          if (a < be) { const len = be - a; rhs += ld.value * len * (a - hPos + len / 2); }
+        }
+        else if (ld.type === "moment" && mep(ld) > hPos) rhs -= ld.value;
+      });
+      A.push(row); b.push(rhs);
+      eqNames.push(`M_${hLab}(右) = 0`);
+    } else {
+      // LEFT FBD (default): Σ Ry_left × (hPos − pos) + Σ M_react_left = Σ P_left × (hPos − pos) + Σ w_left − Σ M_applied_left
+      yR.forEach((r) => { if (r.pos < hPos) row[r.idx] = hPos - r.pos; });
+      mR.forEach((r) => { if (r.pos < hPos) row[r.idx] = 1; });
+      loads.forEach((ld) => {
+        if (ld.type === "point" && ld.pos < hPos) rhs += ld.value * (hPos - ld.pos);
+        else if (ld.type === "distributed") {
+          const be = Math.min(ld.end, hPos);
+          if (ld.start < hPos) { const len = be - ld.start; rhs += ld.value * len * (hPos - ld.start - len / 2); }
+        }
+        else if (ld.type === "moment" && mep(ld) < hPos) rhs -= ld.value;
+      });
+      A.push(row); b.push(rhs);
+      eqNames.push(`M_${hLab}(左) = 0`);
+    }
+  });
+
+  // Guided connection conditions: V = 0 at that point
+  guidedConns.forEach((gPos) => {
+    const gLab = lb(gPos);
+    const row = new Array(nVars).fill(0);
+    yR.forEach((r) => { if (r.pos <= gPos) row[r.idx] = 1; });
+    let rhs = 0;
+    loads.forEach((ld) => {
+      if (ld.type === "point" && ld.pos <= gPos) rhs += ld.value;
+      else if (ld.type === "distributed") {
+        const be = Math.min(ld.end, gPos);
+        if (ld.start < gPos) { const len = be - ld.start; rhs += ld.value * len; }
+      }
+    });
+    A.push(row); b.push(rhs);
+    eqNames.push(`V_${gLab} = 0`);
+  });
+
+  if (A.length !== nVars) return { error: `方程式數 ≠ 未知數`, steps, reactions: {}, shearData: [], momentData: [] };
+
+  // ── Determine best solving order ──
+  // Find an equation with only 1 unknown to solve first
+  const varNames = [...yR.map(r => `Ry_${r.lab}`), ...mR.map(r => `M_${r.lab}`)];
+  const varIdx = [...yR.map(r => r.idx), ...mR.map(r => r.idx)];
+
+  // Solve using Gaussian elimination but SHOW detailed steps
+  const n = nVars;
+  const aug = A.map((row, i) => [...row, b[i]]);
+
+  // Find best equation order: pick eq with fewest unknowns first
+  const solveOrder = [];
+  const solved = new Set();
+  const solValues = new Array(n).fill(null);
+  const remainingEqs = A.map((_, i) => i);
+
+  // Helper: describe an equation in readable form
+  function describeEq(eqIdx, knownVals) {
+    const row = A[eqIdx];
+    const rhs = b[eqIdx];
+    const leftTerms = [];
+    const leftKnownSum = [];
+    let unknownVar = null;
+    let unknownCoeff = 0;
+    let unknownCount = 0;
+
+    for (let vi = 0; vi < nVars; vi++) {
+      if (Math.abs(row[vi]) < 1e-10) continue;
+      const coeff = row[vi];
+      if (knownVals[vi] !== null) {
+        leftKnownSum.push({ vi, coeff, val: knownVals[vi] });
+      } else {
+        unknownCount++;
+        unknownVar = vi;
+        unknownCoeff = coeff;
+        leftTerms.push({ vi, coeff });
+      }
+    }
+    return { leftTerms, leftKnownSum, unknownVar, unknownCoeff, unknownCount, rhs };
+  }
+
+  // Iterative solving: find eq with exactly 1 unknown, solve, repeat
+  let iteration = 0;
+  const maxIter = nVars + 2;
+  const allVarNames = new Array(nVars);
+  yR.forEach((r) => { allVarNames[r.idx] = `Ry_${r.lab}`; });
+  mR.forEach((r) => { allVarNames[r.idx] = `M_${r.lab}`; });
+
+  while (solved.size < nVars && iteration < maxIter) {
+    iteration++;
+    let foundEq = -1;
+    let foundInfo = null;
+
+    // Find equation with exactly 1 unknown
+    for (const eqI of remainingEqs) {
+      const info = describeEq(eqI, solValues);
+      if (info.unknownCount === 1) {
+        foundEq = eqI;
+        foundInfo = info;
+        break;
+      }
+    }
+
+    if (foundEq === -1) {
+      // Try equation with fewest unknowns
+      let minUnk = Infinity;
+      for (const eqI of remainingEqs) {
+        const info = describeEq(eqI, solValues);
+        if (info.unknownCount > 0 && info.unknownCount < minUnk) {
+          minUnk = info.unknownCount;
+          foundEq = eqI;
+          foundInfo = info;
+        }
+      }
+      if (foundEq === -1) break;
+    }
+
+    // Only proceed if 1 unknown
+    if (foundInfo.unknownCount !== 1) {
+      // Fall back to Gaussian elimination for remaining
+      break;
+    }
+
+    const { unknownVar: uVar, unknownCoeff: uCoeff, leftKnownSum, rhs } = foundInfo;
+    const uName = allVarNames[uVar];
+
+    // Calculate
+    let knownContrib = 0;
+    leftKnownSum.forEach((k) => { knownContrib += k.coeff * k.val; });
+    const answer = (rhs - knownContrib) / uCoeff;
+    solValues[uVar] = answer;
+    solved.add(uVar);
+    remainingEqs.splice(remainingEqs.indexOf(foundEq), 1);
+
+    // ── Print detailed equation ──
+    const stepNum = `(${iteration})`;
+    steps.push(`  ─── ${stepNum} 利用 ${eqNames[foundEq]} 求 ${uName} ───`);
+    steps.push("");
+
+    // Build the full equation string
+    if (eqNames[foundEq].startsWith("M")) {
+      // Moment-type equation: M(ref)=0 or M_hinge(左/右)=0
+      const isHingeLeft = eqNames[foundEq].includes("(左)");
+      const isHingeRight = eqNames[foundEq].includes("(右)");
+      const isHinge = isHingeLeft || isHingeRight;
+      const pivLabel = isHinge
+        ? eqNames[foundEq].replace("M_", "").replace("(左) = 0", "").replace("(右) = 0", "")
+        : eqNames[foundEq].replace("M(", "").replace(") = 0", "");
+
+      if (isHingeLeft) {
+        steps.push(`  在內鉸 ${pivLabel} 處，取左側自由體，彎矩為零：`);
+        steps.push(`  M(${pivLabel}⁻) = 0（左側 ΣM = 0）`);
+      } else if (isHingeRight) {
+        steps.push(`  在內鉸 ${pivLabel} 處，取右側自由體，彎矩為零：`);
+        steps.push(`  M(${pivLabel}⁺) = 0（右側 ΣM = 0）`);
+      } else {
+        steps.push(`  在 ${pivLabel} 點（輥支承/鉸支承），彎矩為零：`);
+        steps.push(`  M(${pivLabel}) = 0`);
+      }
+      steps.push("");
+
+      // List each term
+      const terms = [];
+      for (let vi = 0; vi < nVars; vi++) {
+        if (Math.abs(A[foundEq][vi]) < 1e-10) continue;
+        const coeff = A[foundEq][vi];
+        const name = allVarNames[vi];
+        if (solValues[vi] !== null && vi !== uVar) {
+          terms.push({ known: true, name, coeff, rawVal: solValues[vi] });
+        } else {
+          terms.push({ known: false, name, coeff });
+        }
+      }
+
+      // Helper: format a term nicely
+      const fmtTerm = (name, coeff, withSign) => {
+        const sign = coeff > 0 ? "+" : "−";
+        const ac = Math.abs(coeff);
+        const prefix = withSign ? `${sign} ` : (coeff < 0 ? "−" : "");
+        if (Math.abs(ac - 1) < 1e-10) return `${prefix}${name}`;
+        return `${prefix}${name} × ${fmt(ac)}`;
+      };
+
+      // Build LHS equation string (reactions side)
+      const lhsTerms = terms.map((t, i) => {
+        if (t.known) {
+          const val = t.rawVal * t.coeff;
+          return i === 0 ? fmt(val) : (val >= 0 ? `+ ${fmt(val)}` : `− ${fmt(Math.abs(val))}`);
+        }
+        return fmtTerm(t.name, t.coeff, i > 0);
+      });
+
+      // External load contributions (show as RHS)
+      // Determine reference position for this equation
+      let eqRef = mRef; // default: M(mRef) = 0
+      if (isHinge) {
+        eqRef = hinges.find(h => eqNames[foundEq].includes(lb(h))) || mRef;
+      }
+      const loadParts = [];
+      loads.forEach((ld) => {
+        // For left FBD: include loads < eqRef; for right FBD: include loads > eqRef; for global: all
+        const sideCheck = isHingeLeft ? (p) => p < eqRef
+          : isHingeRight ? (p) => p > eqRef
+          : () => true;
+        
+        if (ld.type === "point" && sideCheck(ld.pos)) {
+          const arm = Math.abs(eqRef - ld.pos);
+          if (arm > 0.001) loadParts.push(`${ld.value} × ${fmt(arm)}`);
+        } else if (ld.type === "distributed") {
+          let a, be;
+          if (isHingeLeft) { a = ld.start; be = Math.min(ld.end, eqRef); }
+          else if (isHingeRight) { a = Math.max(ld.start, eqRef); be = ld.end; }
+          else { a = ld.start; be = ld.end; }
+          if (a < be) {
+            const len = be - a;
+            const arm = Math.abs(eqRef - a - len / 2);
+            if (arm > 0.001) loadParts.push(`${fmt(ld.value * len)} × ${fmt(arm)}`);
+          }
+        } else if (ld.type === "moment") {
+          const effPos = mep(ld);
+          if (sideCheck(effPos)) {
+            const sideNote = ld.side ? (ld.side === "left" ? " 鉸左" : " 鉸右") : "";
+            loadParts.push(`${Math.abs(ld.value)}(${ld.value > 0 ? "↻" : "↺"}${sideNote})`);
+          }
+        }
+      });
+
+      // Show the equation
+      const rhsStr = loadParts.length > 0 ? loadParts.join(" + ") : "0";
+      steps.push(`  ${lhsTerms.join(" ")} = ${rhsStr}`);
+      steps.push("");
+
+      // Substitution & Solve
+      const remainRhs = rhs - knownContrib;
+      if (leftKnownSum.length > 0) {
+        // Show substitution
+        const subTerms = terms.map((t, i) => {
+          if (t.known) {
+            const val = t.rawVal * t.coeff;
+            return i === 0 ? fmt(val) : (val >= 0 ? `+ ${fmt(val)}` : `− ${fmt(Math.abs(val))}`);
+          }
+          return fmtTerm(t.name, t.coeff, i > 0);
+        });
+        steps.push(`  代入已知：${subTerms.join(" ")} = ${fmt(rhs)}`);
+        const unknownTermStr = fmtTerm(uName, uCoeff, false);
+        steps.push(`  ${unknownTermStr} = ${fmt(remainRhs)}`);
+      }
+
+      // Final solve
+      if (Math.abs(Math.abs(uCoeff) - 1) < 1e-10) {
+        if (uCoeff < 0) {
+          steps.push(`  ∴ ${uName} = ${fmt(-remainRhs)}`);
+        } else {
+          steps.push(`  ∴ ${uName} = ${fmt(remainRhs)}`);
+        }
+      } else {
+        steps.push(`  ${uName} = ${fmt(remainRhs)} ÷ ${fmt(uCoeff)} = ${fmt(answer)}`);
+      }
+    } else if (eqNames[foundEq].startsWith("V_")) {
+      // Guided connection: V = 0
+      const gLab = eqNames[foundEq].replace("V_", "").replace(" = 0", "");
+      steps.push(`  導向接續 ${gLab} 處，剪力為零：`);
+      steps.push(`  V_${gLab} = 0（左側 ΣFy = 0）`);
+      steps.push("");
+
+      const rxnLeft = yR.filter(r => A[foundEq][r.idx] !== 0).map(r => `Ry_${r.lab}`);
+      const loadLeft = [];
+      loads.forEach((ld) => {
+        const gPos = guidedConns.find(g => eqNames[foundEq].includes(lb(g)));
+        if (ld.type === "point" && ld.pos <= gPos) loadLeft.push(`${ld.value}`);
+        else if (ld.type === "distributed") {
+          const be = Math.min(ld.end, gPos);
+          if (ld.start < gPos) { const len = be - ld.start; loadLeft.push(`${ld.value}×${fmt(len)}`); }
+        }
+      });
+      if (rxnLeft.length > 0) steps.push(`  ${rxnLeft.join(" + ")} = ${loadLeft.join(" + ") || "0"}`);
+
+      // Substitute known
+      const remainRhs = rhs - knownContrib;
+      if (leftKnownSum.length > 0) {
+        steps.push(`  代入已知：${uName} = ${fmt(remainRhs)}`);
+      }
+      steps.push(`  ∴ ${uName} = ${fmt(answer)}`);
+
+    } else {
+      // ΣFy = 0
+      steps.push(`  垂直方向力平衡（↑為正）：`);
+      steps.push(`  +↑ ΣFy = 0`);
+      steps.push("");
+
+      const rxnParts = yR.map((r) => `Ry_${r.lab}`).join(" + ");
+      const loadDescs = [];
+      loads.forEach((ld) => {
+        if (ld.type === "point") loadDescs.push(`${ld.value}`);
+        else if (ld.type === "distributed") loadDescs.push(`${ld.value} × ${ld.end - ld.start}`);
+      });
+      steps.push(`  ${rxnParts} − (${loadDescs.join(" + ")}) = 0`);
+      steps.push(`  ${rxnParts} = ${fmt(rhs)}`);
+
+      // Substitute known
+      if (leftKnownSum.length > 0) {
+        steps.push("");
+        steps.push("  代入已知反力：");
+        const subParts = [];
+        yR.forEach((r) => {
+          if (solValues[r.idx] !== null && r.idx !== uVar) subParts.push(`${fmt(solValues[r.idx])}`);
+          else subParts.push(`Ry_${r.lab}`);
+        });
+        steps.push(`  ${subParts.join(" + ")} = ${fmt(rhs)}`);
+        steps.push(`  ∴ ${uName} = ${fmt(rhs)} − ${fmt(knownContrib)} = ${fmt(answer)}`);
+      }
+    }
+
+    const dir = uName.startsWith("M") ? (answer >= 0 ? "↻ 順時針" : "↺ 逆時針") : (answer >= 0 ? "↑" : "↓");
+    steps.push("");
+    steps.push(`  ★ ${uName} = ${fmt(Math.abs(answer))} kN${uName.startsWith("M") ? "·m" : ""} (${dir})`);
+    steps.push("");
+  }
+
+  // If not all solved via simple substitution, fall back to Gaussian
+  if (solved.size < nVars) {
+    // Gaussian elimination on remaining
+    const gaug = A.map((row, i) => [...row, b[i]]);
+    for (let col = 0; col < n; col++) {
+      let mr = col;
+      for (let row = col + 1; row < n; row++) {
+        if (Math.abs(gaug[row][col]) > Math.abs(gaug[mr][col])) mr = row;
+      }
+      [gaug[col], gaug[mr]] = [gaug[mr], gaug[col]];
+      if (Math.abs(gaug[col][col]) < 1e-10) return { error: "方程式奇異，幾何不穩定", steps, reactions: {}, shearData: [], momentData: [] };
+      for (let row = col + 1; row < n; row++) {
+        const f = gaug[row][col] / gaug[col][col];
+        for (let j = col; j <= n; j++) gaug[row][j] -= f * gaug[col][j];
+      }
+    }
+    for (let i = n - 1; i >= 0; i--) {
+      if (solValues[i] !== null) continue;
+      solValues[i] = gaug[i][n];
+      for (let j = i + 1; j < n; j++) solValues[i] -= gaug[i][j] * (solValues[j] ?? 0);
+      solValues[i] /= gaug[i][i];
+    }
+  }
+
+  const reactions = {};
+  yR.forEach((r) => { reactions[`Ry_${r.pos}`] = solValues[r.idx]; });
+  mR.forEach((r) => { reactions[`M_${r.pos}`] = solValues[r.idx]; });
+
+  // ── V(x), M(x) calculator (exact, no discretization error) ──
+  // stage controls what is included AT x:
+  //   0 = nothing at x (pure left limit: reactions, loads, moments at x all excluded)
+  //   1 = side="left" moments at x included, but not reactions/loads at x
+  //   2 = everything at x included (reactions, loads, moments)
+  function calcVM(x, stage) {
+    let V = 0, M = 0;
+    const incReact = stage >= 2;  // include reactions/point-loads AT x
+    const incMomL  = stage >= 1;  // include side="left" moments AT x
+    const incMomR  = stage >= 2;  // include side="right" or no-side moments AT x
+    yR.forEach((r) => {
+      if (r.pos < x || (incReact && r.pos === x)) { V += solValues[r.idx]; M += solValues[r.idx] * (x - r.pos); }
+    });
+    mR.forEach((r) => {
+      if (r.pos < x || (incReact && r.pos === x)) M += solValues[r.idx];
+    });
+    loads.forEach((ld) => {
+      if (ld.type === "point") {
+        if (ld.pos < x || (incReact && ld.pos === x)) { V -= ld.value; M -= ld.value * (x - ld.pos); }
+      } else if (ld.type === "distributed" && x > ld.start) {
+        const xe = Math.min(x, ld.end); const len = xe - ld.start;
+        V -= ld.value * len; M -= ld.value * len * (x - ld.start - len / 2);
+      } else if (ld.type === "moment") {
+        if (ld.pos < x) {
+          M += ld.value; // always include moments strictly left of x
+        } else if (ld.pos === x) {
+          if (ld.side === "left" && incMomL) M += ld.value;
+          else if (ld.side !== "left" && incMomR) M += ld.value;
+        }
+      }
+    });
+    return { V: Math.round(V * 10000) / 10000, M: Math.round(M * 10000) / 10000 };
+  }
+
+  // ────── Step 4: Summary ──────
+  steps.push("═══════════════════════════════════════");
+  steps.push("【步驟 4】反力結果彙整");
+  steps.push("═══════════════════════════════════════");
+  steps.push("");
+  yR.forEach((r) => {
+    const v = solValues[r.idx];
+    steps.push(`  Ry_${r.lab} = ${fmt(Math.abs(v))} kN (${v >= 0 ? "↑" : "↓"})`);
+  });
+  mR.forEach((r) => {
+    const v = solValues[r.idx];
+    steps.push(`  M_${r.lab} = ${fmt(Math.abs(v))} kN·m (${v >= 0 ? "↻" : "↺"})`);
+  });
+  steps.push("");
+
+  // ────── Step 5: Verification ──────
+  steps.push("═══════════════════════════════════════");
+  steps.push("【步驟 5】驗證");
+  steps.push("═══════════════════════════════════════");
+  steps.push("");
+
+  let totalF = 0;
+  loads.forEach((ld) => {
+    if (ld.type === "point") totalF += ld.value;
+    else if (ld.type === "distributed") totalF += ld.value * (ld.end - ld.start);
+  });
+
+  // ΣFy check
+  let ckF = -totalF;
+  const ckFparts = [];
+  yR.forEach((r) => { ckF += solValues[r.idx]; ckFparts.push(fmt(solValues[r.idx])); });
+  steps.push(`  ΣFy = ${ckFparts.join(" + ")} − ${fmt(totalF)} = ${fmt(ckF)} ≈ 0 ✓`);
+
+  // M check at far end (should be 0)
+  const mck = supports[supports.length - 1].pos;
+  const mckLab = lb(mck);
+  const vmCheck = calcVM(mck, 2);
+  steps.push(`  M(${mckLab}) = ${fmt(vmCheck.M)} ≈ 0 ✓`);
+  steps.push("");
+
+  // ────── Step 6: SFD & BMD ──────
+  steps.push("═══════════════════════════════════════");
+  steps.push("【步驟 6】剪力圖 V(x) 與彎矩圖 M(x)");
+  steps.push("═══════════════════════════════════════");
+  steps.push("");
+  steps.push("  由左端 (x=0) 開始，依序累加反力與外力：");
+  steps.push("  • 遇到向上反力 → V 增加，遇到向下外力 → V 減少");
+  steps.push("  • 均佈載重區間 V 線性變化，M 為拋物線");
+  steps.push("  • 集中彎矩處 M 突變，V 不變");
+  steps.push("");
+
+  // Build sample points: uniform grid + exact key positions (with left/right at discontinuities)
+  const keyPositions = new Set();
+  supports.forEach(s => keyPositions.add(s.pos));
+  hinges.forEach(h => keyPositions.add(h));
+  guidedConns.forEach(g => keyPositions.add(g));
+  loads.forEach(ld => {
+    if (ld.type === "point" || ld.type === "moment") keyPositions.add(ld.pos);
+    if (ld.type === "distributed") { keyPositions.add(ld.start); keyPositions.add(ld.end); }
+  });
+
+  // Positions that have discontinuities (reactions, point loads, moments)
+  const discPositions = new Set();
+  supports.forEach(s => discPositions.add(s.pos));
+  loads.forEach(ld => {
+    if (ld.type === "point") discPositions.add(ld.pos);
+    if (ld.type === "moment") discPositions.add(ld.pos);
+  });
+
+  // Positions where a side="left" moment exists → need 3 stages (0,1,2)
+  const sideMomLeftPos = new Set();
+  loads.forEach(ld => {
+    if (ld.type === "moment" && ld.side === "left") sideMomLeftPos.add(ld.pos);
+  });
+
+  // Build sorted unique sample x values
+  const sampleXs = [];
+  const nSeg = 400;
+  for (let i = 0; i <= nSeg; i++) sampleXs.push(Math.round(i * L / nSeg * 10000) / 10000);
+  keyPositions.forEach(p => sampleXs.push(p));
+  sampleXs.sort((a, b) => a - b);
+  const uniqueXs = [sampleXs[0]];
+  for (let i = 1; i < sampleXs.length; i++) {
+    if (sampleXs[i] - uniqueXs[uniqueXs.length - 1] > 1e-10) uniqueXs.push(sampleXs[i]);
+  }
+
+  const shearData = [];
+  const momentData = [];
+
+  uniqueXs.forEach(x => {
+    if (discPositions.has(x) && x > 0 && x < L) {
+      // Stage 0: pure left limit (nothing at x)
+      const vm0 = calcVM(x, 0);
+      shearData.push({ x, V: vm0.V });
+      momentData.push({ x, M: vm0.M });
+      // Stage 1: after side="left" moments (if any at this position)
+      if (sideMomLeftPos.has(x)) {
+        const vm1 = calcVM(x, 1);
+        shearData.push({ x, V: vm1.V });
+        momentData.push({ x, M: vm1.M });
+      }
+      // Stage 2: after everything at x
+      const vm2 = calcVM(x, 2);
+      shearData.push({ x, V: vm2.V });
+      momentData.push({ x, M: vm2.M });
+    } else {
+      const vm = calcVM(x, 2);
+      shearData.push({ x, V: vm.V });
+      momentData.push({ x, M: vm.M });
+    }
+  });
+
+  // Key section values at labeled points
+  steps.push("  ─── 各標示點斷面內力 ───");
+  steps.push("");
+  const allP = [...new Set([...supports.map(s => s.pos), ...hinges, ...guidedConns, ...loads.filter(l => l.type === "point" || l.type === "moment").map(l => l.pos)])].sort((a, b) => a - b);
+  allP.forEach((pos) => {
+    const vm0 = calcVM(pos, 0);
+    const vm2 = calcVM(pos, 2);
+    const hasVJump = Math.abs(vm0.V - vm2.V) > 0.001;
+    const hasMJump = Math.abs(vm0.M - vm2.M) > 0.001;
+
+    let line = `  ${lb(pos)} 點 (x=${pos}m)：`;
+    if (hasVJump) line += `V_左 = ${fmt(vm0.V)}, V_右 = ${fmt(vm2.V)} kN`;
+    else line += `V = ${fmt(vm2.V)} kN`;
+    line += "，";
+    if (hasMJump) {
+      if (sideMomLeftPos.has(pos)) {
+        const vm1 = calcVM(pos, 1);
+        line += `M_左 = ${fmt(vm0.M)}, M_鉸左 = ${fmt(vm1.M)}, M_右 = ${fmt(vm2.M)} kN·m`;
+      } else {
+        line += `M_左 = ${fmt(vm0.M)}, M_右 = ${fmt(vm2.M)} kN·m`;
+      }
+    } else {
+      line += `M = ${fmt(vm2.M)} kN·m`;
+    }
+    steps.push(line);
+  });
+
+  steps.push("");
+  const allV = shearData.map(d => d.V);
+  const allM = momentData.map(d => d.M);
+  steps.push(`  剪力範圍：V_min = ${fmt(Math.min(...allV))} kN，V_max = ${fmt(Math.max(...allV))} kN`);
+  steps.push(`  彎矩範圍：M_min = ${fmt(Math.min(...allM))} kN·m，M_max = ${fmt(Math.max(...allM))} kN·m`);
+
+  return { reactions, shearData, momentData, steps, error: null };
+}
+
+// ─── Diagram Plotting ───
+function DiagramPlot({ data, yKey, title, color, beamLen, nodeLabels, height=200 }) {
+  if(!data||data.length===0) return null;
+  const W=840,H=height,pad={l:60,r:30,t:36,b:38};
+  const pw=W-pad.l-pad.r, ph=H-pad.t-pad.b;
+  const vals=data.map(d=>d[yKey]);
+  const maxAbs=Math.max(Math.abs(Math.max(...vals)),Math.abs(Math.min(...vals)),0.01);
+  const sy=ph/2/maxAbs;
+  const xS=x=>pad.l+(x/beamLen)*pw;
+  const yS=v=>pad.t+ph/2-v*sy;
+  const pathD=data.map((d,i)=>`${i===0?"M":"L"} ${xS(d.x)} ${yS(d[yKey])}`).join(" ");
+  const fillD=`M ${xS(0)} ${yS(0)} `+data.map(d=>`L ${xS(d.x)} ${yS(d[yKey])}`).join(" ")+` L ${xS(beamLen)} ${yS(0)} Z`;
+
+  // ── Collect ALL key points to label ──
+  const keyPts = [];
+  const addPt = (x, v, tag) => {
+    if (v === undefined || v === null) return;
+    // Avoid duplicates at same pixel position
+    const px = Math.round(xS(x));
+    const exists = keyPts.find(p => Math.abs(p.px - px) < 8 && Math.abs(p.v - v) < maxAbs * 0.01);
+    if (!exists) keyPts.push({ x, v, px, tag });
+  };
+
+  // 1) Values at every labeled node position (including discontinuity left/right)
+  if (nodeLabels) {
+    nodeLabels.list.forEach(nd => {
+      // Find all data points at this x (may have multiple due to discontinuities)
+      const atX = data.filter(d => Math.abs(d.x - nd.pos) < 1e-6);
+      if (atX.length >= 2) {
+        // Discontinuity: show both extremes
+        const vMin = Math.min(...atX.map(d => d[yKey]));
+        const vMax = Math.max(...atX.map(d => d[yKey]));
+        if (Math.abs(vMin) > 0.001) addPt(nd.pos, vMin, nd.label);
+        if (Math.abs(vMax) > 0.001 && Math.abs(vMax - vMin) > maxAbs * 0.01) addPt(nd.pos, vMax, nd.label);
+        if (Math.abs(vMin) < 0.001 && Math.abs(vMax) < 0.001) addPt(nd.pos, 0, nd.label);
+      } else if (atX.length === 1) {
+        addPt(nd.pos, atX[0][yKey], nd.label);
+      }
+    });
+  }
+
+  // 2) Endpoints (x=0 and x=beamLen)
+  if (data.length > 0) addPt(data[0].x, data[0][yKey], "");
+  if (data.length > 1) addPt(data[data.length-1].x, data[data.length-1][yKey], "");
+
+  // 3) Global max and min
+  const globalMax = data.reduce((a, b) => b[yKey] > a[yKey] ? b : a);
+  const globalMin = data.reduce((a, b) => b[yKey] < a[yKey] ? b : a);
+  if (Math.abs(globalMax[yKey]) > 0.001) addPt(globalMax.x, globalMax[yKey], "");
+  if (Math.abs(globalMin[yKey]) > 0.001) addPt(globalMin.x, globalMin[yKey], "");
+
+  // 4) Local turning points (slope changes sign, excluding discontinuity artifacts)
+  for (let i = 1; i < data.length - 1; i++) {
+    const prev = data[i-1][yKey], curr = data[i][yKey], next = data[i+1][yKey];
+    // Skip if same x (discontinuity cluster)
+    if (Math.abs(data[i].x - data[i-1].x) < 1e-6 || Math.abs(data[i].x - data[i+1].x) < 1e-6) continue;
+    const d1 = curr - prev, d2 = next - curr;
+    if ((d1 > 0.001 && d2 < -0.001) || (d1 < -0.001 && d2 > 0.001)) {
+      if (Math.abs(curr) > 0.001) addPt(data[i].x, curr, "");
+    }
+  }
+
+  // 5) Zero crossings (where diagram crosses zero axis)
+  for (let i = 0; i < data.length - 1; i++) {
+    const v1 = data[i][yKey], v2 = data[i+1][yKey];
+    if (Math.abs(data[i].x - data[i+1].x) < 1e-6) continue; // skip discontinuity
+    if ((v1 > 0.01 && v2 < -0.01) || (v1 < -0.01 && v2 > 0.01)) {
+      // Linear interpolation for zero crossing
+      const t = v1 / (v1 - v2);
+      const xZero = data[i].x + t * (data[i+1].x - data[i].x);
+      addPt(xZero, 0, "");
+    }
+  }
+
+  // ── Render labels with smart vertical offset to avoid overlap ──
+  // Sort by pixel x, then resolve vertical overlaps
+  keyPts.sort((a, b) => a.px - b.px || a.v - b.v);
+
+  const fmtV = (v) => {
+    const r = Math.round(v * 100) / 100;
+    return r === 0 ? "0" : r.toFixed(2).replace(/\.?0+$/, "");
+  };
+
+  return (
+    <div style={{marginBottom:12}}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{background:"#0f172a",borderRadius:8,display:"block",maxWidth:W}}>
+        <text x={pad.l-8} y={16} fill="#94a3b8" fontSize="13" fontWeight="700" textAnchor="end">{title}</text>
+        <line x1={pad.l} y1={yS(0)} x2={W-pad.r} y2={yS(0)} stroke="#334155" strokeWidth="1" />
+        <path d={fillD} fill={color} fillOpacity="0.15" />
+        <path d={pathD} fill="none" stroke={color} strokeWidth="2" />
+        {/* Y axis labels */}
+        <text x={pad.l-6} y={yS(maxAbs)+4} fill="#64748b" fontSize="10" textAnchor="end">{maxAbs.toFixed(1)}</text>
+        <text x={pad.l-6} y={yS(-maxAbs)+4} fill="#64748b" fontSize="10" textAnchor="end">{(-maxAbs).toFixed(1)}</text>
+        <text x={pad.l-6} y={yS(0)+4} fill="#64748b" fontSize="10" textAnchor="end">0</text>
+        {/* Node labels on x-axis */}
+        {nodeLabels&&nodeLabels.list.map((nd,i)=>(
+          <g key={`n${i}`}>
+            <line x1={xS(nd.pos)} y1={yS(0)-4} x2={xS(nd.pos)} y2={yS(0)+4} stroke="#38bdf8" strokeWidth="1.5" />
+            <text x={xS(nd.pos)} y={H-4} fill="#38bdf8" fontSize="11" fontWeight="700" textAnchor="middle">{nd.label}</text>
+            <text x={xS(nd.pos)} y={H-16} fill="#475569" fontSize="9" textAnchor="middle">{nd.pos}m</text>
+          </g>
+        ))}
+        {/* Key value markers */}
+        {keyPts.map((p, i) => {
+          const cy = yS(p.v);
+          const above = p.v >= 0;
+          const ty = above ? cy - 10 : cy + 14;
+          // Clamp text inside SVG
+          const tyC = Math.max(12, Math.min(H - pad.b - 2, ty));
+          return (
+            <g key={`kp${i}`}>
+              <circle cx={xS(p.x)} cy={cy} r={3} fill={color} />
+              <line x1={xS(p.x)} y1={yS(0)} x2={xS(p.x)} y2={cy} stroke={color} strokeWidth="0.5" strokeDasharray="2 2" opacity="0.4" />
+              <text x={xS(p.x)} y={tyC} textAnchor="middle" fill={color} fontSize="10" fontWeight="700">
+                {fmtV(p.v)}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ─── Beam SVG ───
+function BeamSVG({ beamLen, supports, loads, hinges, guidedConns = [], nodeLabels, result }) {
+  const off=80;
+  const svgW=Math.max(960,beamLen*GRID+2*off);
+  const bx1=off, bx2=off+beamLen*GRID;
+  const px=pos=>bx1+pos*GRID;
+
+  return (
+    <svg viewBox={`0 0 ${svgW} ${CANVAS_H}`} width="100%" style={{background:"#0f172a",borderRadius:8,display:"block",maxWidth:svgW}}>
+      {/* Grid lines — stop above the label row */}
+      {Array.from({length:beamLen+1},(_,i)=>(
+        <g key={i}>
+          <line x1={px(i)} y1={50} x2={px(i)} y2={LABEL_ROW_Y-16} stroke="#1e293b" strokeWidth="1" />
+          <text x={px(i)} y={LABEL_ROW_Y-4} fill="#334155" fontSize="9" textAnchor="middle">{i}m</text>
+        </g>
+      ))}
+      <line x1={bx1} y1={BEAM_Y} x2={bx2} y2={BEAM_Y} stroke="#e2e8f0" strokeWidth="4" strokeLinecap="round" />
+      {loads.filter(l=>l.type==="distributed").map((l,i)=>(
+        <DistLoadViz key={`dl${i}`} x1={px(l.start)} x2={px(l.end)} y={BEAM_Y} w={l.value} />
+      ))}
+      {loads.filter(l=>l.type==="point").map((l,i)=>(
+        <ArrowDown key={`pl${i}`} x={px(l.pos)} y={BEAM_Y} len={50} label={`${l.value} kN`} />
+      ))}
+      {loads.filter(l=>l.type==="moment").map((l,i)=>{
+        const offset = l.side === "left" ? -16 : l.side === "right" ? 16 : 0;
+        const sideTag = l.side === "left" ? " (鉸左)" : l.side === "right" ? " (鉸右)" : "";
+        return <MomentArc key={`ml${i}`} x={px(l.pos)+offset} y={BEAM_Y} cw={l.value>0} label={`${Math.abs(l.value)} kN·m${sideTag}`} />;
+      })}
+      {supports.map((s,i)=>{
+        const sx=px(s.pos);
+        if(s.type==="roller") return <RollerIcon key={`s${i}`} x={sx} y={BEAM_Y} />;
+        if(s.type==="hinge") return <HingeIcon key={`s${i}`} x={sx} y={BEAM_Y} />;
+        if(s.type==="fixed") return <FixedIcon key={`s${i}`} x={sx} y={BEAM_Y} side={s.pos===0?"left":"right"} />;
+        if(s.type==="slider") return <SliderIcon key={`s${i}`} x={sx} y={BEAM_Y} />;
+        return null;
+      })}
+      {hinges.map((h,i)=><InternalHingeIcon key={`h${i}`} x={px(h)} y={BEAM_Y} />)}
+      {guidedConns.map((g,i)=><GuidedConnIcon key={`gc${i}`} x={px(g)} y={BEAM_Y} />)}
+      {/* ★ Node Labels A, B, C ★ */}
+      {nodeLabels.list.map((nd,i)=><NodeLabel key={`nl${i}`} x={px(nd.pos)} baseY={LABEL_ROW_Y} label={nd.label} />)}
+      {/* Reactions */}
+      {result&&!result.error&&supports.map((s,i)=>{
+        const sx=px(s.pos);
+        const ry=result.reactions[`Ry_${s.pos}`];
+        const rm=result.reactions[`M_${s.pos}`];
+        return (
+          <g key={`rxn${i}`}>
+            {ry!==undefined&&Math.abs(ry)>0.001&&(
+              ry>0
+                ? <ArrowUp x={sx+(s.type==="fixed"||s.type==="slider"?18:0)} y={BEAM_Y+(s.type==="fixed"||s.type==="slider"?50:s.type==="roller"?70:58)} len={35} label={`${ry.toFixed(2)} kN`} />
+                : <ArrowDown x={sx+(s.type==="fixed"||s.type==="slider"?18:0)} y={BEAM_Y+(s.type==="fixed"||s.type==="slider"?50:s.type==="roller"?70:58)+35} len={35} color="#16a34a" label={`${Math.abs(ry).toFixed(2)} kN ↓`} />
+            )}
+            {rm!==undefined&&Math.abs(rm)>0.001&&(
+              <MomentArc x={sx+(s.type==="slider"?20:35)} y={BEAM_Y+50} cw={rm>0} color="#16a34a" label={`${Math.abs(rm).toFixed(2)} kN·m`} />
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// ─── Presets ───
+const PRESETS = [
+  { name:"簡支梁＋集中力", beamLen:8, supports:[{pos:0,type:"hinge"},{pos:8,type:"roller"}], loads:[{type:"point",pos:4,value:20}], hinges:[], guidedConns:[] },
+  { name:"懸臂梁＋均佈載重", beamLen:6, supports:[{pos:0,type:"fixed"}], loads:[{type:"distributed",start:0,end:6,value:10}], hinges:[], guidedConns:[] },
+  { name:"格伯梁（內鉸）", beamLen:12, supports:[{pos:0,type:"fixed"},{pos:6,type:"roller"},{pos:12,type:"roller"}], loads:[{type:"distributed",start:6,end:12,value:12}], hinges:[4], guidedConns:[] },
+  { name:"內鉸＋導向接續", beamLen:36, supports:[{pos:0,type:"fixed"},{pos:30,type:"roller"},{pos:36,type:"hinge"}], loads:[{type:"distributed",start:0,end:12,value:24},{type:"moment",pos:18,value:6},{type:"point",pos:18,value:36}], hinges:[12], guidedConns:[24] },
+  { name:"鉸處彎矩（左/右）", beamLen:12, supports:[{pos:0,type:"hinge"},{pos:6,type:"roller"},{pos:12,type:"roller"}], loads:[{type:"moment",pos:6,value:30,side:"right"}], hinges:[6], guidedConns:[] },
+];
+
+// ─── Main App ───
+function BeamAnalysisApp() {
+  const { isMobile, isTablet } = useIsMobile();
+  const [beamLen,setBeamLen]=useState(8);
+  const [supports,setSupports]=useState([{pos:0,type:"hinge"},{pos:8,type:"roller"}]);
+  const [loads,setLoads]=useState([{type:"point",pos:4,value:20}]);
+  const [hinges,setHinges]=useState([]);
+  const [guidedConns,setGuidedConns]=useState([]);
+  const [result,setResult]=useState(null);
+  const [activeTab,setActiveTab]=useState("setup");
+  const [addMode,setAddMode]=useState(null);
+  const [newSupType,setNewSupType]=useState("roller");
+  const [tempPos,setTempPos]=useState("");
+  const [tempValue,setTempValue]=useState("");
+  const [tempEnd,setTempEnd]=useState("");
+  const [tempMomentDir,setTempMomentDir]=useState("cw"); // "cw" or "ccw"
+  const [tempMomentSide,setTempMomentSide]=useState("none"); // "none","left","right"
+
+  const nodeLabels = useMemo(()=>buildNodeLabels(supports,loads,hinges,guidedConns),[supports,loads,hinges,guidedConns]);
+
+  const runAnalysis=()=>{
+    const res=analyzeBeam(beamLen,supports,loads,hinges,guidedConns,nodeLabels.map);
+    setResult(res); setActiveTab("result");
+  };
+  const loadPreset=(p)=>{setBeamLen(p.beamLen);setSupports([...p.supports]);setLoads([...p.loads]);setHinges([...p.hinges]);setGuidedConns([...(p.guidedConns||[])]);setResult(null);setActiveTab("setup");};
+  const removeSupport=(i)=>{setSupports(supports.filter((_,j)=>j!==i));setResult(null);};
+  const removeLoad=(i)=>{setLoads(loads.filter((_,j)=>j!==i));setResult(null);};
+  const removeHinge=(i)=>{setHinges(hinges.filter((_,j)=>j!==i));setResult(null);};
+  const removeGuidedConn=(i)=>{setGuidedConns(guidedConns.filter((_,j)=>j!==i));setResult(null);};
+
+  const addItem=()=>{
+    const p=parseFloat(tempPos); if(isNaN(p)||p<0||p>beamLen) return;
+    if(addMode==="support") setSupports([...supports,{pos:p,type:newSupType}].sort((a,b)=>a.pos-b.pos));
+    else if(addMode==="pointLoad"){const v=parseFloat(tempValue);if(!isNaN(v))setLoads([...loads,{type:"point",pos:p,value:v}]);}
+    else if(addMode==="distLoad"){const v=parseFloat(tempValue);const e=parseFloat(tempEnd);if(!isNaN(v)&&!isNaN(e)&&e>p&&e<=beamLen)setLoads([...loads,{type:"distributed",start:p,end:e,value:v}]);}
+    else if(addMode==="moment"){
+      const v=parseFloat(tempValue);
+      if(isNaN(v)||v===0) return;
+      const signedVal = tempMomentDir === "ccw" ? -Math.abs(v) : Math.abs(v);
+      const side = hinges.includes(p) ? (tempMomentSide === "none" ? null : tempMomentSide) : null;
+      setLoads([...loads,{type:"moment",pos:p,value:signedVal,side}]);
+    }
+    else if(addMode==="hinge"){if(!hinges.includes(p))setHinges([...hinges,p].sort((a,b)=>a-b));}
+    else if(addMode==="guidedConn"){if(!guidedConns.includes(p))setGuidedConns([...guidedConns,p].sort((a,b)=>a-b));}
+    setTempPos("");setTempValue("");setTempEnd("");setTempMomentDir("cw");setTempMomentSide("none");setAddMode(null);setResult(null);
+  };
+
+  const supDesc=(s)=>{const t=s.type==="roller"?"輥支承":s.type==="hinge"?"鉸支承":s.type==="slider"?"導向支承":"固定端";return `${t} (${s.pos}m)`;};
+  const loadDesc=(l)=>{
+    if(l.type==="point") return `集中力 ${l.value} kN ↓ (${l.pos}m)`;
+    if(l.type==="moment") {
+      const dir = l.value > 0 ? "↻" : "↺";
+      const sideStr = l.side === "left" ? " 鉸左" : l.side === "right" ? " 鉸右" : "";
+      return `彎矩 ${Math.abs(l.value)} kN·m ${dir}${sideStr} (${l.pos}m)`;
+    }
+    if(l.type==="distributed") return `均佈 ${l.value} kN/m [${l.start}~${l.end}m]`;
+    return "";
+  };
+
+  const iS={background:"#0f172a",border:"1px solid #334155",color:"#e2e8f0",padding:isMobile?"8px 10px":"6px 10px",borderRadius:6,width:70,fontSize:isMobile?16:14};
+  const selS={background:"#1e293b",border:"1px solid #334155",color:"#e2e8f0",padding:isMobile?"8px 10px":"6px 10px",borderRadius:6,fontSize:isMobile?16:14};
+  const pad = isMobile ? "10px 12px" : "16px 24px";
+  const secPad = isMobile ? 12 : 20;
+  const btnFs = isMobile ? 14 : 13;
+  const btnPad = isMobile ? "8px 12px" : "6px 14px";
+
+  return (
+    <div style={{fontFamily:"'Noto Sans TC','Segoe UI',sans-serif",background:"linear-gradient(135deg,#0f172a,#1e293b)",color:"#e2e8f0",minHeight:"100vh"}}>
+      {/* Header */}
+      <div style={{background:"linear-gradient(90deg,#0ea5e9,#8b5cf6,#ec4899)",padding:"2px 0"}}>
+        <div style={{background:"#0f172a",padding:isMobile?"10px 12px":"14px 24px",display:"flex",alignItems:"center",gap:isMobile?8:16,flexWrap:"wrap"}}>
+          <div style={{fontSize:isMobile?20:26,fontWeight:900,letterSpacing:-1}}>
+            <span style={{color:"#0ea5e9"}}>結構</span><span>分析</span><span style={{color:"#8b5cf6"}}>器</span>
+          </div>
+          {!isMobile&&<div style={{color:"#64748b",fontSize:13}}>Beam Analysis — 靜定梁　反力 / SFD / BMD / 詳解</div>}
+        </div>
+      </div>
+
+      <div style={{padding:pad,maxWidth:1100,margin:"0 auto"}}>
+        {/* Presets */}
+        <div style={{display:"flex",gap:isMobile?6:8,flexWrap:"wrap",marginBottom:isMobile?10:14}}>
+          <span style={{color:"#94a3b8",fontSize:btnFs,lineHeight:"32px"}}>範例：</span>
+          {PRESETS.map((p,i)=>(
+            <button key={i} onClick={()=>loadPreset(p)} style={{background:"#1e293b",border:"1px solid #334155",color:"#e2e8f0",padding:btnPad,borderRadius:6,cursor:"pointer",fontSize:isMobile?12:13}}
+              onMouseEnter={e=>{e.target.style.borderColor="#0ea5e9";e.target.style.color="#0ea5e9";}}
+              onMouseLeave={e=>{e.target.style.borderColor="#334155";e.target.style.color="#e2e8f0";}}
+            >{p.name}</button>
+          ))}
+        </div>
+
+        {/* Tabs */}
+        <div style={{display:"flex",gap:4}}>
+          {[["setup","⚙ 設定結構"],["result","📊 分析結果"]].map(([k,label])=>(
+            <button key={k} onClick={()=>setActiveTab(k)} style={{
+              background:activeTab===k?"#0ea5e9":"#1e293b",color:activeTab===k?"#fff":"#94a3b8",
+              border:"none",padding:isMobile?"10px 16px":"8px 20px",borderRadius:"8px 8px 0 0",cursor:"pointer",fontWeight:700,fontSize:isMobile?15:14,
+              flex:isMobile?1:undefined,textAlign:"center",
+            }}>{label}</button>
+          ))}
+        </div>
+
+        {/* SETUP */}
+        {activeTab==="setup"&&(
+          <div style={{background:"#1e293b",borderRadius:"0 8px 8px 8px",padding:secPad}}>
+            {/* Beam Length */}
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+              <label style={{color:"#94a3b8",fontSize:btnFs}}>梁長度 (m)：</label>
+              <input type="number" min={1} max={50} value={beamLen} onChange={e=>{setBeamLen(parseInt(e.target.value)||1);setResult(null);}} style={{...iS,width:80}} />
+            </div>
+
+            {/* Beam SVG — scrollable on mobile */}
+            <div style={{overflowX:"auto",marginBottom:14,WebkitOverflowScrolling:"touch"}}>
+              <BeamSVG beamLen={beamLen} supports={supports} loads={loads} hinges={hinges} guidedConns={guidedConns} nodeLabels={nodeLabels} result={null} />
+            </div>
+
+            {/* Add buttons — 3-column grid on mobile */}
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(6,auto)",gap:isMobile?6:8,marginBottom:10}}>
+              {[["support","＋ 支承","#0ea5e9"],["pointLoad","＋ 集中力","#dc2626"],["distLoad","＋ 均佈載重","#dc2626"],["moment","＋ 集中彎矩","#d97706"],["hinge","＋ 內鉸","#a855f7"],["guidedConn","＋ 導向接續","#f97316"]].map(([mode,label,clr])=>(
+                <button key={mode} onClick={()=>setAddMode(addMode===mode?null:mode)} style={{
+                  background:addMode===mode?clr:"transparent",border:`1px solid ${clr}`,
+                  color:addMode===mode?"#fff":clr,padding:btnPad,borderRadius:6,cursor:"pointer",fontSize:isMobile?13:13,fontWeight:600,
+                  textAlign:"center",
+                }}>{label}</button>
+              ))}
+            </div>
+
+            {/* Add form — stack vertically on mobile */}
+            {addMode&&(
+              <div style={{background:"#0f172a",border:"1px solid #334155",borderRadius:8,padding:isMobile?12:14,marginBottom:12,
+                display:"flex",gap:isMobile?8:10,alignItems:isMobile?"stretch":"center",flexWrap:"wrap",
+                flexDirection:isMobile?"column":"row"}}>
+                {addMode==="support"&&(
+                  <select value={newSupType} onChange={e=>setNewSupType(e.target.value)} style={selS}>
+                    <option value="roller">輥支承</option><option value="hinge">鉸支承</option><option value="fixed">固定端</option><option value="slider">導向支承</option>
+                  </select>
+                )}
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <label style={{color:"#94a3b8",fontSize:btnFs,whiteSpace:"nowrap"}}>{addMode==="distLoad"?"起點":"位置"} (m)：</label>
+                  <input type="number" step="0.5" min={0} max={beamLen} value={tempPos} onChange={e=>setTempPos(e.target.value)} style={{...iS,flex:1}} />
+                </div>
+                {addMode==="distLoad"&&(
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <label style={{color:"#94a3b8",fontSize:btnFs,whiteSpace:"nowrap"}}>終點 (m)：</label>
+                    <input type="number" step="0.5" min={0} max={beamLen} value={tempEnd} onChange={e=>setTempEnd(e.target.value)} style={{...iS,flex:1}} />
+                  </div>
+                )}
+                {(addMode==="pointLoad"||addMode==="distLoad"||addMode==="moment")&&(
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <label style={{color:"#94a3b8",fontSize:btnFs,whiteSpace:"nowrap"}}>{addMode==="moment"?"大小 (kN·m)：":addMode==="distLoad"?"強度 (kN/m)：":"力量 (kN)："}</label>
+                    <input type="number" step="1" value={tempValue} onChange={e=>setTempValue(e.target.value)} style={{...iS,flex:1}} />
+                  </div>
+                )}
+                {addMode==="moment"&&(
+                  <>
+                    <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                      <label style={{color:"#94a3b8",fontSize:btnFs,whiteSpace:"nowrap"}}>方向：</label>
+                      <div style={{display:"flex",gap:4,flex:1}}>
+                        {[["cw","↻ 順時針"],["ccw","↺ 逆時針"]].map(([d,label])=>(
+                          <button key={d} type="button" onClick={()=>setTempMomentDir(d)} style={{
+                            background:tempMomentDir===d?"#d97706":"#1e293b",
+                            border:"1px solid "+(tempMomentDir===d?"#d97706":"#334155"),
+                            color:tempMomentDir===d?"#fff":"#94a3b8",
+                            padding:isMobile?"8px 12px":"5px 10px",borderRadius:4,cursor:"pointer",fontSize:isMobile?14:12,fontWeight:600,flex:1,textAlign:"center",
+                          }}>{label}</button>
+                        ))}
+                      </div>
+                    </div>
+                    {hinges.includes(parseFloat(tempPos))&&(
+                      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                        <label style={{color:"#f97316",fontSize:btnFs,fontWeight:600,whiteSpace:"nowrap"}}>鉸接續側：</label>
+                        <div style={{display:"flex",gap:4,flex:1}}>
+                          {[["left","← 鉸左"],["right","鉸右 →"]].map(([s,label])=>(
+                            <button key={s} type="button" onClick={()=>setTempMomentSide(s)} style={{
+                              background:tempMomentSide===s?"#f97316":"#1e293b",
+                              border:"1px solid "+(tempMomentSide===s?"#f97316":"#334155"),
+                              color:tempMomentSide===s?"#fff":"#94a3b8",
+                              padding:isMobile?"8px 12px":"5px 10px",borderRadius:4,cursor:"pointer",fontSize:isMobile?14:12,fontWeight:600,flex:1,textAlign:"center",
+                            }}>{label}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+                <button onClick={addItem} style={{background:"#0ea5e9",border:"none",color:"#fff",padding:isMobile?"10px 16px":"6px 16px",borderRadius:6,cursor:"pointer",fontWeight:700,fontSize:isMobile?15:14}}>確認新增</button>
+              </div>
+            )}
+
+            {/* Items listing — stack on mobile */}
+            <div style={{display:"flex",gap:isMobile?10:16,flexWrap:"wrap",marginBottom:16,flexDirection:isMobile?"column":"row"}}>
+              <div style={{flex:1,minWidth:isMobile?undefined:220}}>
+                <div style={{color:"#0ea5e9",fontSize:btnFs,fontWeight:700,marginBottom:6}}>支承</div>
+                {supports.map((s,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:isMobile?"6px 10px":"4px 8px",background:"#0f172a",borderRadius:4,marginBottom:4,fontSize:btnFs}}>
+                    <span><span style={{color:"#38bdf8",fontWeight:800,marginRight:6,fontSize:15}}>{nodeLabels.map[s.pos]}</span>{supDesc(s)}</span>
+                    <button onClick={()=>removeSupport(i)} style={{background:"none",border:"none",color:"#ef4444",cursor:"pointer",fontSize:18,padding:"4px 8px"}}>✕</button>
+                  </div>
+                ))}
+              </div>
+              <div style={{flex:1,minWidth:isMobile?undefined:220}}>
+                <div style={{color:"#dc2626",fontSize:btnFs,fontWeight:700,marginBottom:6}}>載重</div>
+                {loads.map((l,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:isMobile?"6px 10px":"4px 8px",background:"#0f172a",borderRadius:4,marginBottom:4,fontSize:btnFs}}>
+                    <span>
+                      {(l.type==="point"||l.type==="moment")&&<span style={{color:"#38bdf8",fontWeight:800,marginRight:6,fontSize:15}}>{nodeLabels.map[l.pos]}</span>}
+                      {loadDesc(l)}
+                    </span>
+                    <button onClick={()=>removeLoad(i)} style={{background:"none",border:"none",color:"#ef4444",cursor:"pointer",fontSize:18,padding:"4px 8px"}}>✕</button>
+                  </div>
+                ))}
+              </div>
+              {hinges.length>0&&(
+                <div style={{flex:1,minWidth:isMobile?undefined:220}}>
+                  <div style={{color:"#a855f7",fontSize:btnFs,fontWeight:700,marginBottom:6}}>內鉸 (M=0)</div>
+                  {hinges.map((h,i)=>(
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:isMobile?"6px 10px":"4px 8px",background:"#0f172a",borderRadius:4,marginBottom:4,fontSize:btnFs}}>
+                      <span><span style={{color:"#38bdf8",fontWeight:800,marginRight:6,fontSize:15}}>{nodeLabels.map[h]}</span>內鉸 ({h}m)</span>
+                      <button onClick={()=>removeHinge(i)} style={{background:"none",border:"none",color:"#ef4444",cursor:"pointer",fontSize:18,padding:"4px 8px"}}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {guidedConns.length>0&&(
+                <div style={{flex:1,minWidth:isMobile?undefined:220}}>
+                  <div style={{color:"#f97316",fontSize:btnFs,fontWeight:700,marginBottom:6}}>導向接續 (V=0)</div>
+                  {guidedConns.map((g,i)=>(
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:isMobile?"6px 10px":"4px 8px",background:"#0f172a",borderRadius:4,marginBottom:4,fontSize:btnFs}}>
+                      <span><span style={{color:"#38bdf8",fontWeight:800,marginRight:6,fontSize:15}}>{nodeLabels.map[g]}</span>導向接續 ({g}m)</span>
+                      <button onClick={()=>removeGuidedConn(i)} style={{background:"none",border:"none",color:"#ef4444",cursor:"pointer",fontSize:18,padding:"4px 8px"}}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button onClick={runAnalysis} style={{background:"linear-gradient(90deg,#0ea5e9,#8b5cf6)",border:"none",color:"#fff",padding:isMobile?"14px 32px":"12px 32px",borderRadius:8,cursor:"pointer",fontWeight:800,fontSize:isMobile?17:16,letterSpacing:1,width:"100%"}}>
+              開始分析 ▶
+            </button>
+          </div>
+        )}
+
+        {/* RESULT */}
+        {activeTab==="result"&&(
+          <div style={{background:"#1e293b",borderRadius:"0 8px 8px 8px",padding:secPad}}>
+            {!result?(
+              <div style={{color:"#64748b",textAlign:"center",padding:40}}>請先設定結構並點擊「開始分析」</div>
+            ):result.error?(
+              <div style={{background:"#7f1d1d",border:"1px solid #ef4444",borderRadius:8,padding:isMobile?12:16,marginBottom:16}}>
+                <div style={{color:"#fca5a5",fontWeight:700,marginBottom:4}}>分析錯誤</div>
+                <div style={{color:"#fecaca",whiteSpace:"pre-wrap",fontSize:isMobile?13:14}}>{result.error}</div>
+              </div>
+            ):(
+              <>
+                <div style={{overflowX:"auto",marginBottom:16,WebkitOverflowScrolling:"touch"}}>
+                  <BeamSVG beamLen={beamLen} supports={supports} loads={loads} hinges={hinges} guidedConns={guidedConns} nodeLabels={nodeLabels} result={result} />
+                </div>
+                <DiagramPlot data={result.shearData} yKey="V" title="V (kN) — 剪力圖" color="#f59e0b" beamLen={beamLen} nodeLabels={nodeLabels} />
+                <DiagramPlot data={result.momentData} yKey="M" title="M (kN·m) — 彎矩圖" color="#ec4899" beamLen={beamLen} nodeLabels={nodeLabels} />
+
+                <div style={{marginTop:16}}>
+                  <div style={{color:"#0ea5e9",fontWeight:800,fontSize:15,marginBottom:8}}>詳細解題步驟</div>
+                  <div style={{background:"#0f172a",borderRadius:8,padding:isMobile?10:16,fontFamily:"'Fira Code',monospace",fontSize:isMobile?11:13,lineHeight:1.9,whiteSpace:"pre-wrap",color:"#cbd5e1",maxHeight:isMobile?400:700,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+                    {result.steps.join("\n")}
+                  </div>
+                </div>
+
+                <div style={{marginTop:14,padding:isMobile?"8px 10px":"10px 14px",background:"#0f172a",borderRadius:8}}>
+                  <div style={{color:"#64748b",fontSize:12,marginBottom:4}}>節點編號對照</div>
+                  <div style={{display:"flex",gap:isMobile?10:16,flexWrap:"wrap"}}>
+                    {nodeLabels.list.map((nd,i)=>(
+                      <span key={i} style={{fontSize:btnFs}}>
+                        <span style={{color:"#38bdf8",fontWeight:800}}>{nd.label}</span>
+                        <span style={{color:"#94a3b8"}}> = {nd.pos}m</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(BeamAnalysisApp));
+</script>
+</body>
+</html>
